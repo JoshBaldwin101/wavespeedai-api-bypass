@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
+# Discourage search indexing while keeping the site publicly accessible.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive, nosnippet"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

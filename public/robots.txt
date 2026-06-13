@@ -1,0 +1,3 @@
+# Unlisted — allow access but ask crawlers not to index.
+User-agent: *
+Disallow: /
