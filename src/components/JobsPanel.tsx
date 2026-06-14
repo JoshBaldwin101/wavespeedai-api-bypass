@@ -95,7 +95,7 @@ export const JobsPanel = ({
   )
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4 sm:p-5">
+    <section className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:space-y-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-slate-100">Generation jobs</h3>
@@ -106,7 +106,7 @@ export const JobsPanel = ({
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)]">
+      <div className="grid items-stretch gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)] lg:gap-4">
         <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
           {selectedJob ? (
             <>
@@ -125,7 +125,7 @@ export const JobsPanel = ({
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+              <div className="border-y border-slate-800 py-3">
                 <p className="text-xs text-slate-400">Request ID</p>
                 <code className="mt-1 block overflow-x-auto text-sm text-slate-200">{selectedJob.id}</code>
                 {isPollingSelected ? <p className="mt-2 text-xs text-slate-400">Elapsed: {elapsedSeconds}s</p> : null}
@@ -136,7 +136,7 @@ export const JobsPanel = ({
               ) : null}
 
               {outputUrl ? (
-                <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/50 p-3">
+                <div className="space-y-3">
                   <video className="aspect-video w-full rounded bg-black" controls src={outputUrl} preload="metadata" />
                   <a
                     className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
@@ -165,22 +165,22 @@ export const JobsPanel = ({
               </div>
             </>
           ) : (
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
+            <div className="py-2">
               <p className="text-sm text-slate-300">No job selected yet.</p>
               <p className="mt-1 text-xs text-slate-400">Submit a generation or select a recent job to inspect details.</p>
             </div>
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-          <p className="mb-2 text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Recents</p>
+        <div className="flex min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/35 p-2.5 sm:p-3 lg:h-full">
+          <p className="px-1 pb-2 text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Recents</p>
           {isLoadingRecents && recentJobs.length === 0 ? <Spinner label="Loading recent jobs..." /> : null}
-          {recentsError ? <p className="mb-2 text-sm text-rose-300">{recentsError}</p> : null}
+          {recentsError ? <p className="mb-2 px-1 text-sm text-rose-300">{recentsError}</p> : null}
           {recentJobs.length === 0 && !isLoadingRecents && !recentsError ? (
-            <p className="text-sm text-slate-400">No recent jobs in the last 7 days.</p>
+            <p className="px-1 text-sm text-slate-400">No recent jobs in the last 7 days.</p>
           ) : null}
           {recentJobs.length > 0 ? (
-            <ul className="max-h-96 space-y-2 overflow-auto pr-1">
+            <ul className="min-h-0 max-h-[50vh] flex-1 divide-y divide-slate-800/80 overflow-auto lg:max-h-none">
               {recentJobs.map((job) => {
                 const isSelected = job.id === selectedJobId
                 const isProcessing = !isTerminalStatus(job.status)
@@ -188,10 +188,10 @@ export const JobsPanel = ({
                   <li key={job.id}>
                     <button
                       type="button"
-                      className={`w-full rounded-lg border p-2.5 text-left transition ${
+                      className={`w-full px-2 py-2 text-left transition sm:px-2.5 ${
                         isSelected
-                          ? 'border-sky-500/70 bg-sky-500/10'
-                          : 'border-slate-800 bg-slate-950/60 hover:border-slate-700 hover:bg-slate-900/50'
+                          ? 'rounded-lg bg-sky-500/10 ring-1 ring-sky-500/60'
+                          : 'rounded-lg hover:bg-slate-900/60'
                       }`}
                       onClick={() => onSelect(job.id)}
                     >
