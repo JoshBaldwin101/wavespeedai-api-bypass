@@ -25,3 +25,36 @@ body {
     Arial,
     sans-serif;
 }
+
+.api-key-guide img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+}
+
+.api-key-guide figure {
+  margin: 0;
+}
+
+.api-key-guide figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: #94a3b8;
+}
+
+.api-key-guide ol,
+.api-key-guide ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.api-key-guide li + li {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #1e293b;
+}

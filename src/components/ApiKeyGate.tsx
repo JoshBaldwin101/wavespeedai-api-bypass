@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import step1and2 from '../assets/step1and2.png'
+import step3 from '../assets/step3.png'
 import { ConfirmDialog } from './ui/ConfirmDialog'
 import { useApiKey } from '../context/useApiKey'
 import { WavespeedError, validateKey } from '../lib/wavespeed'
@@ -12,6 +14,7 @@ export const ApiKeyGate = () => {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showTestKeyConfirm, setShowTestKeyConfirm] = useState(false)
+  const [isGuideOpen, setIsGuideOpen] = useState(false)
 
   const startsWithPrefix = useMemo(() => apiKey.startsWith(API_KEY_PREFIX), [apiKey])
   const canTest = apiKey.length > 0 && startsWithPrefix && !isSubmitting
@@ -41,7 +44,8 @@ export const ApiKeyGate = () => {
     } catch (caughtError) {
       setValidated(false)
       if (caughtError instanceof WavespeedError) {
-        setError(caughtError.message)
+        const statusSuffix = caughtError.status > 0 ? ` (HTTP ${caughtError.status})` : ''
+        setError(`${caughtError.message}${statusSuffix}`)
       } else {
         setError('Could not validate this key right now.')
       }
@@ -148,6 +152,78 @@ export const ApiKeyGate = () => {
 
         {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
         {message ? <p className="mt-4 text-sm text-emerald-300">{message}</p> : null}
+
+        <div className="mt-6 border-t border-slate-800 pt-4">
+          <button
+            type="button"
+            className="flex w-full items-center gap-2.5 text-left text-sm font-medium text-slate-200 transition hover:text-slate-50"
+            aria-expanded={isGuideOpen}
+            aria-controls="api-key-guide-content"
+            onClick={() => setIsGuideOpen((open) => !open)}
+          >
+            <span
+              aria-hidden="true"
+              className={`inline-block shrink-0 border-y-[5px] border-l-[8px] border-y-transparent border-l-white transition-transform duration-200 ${
+                isGuideOpen ? 'translate-y-px rotate-90' : ''
+              }`}
+            />
+            WaveSpeedAI API Key Guide
+          </button>
+          {isGuideOpen ? (
+            <div
+              id="api-key-guide-content"
+              className="api-key-guide mt-4 space-y-6 text-sm leading-6 text-slate-300"
+            >
+              <p>
+                To create a key, go to your{' '}
+                <a
+                  className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+                  href="https://wavespeed.ai/accesskey"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  WaveSpeed dashboard
+                </a>
+                {' '}and follow the steps below.
+              </p>
+
+              <ol>
+                <li>
+                  <p className="font-medium text-slate-100">Name your key and create it</p>
+                  <p className="mt-1">
+                    Enter any label you will recognize later, such as <strong className="font-medium text-slate-200">"my key"</strong>,
+                    then click <strong className="font-medium text-slate-200">Create Key</strong>.
+                  </p>
+                  <figure className="mt-3">
+                    <img
+                      src={step1and2}
+                      alt="WaveSpeed API key form with a name entered and the Create Key button visible"
+                    />
+                    <figcaption>Type a name, then click Create Key.</figcaption>
+                  </figure>
+                </li>
+                <li>
+                  <p className="font-medium text-slate-100">Copy your new key</p>
+                  <p className="mt-1">
+                    After the key is generated, click the blue <strong className="font-medium text-slate-200">Copy key</strong> button.
+                    Paste it into the field at the top of this page.
+                  </p>
+                  <figure className="mt-3">
+                    <img
+                      src={step3}
+                      alt="Generated WaveSpeed API key with the Copy key button highlighted"
+                    />
+                    <figcaption>Copy the key, then paste it above and click Test key.</figcaption>
+                  </figure>
+                  <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-amber-100">
+                    <strong className="font-medium text-amber-50">Keep it private:</strong> Do not share your API key with
+                    anyone. Anyone who has it can access your WaveSpeed account and spend your credits. It is best practice to routinely delete and remake keys.
+                  </p>
+                </li>
+              </ol>
+            </div>
+          ) : null}
+        </div>
       </section>
 
       <ConfirmDialog
