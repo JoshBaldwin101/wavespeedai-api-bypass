@@ -181,29 +181,29 @@ const AppContent = () => {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
-        <header className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/20">
-          <div className="border-b border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/40 p-5 sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 p-3 sm:gap-6 sm:p-6">
+        <header className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/20 sm:rounded-3xl">
+          <div className="border-b border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/40 p-3.5 sm:p-6">
+            <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-50">WaveSpeedAI API Tool</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                <h1 className="text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl">WaveSpeedAI API Tool</h1>
+                <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-slate-300 sm:block">
                   Choose a workflow, review your account status, then send generation jobs with the validated key.
                 </p>
               </div>
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm font-medium text-emerald-200">
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-200 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm">
                 <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.8)]" />
                 API key verified
               </span>
             </div>
           </div>
 
-          <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
-            <label className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+          <div className="grid gap-3 p-3 sm:gap-4 sm:p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
+            <label className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
               <span className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">Workflow</span>
-              <span className="mt-2 block text-sm text-slate-300">Select the model endpoint this run should use.</span>
+              <span className="mt-2 hidden text-sm text-slate-300 sm:block">Select the model endpoint this run should use.</span>
               <select
-                className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm font-medium text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-medium text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:mt-4 sm:px-4 sm:py-3"
                 value={activeWorkflow.id}
                 onChange={(event) => {
                   const nextWorkflowId = event.target.value
@@ -225,18 +225,18 @@ const AppContent = () => {
               </select>
             </label>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-1">
+              <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">Balance</p>
-                    <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-50">
+                    <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-50 sm:mt-2 sm:text-3xl">
                       {isBalanceLoading && !balanceData ? 'Checking...' : balanceDisplay}
                     </p>
                   </div>
                   <Button
                     variant="secondary"
-                    className="rounded-full px-3 py-2"
+                    className="rounded-full px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
                     disabled={isBalanceLoading || isBalanceRefreshCooldown}
                     aria-label="Refresh balance"
                     title={isBalanceRefreshCooldown ? 'Balance refresh is cooling down' : 'Refresh balance'}
@@ -247,18 +247,20 @@ const AppContent = () => {
                     {isBalanceLoading ? 'Refreshing' : 'Refresh'}
                   </Button>
                 </div>
-                <p className="mt-3 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-slate-400 sm:mt-3">
                   {balanceError ? <span className="text-rose-300">{balanceError}</span> : 'Pulled from your WaveSpeed account.'}
                 </p>
               </section>
 
-              <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+              <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
                 <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">API Key</p>
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start xl:flex-row xl:items-center">
-                  <code className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-200">{maskedKey}</code>
+                <div className="mt-2 flex flex-row items-center justify-between gap-3 sm:mt-3 lg:flex-col lg:items-start xl:flex-row xl:items-center">
+                  <code className="min-w-0 overflow-x-auto rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs text-slate-200 sm:px-3 sm:py-2 sm:text-sm">
+                    {maskedKey}
+                  </code>
                   <Button
                     variant="ghost"
-                    className="px-0 text-rose-400 hover:bg-transparent hover:text-rose-300"
+                    className="shrink-0 px-0 py-1 text-xs text-rose-400 hover:bg-transparent hover:text-rose-300 sm:py-2.5 sm:text-sm"
                     onClick={() => setShowChangeKeyConfirm(true)}
                   >
                     Change key
@@ -269,7 +271,7 @@ const AppContent = () => {
           </div>
         </header>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
             apiKey={apiKey}
             isSubmitting={isRunning}

@@ -106,13 +106,13 @@ export const MediaUpload = ({
   }
 
   return (
-    <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+    <div className="space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/50 p-3 sm:space-y-2 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-slate-100">
           {label}
           {required ? <span className="ml-1 text-rose-400">*</span> : null}
         </p>
-        <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
+        <Button className="px-3 py-1.5 text-xs sm:px-3.5 sm:py-2.5 sm:text-sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
           {multiple ? 'Upload files' : 'Upload file'}
         </Button>
       </div>
@@ -129,7 +129,7 @@ export const MediaUpload = ({
         }}
       />
 
-      {hint ? <p className="text-xs text-slate-400">{hint}</p> : null}
+      {hint ? <p className="hidden text-xs text-slate-400 sm:block">{hint}</p> : null}
       {error ? <p className="text-xs text-rose-300">{error}</p> : null}
 
       {isUploading ? (
@@ -145,11 +145,11 @@ export const MediaUpload = ({
       ) : null}
 
       {value.length > 0 ? (
-        <ul className="space-y-2 pt-1">
+        <ul className="space-y-1.5 pt-1 sm:space-y-2">
           {value.map((url) => (
             <li
               key={url}
-              className="flex flex-col gap-2 rounded border border-slate-700 bg-slate-950/70 p-2 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-1.5 rounded border border-slate-700 bg-slate-950/70 p-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
             >
               <code className="max-w-full overflow-x-auto text-xs text-slate-300">{url}</code>
               <Button variant="ghost" className="justify-start sm:justify-center" onClick={() => handleRemove(url)}>

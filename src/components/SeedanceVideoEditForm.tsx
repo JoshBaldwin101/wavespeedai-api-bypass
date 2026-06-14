@@ -90,7 +90,7 @@ export const SeedanceVideoEditForm = ({
   }
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
+    <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
       <Field
         label="Edit prompt"
         htmlFor="seedance-prompt"
@@ -99,7 +99,7 @@ export const SeedanceVideoEditForm = ({
       >
         <textarea
           id="seedance-prompt"
-          className="min-h-28 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
+          className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
           placeholder="Change the time to a rainy night."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
@@ -134,7 +134,7 @@ export const SeedanceVideoEditForm = ({
         multiple
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
         <Field label="Aspect ratio" htmlFor="seedance-aspect-ratio" hint="Leave as Adapt to input to let WaveSpeed decide.">
           <select
             id="seedance-aspect-ratio"
@@ -163,7 +163,12 @@ export const SeedanceVideoEditForm = ({
           </select>
         </Field>
 
-        <Field label="Duration (seconds)" htmlFor="seedance-duration" hint="Optional. Allowed range: 4-15.">
+        <Field
+          className="col-span-2 md:col-span-1"
+          label="Duration (seconds)"
+          htmlFor="seedance-duration"
+          hint="Optional. Allowed range: 4-15."
+        >
           <input
             id="seedance-duration"
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
@@ -175,7 +180,7 @@ export const SeedanceVideoEditForm = ({
         </Field>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-2 sm:gap-3 md:grid-cols-2">
         <Toggle
           id="seedance-web-search"
           checked={enableWebSearch}
@@ -195,7 +200,7 @@ export const SeedanceVideoEditForm = ({
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
       <div className="flex justify-end">
-        <Button type="submit" isLoading={isSubmitting} disabled={!isFormValid}>
+        <Button className="w-full sm:w-auto" type="submit" isLoading={isSubmitting} disabled={!isFormValid}>
           {isSubmitting ? 'Submitting...' : submitLabel}
         </Button>
       </div>
