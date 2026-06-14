@@ -59,8 +59,8 @@ export const ApiKeyGate = () => {
         <label className="mt-6 block text-sm font-medium text-slate-200" htmlFor="api-key-input">
           API key
         </label>
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-          <div className="flex-1">
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
             <div className="relative">
               <input
                 id="api-key-input"
@@ -108,13 +108,24 @@ export const ApiKeyGate = () => {
                 )}
               </button>
             </div>
+            <p className="mt-2 text-sm text-slate-300">
+              Need a key? Create one in your WaveSpeed dashboard:{' '}
+              <a
+                className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+                href="https://wavespeed.ai/accesskey"
+                target="_blank"
+                rel="noreferrer"
+              >
+                wavespeed.ai/accesskey
+              </a>
+            </p>
             {!startsWithPrefix && apiKey.length > 0 ? (
               <p className="mt-2 text-xs text-amber-300">
                 API keys should start with <code>wsk_live_</code>.
               </p>
             ) : null}
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:w-48 sm:grid-cols-1">
+          <div className="flex shrink-0 flex-col gap-2 sm:w-32">
             <button
               className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition hover:bg-slate-700"
               type="button"
@@ -135,18 +146,6 @@ export const ApiKeyGate = () => {
 
         {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
         {message ? <p className="mt-4 text-sm text-emerald-300">{message}</p> : null}
-
-        <p className="mt-5 text-sm text-slate-300">
-          Need a key? Create one in your WaveSpeed dashboard:{' '}
-          <a
-            className="text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
-            href="https://wavespeed.ai/accesskey"
-            target="_blank"
-            rel="noreferrer"
-          >
-            wavespeed.ai/accesskey
-          </a>
-        </p>
       </section>
     </main>
   )
