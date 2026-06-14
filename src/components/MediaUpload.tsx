@@ -12,6 +12,7 @@ interface MediaUploadProps {
   label: ReactNode
   value: string[]
   multiple?: boolean
+  maxItems?: number
   hint?: string
   required?: boolean
   onChange: (next: string[]) => void
@@ -40,6 +41,7 @@ export const MediaUpload = ({
   hint,
   kind,
   label,
+  maxItems,
   multiple = false,
   required = false,
   onChange,
@@ -59,6 +61,14 @@ export const MediaUpload = ({
       urlInputRef.current?.focus()
     }
   }, [isAddingUrl])
+
+  const isAtLimit = typeof maxItems === 'number' && value.length >= maxItems
+
+  const buildMaxItemsError = (incomingCount: number): string => {
+    const maxLabel = maxItems === 1 ? '1 file' : `${maxItems} files`
+    const nextCount = value.length + incomingCount
+    return `This field accepts at most ${maxLabel}. You currently have ${value.length} and tried to add ${incomingCount} more (total ${nextCount}).`
+  }
 
   const validateLocalFile = (file: File): string | null => {
     if (!file.type.startsWith(typePrefixMap[kind])) {
@@ -85,6 +95,10 @@ export const MediaUpload = ({
 
     try {
       const selected = Array.from(files)
+      if (typeof maxItems === 'number' && value.length + selected.length > maxItems) {
+        throw new Error(buildMaxItemsError(selected.length))
+      }
+
       const nextUrls: string[] = []
 
       for (const selectedFile of selected) {
@@ -143,6 +157,11 @@ export const MediaUpload = ({
       return
     }
 
+    if (typeof maxItems === 'number' && value.length + 1 > maxItems) {
+      setError(buildMaxItemsError(1))
+      return
+    }
+
     setError(null)
     onChange(multiple ? [...value, trimmed] : [trimmed])
     setDirectUrl('')
@@ -191,10 +210,15 @@ export const MediaUpload = ({
               {showPreviews ? 'Hide previews' : 'Show previews'}
             </Button>
           ) : null}
-          <Button className="px-3 py-1.5 text-xs sm:px-3.5 sm:py-2.5 sm:text-sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+          <Button
+            className="px-3 py-1.5 text-xs sm:px-3.5 sm:py-2.5 sm:text-sm"
+            variant="secondary"
+            disabled={isAtLimit}
+            onClick={() => fileInputRef.current?.click()}
+          >
             {multiple ? 'Upload files' : 'Upload file'}
           </Button>
-          <Button className="px-2.5 py-1 text-xs sm:px-3 sm:py-2" variant="ghost" onClick={handleStartAddingUrl}>
+          <Button className="px-2.5 py-1 text-xs sm:px-3 sm:py-2" variant="ghost" disabled={isAtLimit} onClick={handleStartAddingUrl}>
             Add URL
           </Button>
         </div>
@@ -213,6 +237,9 @@ export const MediaUpload = ({
       />
 
       {hint ? <p className="hidden text-xs text-slate-400 sm:block">{hint}</p> : null}
+      {typeof maxItems === 'number' ? (
+        <p className="hidden text-xs text-slate-500 sm:block">Attachment limit: {maxItems === 1 ? '1 file' : `${maxItems} files`}.</p>
+      ) : null}
       {error ? <p className="text-xs text-rose-300">{error}</p> : null}
 
       {isUploading ? (

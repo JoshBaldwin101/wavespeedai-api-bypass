@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { ModelPricing, SeedanceAspectRatio, SeedanceVideoEditInput } from '../lib/types'
-import { getModelPricing, WavespeedError } from '../lib/wavespeed'
-import { Button } from './ui/Button'
-import { Field } from './ui/Field'
-import { Toggle } from './ui/Toggle'
-import { MediaUpload } from './MediaUpload'
+import { useMemo, useState } from 'react'
+import type { SeedanceAspectRatio, SeedanceVideoEditInput } from '../../lib/types'
+import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
+import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { Button } from '../ui/Button'
+import { Field } from '../ui/Field'
+import { MediaUpload } from '../MediaUpload'
+import { SeedanceAdvancedFields } from './SeedanceAdvancedFields'
 
 interface SeedanceVideoEditFormProps {
   apiKey: string
@@ -16,8 +17,6 @@ interface SeedanceVideoEditFormProps {
 
 type AspectRatioOption = SeedanceAspectRatio | 'auto'
 
-const aspectRatioOptions: AspectRatioOption[] = ['auto', '16:9', '9:16', '4:3', '3:4', '1:1', '21:9']
-
 export const SeedanceVideoEditForm = ({
   apiKey,
   pricingModelId,
@@ -25,6 +24,7 @@ export const SeedanceVideoEditForm = ({
   submitLabel = 'Generate video',
   onSubmit,
 }: SeedanceVideoEditFormProps) => {
+  const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
   const [prompt, setPrompt] = useState('')
   const [videoUrls, setVideoUrls] = useState<string[]>([])
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
@@ -35,8 +35,6 @@ export const SeedanceVideoEditForm = ({
   const [enableWebSearch, setEnableWebSearch] = useState(false)
   const [generateAudio, setGenerateAudio] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [livePricing, setLivePricing] = useState<ModelPricing | null>(null)
-  const [isPricingLoading, setIsPricingLoading] = useState(false)
 
   const durationValue = useMemo(() => {
     if (!duration.trim()) return undefined
@@ -59,6 +57,7 @@ export const SeedanceVideoEditForm = ({
     if (typeof durationValue === 'number' && (Number.isNaN(durationValue) || durationValue < 4 || durationValue > 15)) {
       return null
     }
+    if (referenceImageUrls.length > limits.referenceImages) return null
 
     const payload: SeedanceVideoEditInput = {
       prompt: trimmedPrompt,
@@ -68,7 +67,6 @@ export const SeedanceVideoEditForm = ({
       generate_audio: generateAudio,
     }
 
-    // Preserve reference order exactly as entered/uploaded by the user.
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -79,6 +77,7 @@ export const SeedanceVideoEditForm = ({
     prompt,
     videoUrls,
     durationValue,
+    limits.referenceImages,
     resolution,
     enableWebSearch,
     generateAudio,
@@ -87,58 +86,22 @@ export const SeedanceVideoEditForm = ({
     aspectRatio,
   ])
 
-  useEffect(() => {
-    if (!pricingInput) {
-      setLivePricing(null)
-      setIsPricingLoading(false)
-      return
-    }
+  const { livePricing, isPricingLoading } = useLivePricing({
+    apiKey,
+    pricingModelId,
+    pricingInput,
+  })
 
-    let cancelled = false
-    setIsPricingLoading(true)
-
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        try {
-          const pricing = await getModelPricing(apiKey, pricingModelId, pricingInput)
-          if (!cancelled) {
-            setLivePricing(pricing)
-          }
-        } catch (caughtError) {
-          if (cancelled) return
-          if (!(caughtError instanceof WavespeedError || caughtError instanceof Error)) {
-            setLivePricing(null)
-            return
-          }
-          setLivePricing(null)
-        } finally {
-          if (!cancelled) {
-            setIsPricingLoading(false)
-          }
-        }
-      })()
-    }, 500)
-
-    return () => {
-      cancelled = true
-      window.clearTimeout(timer)
-    }
-  }, [apiKey, pricingModelId, pricingInput])
-
-  const formatLivePrice = (value: number, currency: string): string => {
-    const formatted = value.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 3,
-    })
-    return currency === 'USD' ? `$${formatted}` : `${formatted} ${currency}`
-  }
-
-  const liveSubmitLabel = useMemo(() => {
-    if (isSubmitting) return 'Submitting...'
-    if (isPricingLoading) return 'Calculating price...'
-    if (livePricing) return `Generate ${formatLivePrice(livePricing.unit_price, livePricing.currency)}`
-    return submitLabel
-  }, [isSubmitting, isPricingLoading, livePricing, submitLabel])
+  const liveSubmitLabel = useMemo(
+    () =>
+      buildSubmitLabel({
+        isSubmitting,
+        isPricingLoading,
+        livePricing,
+        submitLabel,
+      }),
+    [isSubmitting, isPricingLoading, livePricing, submitLabel],
+  )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -165,6 +128,12 @@ export const SeedanceVideoEditForm = ({
       return
     }
 
+    const attachmentError = validateAttachmentLimit('Reference images', referenceImageUrls, limits.referenceImages)
+    if (attachmentError) {
+      setError(attachmentError)
+      return
+    }
+
     const payload: SeedanceVideoEditInput = {
       prompt: trimmedPrompt,
       resolution,
@@ -173,7 +142,6 @@ export const SeedanceVideoEditForm = ({
       generate_audio: generateAudio,
     }
 
-    // Preserve reference order exactly as entered/uploaded by the user.
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -206,6 +174,7 @@ export const SeedanceVideoEditForm = ({
         required
         value={videoUrls}
         onChange={setVideoUrls}
+        maxItems={limits.video}
         hint="Single file. WaveSpeed trims source videos longer than 15 seconds."
       />
 
@@ -216,6 +185,7 @@ export const SeedanceVideoEditForm = ({
         value={referenceImageUrls}
         onChange={setReferenceImageUrls}
         multiple
+        maxItems={limits.referenceImages}
       />
 
       <MediaUpload
@@ -227,68 +197,18 @@ export const SeedanceVideoEditForm = ({
         multiple
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
-        <Field label="Aspect ratio" htmlFor="seedance-aspect-ratio" hint="Leave as Adapt to input to let WaveSpeed decide.">
-          <select
-            id="seedance-aspect-ratio"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
-            value={aspectRatio}
-            onChange={(event) => setAspectRatio(event.target.value as AspectRatioOption)}
-          >
-            {aspectRatioOptions.map((option) => (
-              <option key={option} value={option}>
-                {option === 'auto' ? 'Adapt to input' : option}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <Field label="Resolution" htmlFor="seedance-resolution">
-          <select
-            id="seedance-resolution"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
-            value={resolution}
-            onChange={(event) => setResolution(event.target.value as '480p' | '720p' | '1080p')}
-          >
-            <option value="480p">480p</option>
-            <option value="720p">720p</option>
-            <option value="1080p">1080p</option>
-          </select>
-        </Field>
-
-        <Field
-          className="col-span-2 md:col-span-1"
-          label="Duration (seconds)"
-          htmlFor="seedance-duration"
-          hint="Optional. Allowed range: 4-15."
-        >
-          <input
-            id="seedance-duration"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
-            inputMode="numeric"
-            placeholder="Auto"
-            value={duration}
-            onChange={(event) => setDuration(event.target.value)}
-          />
-        </Field>
-      </div>
-
-      <div className="grid gap-2 sm:gap-3 md:grid-cols-2">
-        <Toggle
-          id="seedance-web-search"
-          checked={enableWebSearch}
-          onChange={setEnableWebSearch}
-          label="Enable web search"
-          description="Include real-time web context in the generation call."
-        />
-        <Toggle
-          id="seedance-generate-audio"
-          checked={generateAudio}
-          onChange={setGenerateAudio}
-          label="Generate audio"
-          description="Turn off to preserve the original input audio track."
-        />
-      </div>
+      <SeedanceAdvancedFields
+        aspectRatio={aspectRatio}
+        onAspectRatioChange={setAspectRatio}
+        resolution={resolution}
+        onResolutionChange={setResolution}
+        duration={duration}
+        onDurationChange={setDuration}
+        enableWebSearch={enableWebSearch}
+        onEnableWebSearchChange={setEnableWebSearch}
+        generateAudio={generateAudio}
+        onGenerateAudioChange={setGenerateAudio}
+      />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 

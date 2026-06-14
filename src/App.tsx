@@ -1,39 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiKeyGate } from './components/ApiKeyGate'
 import { JobsPanel } from './components/JobsPanel'
-import { SeedanceVideoEditForm } from './components/SeedanceVideoEditForm'
 import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
-import type { BalanceResponseData, ModelPricing, PredictionResult, SeedanceVideoEditInput } from './lib/types'
+import type { BalanceResponseData, ModelPricing } from './lib/types'
+import { workflows } from './lib/workflows'
 import { useJobs } from './hooks/useJobs'
-import { getModelPricing, submitVideoEdit, validateKey, WavespeedError } from './lib/wavespeed'
+import { getModelPricing, submitPrediction, validateKey, WavespeedError } from './lib/wavespeed'
 
 const maskApiKey = (key: string): string => {
   if (key.length <= 14) return '********'
   return `${key.slice(0, 8)}••••${key.slice(-4)}`
 }
-
-interface WorkflowDefinition {
-  id: string
-  label: string
-  submitLabel: string
-  pricingModelId: string
-  submit: (apiKey: string, input: unknown) => Promise<PredictionResult>
-  form: typeof SeedanceVideoEditForm
-}
-
-const workflows: WorkflowDefinition[] = [
-  {
-    id: 'bytedance-seedance-2-video-edit',
-    label: 'Bytedance Seedance 2.0 Video Edit',
-    submitLabel: 'Generate video',
-    pricingModelId: 'bytedance/seedance-2.0/video-edit',
-    submit: (apiKey, input) => submitVideoEdit(apiKey, input as SeedanceVideoEditInput),
-    form: SeedanceVideoEditForm,
-  },
-]
 
 const formatCurrency = (value: number): string =>
   `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -145,7 +125,7 @@ const AppContent = () => {
     () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? workflows[0],
     [selectedWorkflowId],
   )
-  const jobModelNeedles = useMemo(() => [activeWorkflow.pricingModelId], [activeWorkflow.pricingModelId])
+  const jobModelNeedles = useMemo(() => [activeWorkflow.model], [activeWorkflow.model])
   const jobs = useJobs({ apiKey, modelNeedles: jobModelNeedles })
   const FormComponent = activeWorkflow.form
   const balanceDisplay = useMemo(() => formatBalance(balanceData), [balanceData])
@@ -235,7 +215,7 @@ const AppContent = () => {
     setSubmitError(null)
 
     try {
-      const created = await activeWorkflow.submit(apiKey, input)
+      const created = await submitPrediction(apiKey, activeWorkflow.model, input)
       const trackingTarget = created.urls?.get ?? created.id
       await jobs.track(trackingTarget)
     } catch (caughtError) {
@@ -270,7 +250,7 @@ const AppContent = () => {
     setIsPricingLoading(true)
 
     try {
-      const pricing = await getModelPricing(apiKey, activeWorkflow.pricingModelId, input as Record<string, unknown>)
+      const pricing = await getModelPricing(apiKey, activeWorkflow.model, input as Record<string, unknown>)
       setPricePreview(pricing)
     } catch (caughtError) {
       const message =
@@ -292,7 +272,7 @@ const AppContent = () => {
 
     try {
       const [pricing, freshBalance] = await Promise.all([
-        getModelPricing(apiKey, activeWorkflow.pricingModelId, pendingInput as Record<string, unknown>),
+        getModelPricing(apiKey, activeWorkflow.model, pendingInput as Record<string, unknown>),
         validateKey(apiKey),
       ])
 
@@ -433,7 +413,7 @@ const AppContent = () => {
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
             apiKey={apiKey}
-            pricingModelId={activeWorkflow.pricingModelId}
+            pricingModelId={activeWorkflow.model}
             isSubmitting={jobs.pollingJobId !== null || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             onSubmit={prepareRun}

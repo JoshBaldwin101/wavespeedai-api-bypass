@@ -1,0 +1,231 @@
+Use one of our client libraries to get started quickly.
+
+HTTP
+Node.js
+Python
+Bytedance Seedance-2.0 Text-to-video
+Seedance 2.0 (Text-to-Video) generates Hollywood-grade cinematic videos from text prompts with native audio-visual synchronization, director-level camera and lighting control, and exceptional motion stability. Built on Seed's unified multimodal architecture, it leads on instruction adherence, motion quality, and visual aesthetics.
+
+1. Calling the API
+Submit a request
+The SDK handles polling automatically and returns the result once the task is complete. If you're using cURL or raw HTTP, see Queue & Webhooks for how to retrieve results.
+
+
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/text-to-video" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "A master chef, 60s, with a white cane hooked on the counter edge, works alone in a chaotic Michelin-...",
+    "reference_audios": [],
+    "reference_images": [],
+    "reference_videos": [],
+    "resolution": "720p"
+}'
+
+2. Authentication
+The API uses an API Key for authentication.
+
+Get your API Key
+Get your API key from https://wavespeed.ai/accesskey.
+
+Environment variable
+export WAVESPEED_API_KEY="your-api-key"
+
+3. Queue & Webhooks
+For long-running requests, you can either poll for results or use webhooks.
+
+Submit request
+# Without webhook (poll for results)
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/text-to-video" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "A master chef, 60s, with a white cane hooked on the counter edge, works alone in a chaotic Michelin-...",
+    "reference_audios": [],
+    "reference_images": [],
+    "reference_videos": [],
+    "resolution": "720p"
+}'
+
+### With webhook (receive notification)
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/text-to-video?webhook=https://your.app/endpoint" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "A master chef, 60s, with a white cane hooked on the counter edge, works alone in a chaotic Michelin-...",
+    "reference_audios": [],
+    "reference_images": [],
+    "reference_videos": [],
+    "resolution": "720p"
+}'
+
+Response
+{
+    "id": "abc123-def456-...",
+    "status": "pending"
+}
+
+Get the result
+Polling
+# Check status
+curl -X GET "https://api.wavespeed.ai/api/v3/predictions/{request_id}" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY"
+
+# Possible statuses: pending → processing → completed | failed
+# Poll every 1-2 seconds until status is "completed" or "failed"
+
+# Get result (when status is "completed")
+curl -X GET "https://api.wavespeed.ai/api/v3/predictions/{request_id}/result" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY"
+
+Webhook
+If you added ?webhook=<your_url> when submitting, WaveSpeed sends a POST to your URL when the task completes:
+
+{
+    "id": "<task_id>",
+    "model": "bytedance/seedance-2.0/text-to-video",
+    "input": {
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "enable_web_search": false,
+        "generate_audio": true,
+        "prompt": "A master chef, 60s, with a white cane hooked on the counter edge, works alone in a chaotic Michelin-...",
+        "reference_audios": [],
+        "reference_images": [],
+        "reference_videos": [],
+        "resolution": "720p"
+    },
+    "outputs": ["<output_url>"],
+    "status": "completed",
+    "created_at": "<timestamp>",
+    "error": null
+}
+
+Field	Description
+id	Task ID
+outputs	Array of output URLs (only when status: "completed")
+status	completed or failed
+error	Error message (only when status: "failed")
+Best practices:
+Use HTTPS endpoint
+Return 2xx immediately
+Implement idempotency
+Verify signatures (see below)
+📖 For more details, see Get Result | Webhooks.
+
+4. Verifying Webhooks
+Always verify webhook signatures to ensure requests are from WaveSpeed.
+
+Webhook headers
+Each webhook request includes these headers:
+
+Header	Description
+webhook-id	Unique identifier for this webhook delivery
+webhook-timestamp	Unix timestamp when the webhook was sent
+webhook-signature	Signature in format v3,<hex_signature>
+Signature computation
+HMAC_SHA256(secret_without_prefix, "{webhook-id}.{webhook-timestamp}.{raw_body}")
+
+⚠️ Important: Remove the whsec_ prefix from your webhook secret before using it as the HMAC key. Do NOT base64 decode it.
+
+5. Files
+Many input parameters — such as image, images, mask_image, video, and audio — accept file URLs or Base64 data URIs.
+
+Public URL
+Pass publicly accessible URLs directly:
+
+
+{
+    "image": "https://example.com/image.png",
+    "images": ["https://example.com/image.png"],
+    "mask_image": "https://example.com/mask.png"
+}
+
+Base64 data URI
+Embed files as Base64:
+
+
+{
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+    "images": ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."],
+    "mask_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+}
+
+Upload API
+Upload local files to get a URL.
+
+Endpoint:
+
+POST https://api.wavespeed.ai/api/v3/media/upload/binary
+
+Request:
+
+curl -X POST "https://api.wavespeed.ai/api/v3/media/upload/binary" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -F "file=@/path/to/image.png"
+
+Response:
+
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+      "type": "image",
+      "download_url": "https://cdn.wavespeed.ai/uploads/xxx.png",
+      "filename": "image.png",
+      "size": 1024000
+    }
+}
+
+💡 For files larger than 300MB, use a URL input instead of uploading directly.
+
+6. Schema
+Input
+Parameter	Type	Required	Default	Range	Description
+prompt	string	No	--	--	Describe the scene, action, camera movement, and mood for the video.
+reference_images	array	No	--	--	Reference image URLs to guide visual style, characters, or scene composition.
+reference_videos	array	No	--	--	Reference video URLs (total length must not exceed 15 seconds).
+reference_audios	array	No	--	--	Reference audio URLs (total length must not exceed 15 seconds).
+aspect_ratio	string	No	16:9	16:9, 9:16, 4:3, 3:4, 1:1, 21:9	The aspect ratio of the generated video.
+resolution	string	No	720p	480p, 720p, 1080p	The output video resolution.
+duration	integer	No	5	--	The duration of the generated video in seconds (4-15s).
+enable_web_search	boolean	No	--	--	Enable web search for real-time information.
+generate_audio	boolean	No	true	--	Whether to generate native audio synchronized with the output video. Defaults to true.
+Example request
+
+{
+    "aspect_ratio": "16:9",
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "A master chef, 60s, with a white cane hooked on the counter edge, works alone in a chaotic Michelin-...",
+    "reference_audios": [],
+    "reference_images": [],
+    "reference_videos": [],
+    "resolution": "720p"
+}
+
+Output
+
+{
+    "id": "abc123-def456-...",
+    "status": "completed",
+    "outputs": ["https://cdn.wavespeed.ai/outputs/xxx.png"]   // Image models
+              ["https://cdn.wavespeed.ai/outputs/xxx.mp4"]   // Video models
+              ["https://cdn.wavespeed.ai/outputs/xxx.mp3"]   // Audio/TTS models
+              ["https://cdn.wavespeed.ai/outputs/xxx.json"]  // Transcription models
+}
+
+📖 For detailed output schema, see Get Result Documentation.(https://wavespeed.ai/docs/get-result)

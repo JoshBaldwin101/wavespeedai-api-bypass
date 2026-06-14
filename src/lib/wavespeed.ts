@@ -3,7 +3,6 @@ import type {
   ModelPricing,
   PredictionListResponse,
   PredictionResult,
-  SeedanceVideoEditInput,
   UploadedMedia,
   WavespeedEnvelope,
 } from './types'
@@ -165,21 +164,19 @@ export const uploadFile = async (
   return envelope.data
 }
 
-export const submitVideoEdit = async (
+export const submitPrediction = async (
   apiKey: string,
-  input: SeedanceVideoEditInput,
+  model: string,
+  input: unknown,
 ): Promise<PredictionResult> => {
-  const envelope = await requestJson<PredictionResult>(
-    `${BASE_URL}/bytedance/seedance-2.0/video-edit`,
-    {
-      method: 'POST',
-      headers: {
-        ...createAuthHeaders(apiKey),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(input),
+  const envelope = await requestJson<PredictionResult>(`${BASE_URL}/${model}`, {
+    method: 'POST',
+    headers: {
+      ...createAuthHeaders(apiKey),
+      'Content-Type': 'application/json',
     },
-  )
+    body: JSON.stringify(input),
+  })
   return envelope.data
 }
 

@@ -3,16 +3,37 @@ export type PredictionStatus = 'created' | 'queued' | 'pending' | 'processing' |
 export type SeedanceAspectRatio = '16:9' | '9:16' | '4:3' | '3:4' | '1:1' | '21:9'
 export type SeedanceResolution = '480p' | '720p' | '1080p'
 
-export interface SeedanceVideoEditInput {
+export interface SeedanceCommonInput {
   prompt?: string
-  video?: string
-  reference_images?: string[]
-  reference_audios?: string[]
-  aspect_ratio?: SeedanceAspectRatio
   resolution?: SeedanceResolution
   duration?: number
   enable_web_search?: boolean
   generate_audio?: boolean
+}
+
+export interface SeedanceVideoEditInput extends SeedanceCommonInput {
+  video?: string
+  reference_images?: string[]
+  reference_audios?: string[]
+  aspect_ratio?: SeedanceAspectRatio
+}
+
+export interface SeedanceTextToVideoInput extends SeedanceCommonInput {
+  aspect_ratio?: SeedanceAspectRatio
+  reference_images?: string[]
+  reference_videos?: string[]
+  reference_audios?: string[]
+}
+
+export interface SeedanceImageToVideoInput extends SeedanceCommonInput {
+  image?: string
+  last_image?: string
+  aspect_ratio?: SeedanceAspectRatio
+}
+
+export interface SeedanceVideoExtendInput extends SeedanceCommonInput {
+  video?: string
+  last_image?: string
 }
 
 export interface UploadedMedia {

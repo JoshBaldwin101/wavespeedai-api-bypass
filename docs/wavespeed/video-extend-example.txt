@@ -1,0 +1,214 @@
+Use one of our client libraries to get started quickly.
+
+HTTP
+Node.js
+Python
+Bytedance Seedance-2.0 Video-extend
+Seedance 2.0 (Video-Extend) extends an input video with a new cinematic continuation generated from its last frame and a natural-language prompt. Ready-to-use REST API, best performance, no coldstarts, affordable pricing.
+
+1. Calling the API
+Submit a request
+The SDK handles polling automatically and returns the result once the task is complete. If you're using cURL or raw HTTP, see Queue & Webhooks for how to retrieve results.
+
+
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/video-extend" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "Continue the existing subway train scene seamlessly. Keep the same passengers, same seating positions, same clothing, same faces, same subway carriage layout, same lighting, same handrails, same doors, and same route display above the door. The route display text “NEXT STOP: CENTRAL STATION” remains stable, correctly spelled, readable, and unchanged throughout the video.\n\nThe train continues moving smoothly, causing a gentle natural sway in the passengers and hanging straps. The office worker keeps looking at his phone, the student listens to music, the elderly man holds the handrail, the mother adjusts her grocery bag, and two friends talk softly near the door. Reflections move subtly across the windows, fluorescent lights remain steady, the camera gently sways with the motion of the train, realistic body movement, stable faces, natural commute atmosphere, documentary realism, 4K, 24fps.",
+    "resolution": "720p",
+    "video": "https://static.wavespeed.ai/examples/3aef5ad764864417b773b12040f4deee/1777209084598573351_j9xFDBzH.mp4"
+}'
+
+2. Authentication
+The API uses an API Key for authentication.
+
+Get your API Key
+Get your API key from https://wavespeed.ai/accesskey.
+
+Environment variable
+export WAVESPEED_API_KEY="your-api-key"
+
+3. Queue & Webhooks
+For long-running requests, you can either poll for results or use webhooks.
+
+Submit request
+# Without webhook (poll for results)
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/video-extend" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "Continue the existing subway train scene seamlessly. Keep the same passengers, same seating positions, same clothing, same faces, same subway carriage layout, same lighting, same handrails, same doors, and same route display above the door. The route display text “NEXT STOP: CENTRAL STATION” remains stable, correctly spelled, readable, and unchanged throughout the video.\n\nThe train continues moving smoothly, causing a gentle natural sway in the passengers and hanging straps. The office worker keeps looking at his phone, the student listens to music, the elderly man holds the handrail, the mother adjusts her grocery bag, and two friends talk softly near the door. Reflections move subtly across the windows, fluorescent lights remain steady, the camera gently sways with the motion of the train, realistic body movement, stable faces, natural commute atmosphere, documentary realism, 4K, 24fps.",
+    "resolution": "720p",
+    "video": "https://static.wavespeed.ai/examples/3aef5ad764864417b773b12040f4deee/1777209084598573351_j9xFDBzH.mp4"
+}'
+
+### With webhook (receive notification)
+curl -X POST "https://api.wavespeed.ai/api/v3/bytedance/seedance-2.0/video-extend?webhook=https://your.app/endpoint" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -d '{
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "Continue the existing subway train scene seamlessly. Keep the same passengers, same seating positions, same clothing, same faces, same subway carriage layout, same lighting, same handrails, same doors, and same route display above the door. The route display text “NEXT STOP: CENTRAL STATION” remains stable, correctly spelled, readable, and unchanged throughout the video.\n\nThe train continues moving smoothly, causing a gentle natural sway in the passengers and hanging straps. The office worker keeps looking at his phone, the student listens to music, the elderly man holds the handrail, the mother adjusts her grocery bag, and two friends talk softly near the door. Reflections move subtly across the windows, fluorescent lights remain steady, the camera gently sways with the motion of the train, realistic body movement, stable faces, natural commute atmosphere, documentary realism, 4K, 24fps.",
+    "resolution": "720p",
+    "video": "https://static.wavespeed.ai/examples/3aef5ad764864417b773b12040f4deee/1777209084598573351_j9xFDBzH.mp4"
+}'
+
+Response
+{
+    "id": "abc123-def456-...",
+    "status": "pending"
+}
+
+Get the result
+Polling
+# Check status
+curl -X GET "https://api.wavespeed.ai/api/v3/predictions/{request_id}" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY"
+
+# Possible statuses: pending → processing → completed | failed
+# Poll every 1-2 seconds until status is "completed" or "failed"
+
+# Get result (when status is "completed")
+curl -X GET "https://api.wavespeed.ai/api/v3/predictions/{request_id}/result" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY"
+
+Webhook
+If you added ?webhook=<your_url> when submitting, WaveSpeed sends a POST to your URL when the task completes:
+
+{
+    "id": "<task_id>",
+    "model": "bytedance/seedance-2.0/video-extend",
+    "input": {
+        "duration": 5,
+        "enable_web_search": false,
+        "generate_audio": true,
+        "prompt": "Continue the existing subway train scene seamlessly. Keep the same passengers, same seating positions, same clothing, same faces, same subway carriage layout, same lighting, same handrails, same doors, and same route display above the door. The route display text “NEXT STOP: CENTRAL STATION” remains stable, correctly spelled, readable, and unchanged throughout the video.\n\nThe train continues moving smoothly, causing a gentle natural sway in the passengers and hanging straps. The office worker keeps looking at his phone, the student listens to music, the elderly man holds the handrail, the mother adjusts her grocery bag, and two friends talk softly near the door. Reflections move subtly across the windows, fluorescent lights remain steady, the camera gently sways with the motion of the train, realistic body movement, stable faces, natural commute atmosphere, documentary realism, 4K, 24fps.",
+        "resolution": "720p",
+        "video": "https://static.wavespeed.ai/examples/3aef5ad764864417b773b12040f4deee/1777209084598573351_j9xFDBzH.mp4"
+    },
+    "outputs": ["<output_url>"],
+    "status": "completed",
+    "created_at": "<timestamp>",
+    "error": null
+}
+
+Field	Description
+id	Task ID
+outputs	Array of output URLs (only when status: "completed")
+status	completed or failed
+error	Error message (only when status: "failed")
+Best practices:
+Use HTTPS endpoint
+Return 2xx immediately
+Implement idempotency
+Verify signatures (see below)
+📖 For more details, see Get Result | Webhooks.
+
+4. Verifying Webhooks
+Always verify webhook signatures to ensure requests are from WaveSpeed.
+
+Webhook headers
+Each webhook request includes these headers:
+
+Header	Description
+webhook-id	Unique identifier for this webhook delivery
+webhook-timestamp	Unix timestamp when the webhook was sent
+webhook-signature	Signature in format v3,<hex_signature>
+Signature computation
+HMAC_SHA256(secret_without_prefix, "{webhook-id}.{webhook-timestamp}.{raw_body}")
+
+⚠️ Important: Remove the whsec_ prefix from your webhook secret before using it as the HMAC key. Do NOT base64 decode it.
+
+5. Files
+Many input parameters — such as image, images, mask_image, video, and audio — accept file URLs or Base64 data URIs.
+
+Public URL
+Pass publicly accessible URLs directly:
+
+
+{
+    "image": "https://example.com/image.png",
+    "images": ["https://example.com/image.png"],
+    "mask_image": "https://example.com/mask.png"
+}
+
+Base64 data URI
+Embed files as Base64:
+
+
+{
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
+    "images": ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."],
+    "mask_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+}
+
+Upload API
+Upload local files to get a URL.
+
+Endpoint:
+
+POST https://api.wavespeed.ai/api/v3/media/upload/binary
+
+Request:
+
+curl -X POST "https://api.wavespeed.ai/api/v3/media/upload/binary" \
+  -H "Authorization: Bearer $WAVESPEED_API_KEY" \
+  -F "file=@/path/to/image.png"
+
+Response:
+
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+      "type": "image",
+      "download_url": "https://cdn.wavespeed.ai/uploads/xxx.png",
+      "filename": "image.png",
+      "size": 1024000
+    }
+}
+
+💡 For files larger than 300MB, use a URL input instead of uploading directly.
+
+6. Schema
+Input
+Parameter	Type	Required	Default	Range	Description
+prompt	string	No	--	--	Describe the cinematic continuation — action, camera movement, lighting, mood.
+video	string	No	--	--	URL of the input video to extend. Generation continues from the last frame.
+last_image	string	No	--	--	Optional target last-frame URL. If provided, the new segment interpolates from the input video's last frame to this image.
+resolution	string	No	720p	480p, 720p, 1080p	Output resolution of the new segment.
+duration	integer	No	5	--	Length in seconds of the new segment to append (4-15).
+enable_web_search	boolean	No	--	--	Enable web search for real-time information.
+generate_audio	boolean	No	true	--	Whether to generate native audio synchronized with the output video. Defaults to true.
+Example request
+
+{
+    "duration": 5,
+    "enable_web_search": false,
+    "generate_audio": true,
+    "prompt": "Continue the existing subway train scene seamlessly. Keep the same passengers, same seating positions, same clothing, same faces, same subway carriage layout, same lighting, same handrails, same doors, and same route display above the door. The route display text “NEXT STOP: CENTRAL STATION” remains stable, correctly spelled, readable, and unchanged throughout the video.\n\nThe train continues moving smoothly, causing a gentle natural sway in the passengers and hanging straps. The office worker keeps looking at his phone, the student listens to music, the elderly man holds the handrail, the mother adjusts her grocery bag, and two friends talk softly near the door. Reflections move subtly across the windows, fluorescent lights remain steady, the camera gently sways with the motion of the train, realistic body movement, stable faces, natural commute atmosphere, documentary realism, 4K, 24fps.",
+    "resolution": "720p",
+    "video": "https://static.wavespeed.ai/examples/3aef5ad764864417b773b12040f4deee/1777209084598573351_j9xFDBzH.mp4"
+}
+
+Output
+
+{
+    "id": "abc123-def456-...",
+    "status": "completed",
+    "outputs": ["https://cdn.wavespeed.ai/outputs/xxx.png"]   // Image models
+              ["https://cdn.wavespeed.ai/outputs/xxx.mp4"]   // Video models
+              ["https://cdn.wavespeed.ai/outputs/xxx.mp3"]   // Audio/TTS models
+              ["https://cdn.wavespeed.ai/outputs/xxx.json"]  // Transcription models
+}
+
+📖 For detailed output schema, see Get Result Documentation.(https://wavespeed.ai/docs/get-result)
