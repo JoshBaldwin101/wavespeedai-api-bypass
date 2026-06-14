@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceVideoEditInput } from '../lib/types'
+import { useEffect, useMemo, useState } from 'react'
+import type { ModelPricing, SeedanceAspectRatio, SeedanceVideoEditInput } from '../lib/types'
+import { getModelPricing, WavespeedError } from '../lib/wavespeed'
 import { Button } from './ui/Button'
 import { Field } from './ui/Field'
 import { Toggle } from './ui/Toggle'
@@ -7,6 +8,7 @@ import { MediaUpload } from './MediaUpload'
 
 interface SeedanceVideoEditFormProps {
   apiKey: string
+  pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
   onSubmit: (input: SeedanceVideoEditInput) => Promise<void>
@@ -18,8 +20,9 @@ const aspectRatioOptions: AspectRatioOption[] = ['auto', '16:9', '9:16', '4:3', 
 
 export const SeedanceVideoEditForm = ({
   apiKey,
+  pricingModelId,
   isSubmitting,
-  submitLabel = 'Run Seedance video edit',
+  submitLabel = 'Generate video',
   onSubmit,
 }: SeedanceVideoEditFormProps) => {
   const [prompt, setPrompt] = useState('')
@@ -32,6 +35,8 @@ export const SeedanceVideoEditForm = ({
   const [enableWebSearch, setEnableWebSearch] = useState(false)
   const [generateAudio, setGenerateAudio] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [livePricing, setLivePricing] = useState<ModelPricing | null>(null)
+  const [isPricingLoading, setIsPricingLoading] = useState(false)
 
   const durationValue = useMemo(() => {
     if (!duration.trim()) return undefined
@@ -47,6 +52,93 @@ export const SeedanceVideoEditForm = ({
     if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) return false
     return true
   }, [prompt, videoUrls, durationValue])
+
+  const pricingInput = useMemo<Record<string, unknown> | null>(() => {
+    const trimmedPrompt = prompt.trim()
+    if (!trimmedPrompt || !videoUrls[0]) return null
+    if (typeof durationValue === 'number' && (Number.isNaN(durationValue) || durationValue < 4 || durationValue > 15)) {
+      return null
+    }
+
+    const payload: SeedanceVideoEditInput = {
+      prompt: trimmedPrompt,
+      resolution,
+      video: videoUrls[0],
+      enable_web_search: enableWebSearch,
+      generate_audio: generateAudio,
+    }
+
+    // Preserve reference order exactly as entered/uploaded by the user.
+    if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
+    if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (typeof durationValue === 'number') payload.duration = durationValue
+
+    return payload as Record<string, unknown>
+  }, [
+    prompt,
+    videoUrls,
+    durationValue,
+    resolution,
+    enableWebSearch,
+    generateAudio,
+    referenceImageUrls,
+    referenceAudioUrls,
+    aspectRatio,
+  ])
+
+  useEffect(() => {
+    if (!pricingInput) {
+      setLivePricing(null)
+      setIsPricingLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setIsPricingLoading(true)
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const pricing = await getModelPricing(apiKey, pricingModelId, pricingInput)
+          if (!cancelled) {
+            setLivePricing(pricing)
+          }
+        } catch (caughtError) {
+          if (cancelled) return
+          if (!(caughtError instanceof WavespeedError || caughtError instanceof Error)) {
+            setLivePricing(null)
+            return
+          }
+          setLivePricing(null)
+        } finally {
+          if (!cancelled) {
+            setIsPricingLoading(false)
+          }
+        }
+      })()
+    }, 500)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [apiKey, pricingModelId, pricingInput])
+
+  const formatLivePrice = (value: number, currency: string): string => {
+    const formatted = value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 3,
+    })
+    return currency === 'USD' ? `$${formatted}` : `${formatted} ${currency}`
+  }
+
+  const liveSubmitLabel = useMemo(() => {
+    if (isSubmitting) return 'Submitting...'
+    if (isPricingLoading) return 'Calculating price...'
+    if (livePricing) return `Generate ${formatLivePrice(livePricing.unit_price, livePricing.currency)}`
+    return submitLabel
+  }, [isSubmitting, isPricingLoading, livePricing, submitLabel])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -81,6 +173,7 @@ export const SeedanceVideoEditForm = ({
       generate_audio: generateAudio,
     }
 
+    // Preserve reference order exactly as entered/uploaded by the user.
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -200,8 +293,15 @@ export const SeedanceVideoEditForm = ({
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
       <div className="flex justify-end">
-        <Button className="w-full sm:w-auto" type="submit" isLoading={isSubmitting} disabled={!isFormValid}>
-          {isSubmitting ? 'Submitting...' : submitLabel}
+        <Button
+          className="w-full sm:w-auto"
+          type="submit"
+          disabled={!isFormValid || isSubmitting || isPricingLoading}
+          leadingIcon={
+            isPricingLoading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-500 border-t-slate-950" /> : null
+          }
+        >
+          {liveSubmitLabel}
         </Button>
       </div>
     </form>

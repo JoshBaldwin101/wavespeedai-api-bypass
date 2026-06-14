@@ -28,7 +28,7 @@ const workflows: WorkflowDefinition[] = [
   {
     id: 'bytedance-seedance-2-video-edit',
     label: 'Bytedance Seedance 2.0 Video Edit',
-    submitLabel: 'Run Seedance video edit',
+    submitLabel: 'Generate video',
     pricingModelId: 'bytedance/seedance-2.0/video-edit',
     submit: (apiKey, input) => submitVideoEdit(apiKey, input as SeedanceVideoEditInput),
     form: SeedanceVideoEditForm,
@@ -121,9 +121,9 @@ const AppContent = () => {
     return formatEstimatedPrice(pricePreview.unit_price, pricePreview.currency)
   }, [pricePreview])
   const priceConfirmLabel = useMemo(() => {
-    if (isPricingLoading) return 'Checking price...'
-    if (priceDisplay) return `Run for ~${priceDisplay}`
-    return 'Run anyway'
+    if (isPricingLoading) return 'Calculating price...'
+    if (priceDisplay) return `Generate ${priceDisplay}`
+    return 'Generate anyway'
   }, [isPricingLoading, priceDisplay])
 
   const refreshBalance = async (startCooldown: boolean) => {
@@ -370,6 +370,7 @@ const AppContent = () => {
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
             apiKey={apiKey}
+            pricingModelId={activeWorkflow.pricingModelId}
             isSubmitting={isRunning || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             onSubmit={prepareRun}
@@ -395,16 +396,16 @@ const AppContent = () => {
         description={
           <div className="space-y-2">
             {isPricingLoading ? (
-              <p>Estimating price based on your current settings...</p>
+              <p>Calculating price based on your current settings...</p>
             ) : priceDisplay ? (
               <>
                 <p className="text-base font-semibold text-slate-100">Estimated cost: {priceDisplay}</p>
-                <p>This is an estimate. You will run one generation when you confirm.</p>
+                <p>This is an estimate. One generation runs when you confirm.</p>
               </>
             ) : (
               <>
                 <p className="text-rose-300">{pricingError ?? 'Could not estimate pricing.'}</p>
-                <p>You can still continue with this run if you want.</p>
+                <p>You can still continue with generation if you want.</p>
               </>
             )}
           </div>
