@@ -113,6 +113,7 @@ const AppContent = () => {
   const [showChangeKeyConfirm, setShowChangeKeyConfirm] = useState(false)
   const [showPriceConfirm, setShowPriceConfirm] = useState(false)
   const [showWorkflowJobsOnly, setShowWorkflowJobsOnly] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [pendingInput, setPendingInput] = useState<unknown | null>(null)
   const [pricePreview, setPricePreview] = useState<ModelPricing | null>(null)
   const [isPricingLoading, setIsPricingLoading] = useState(false)
@@ -188,11 +189,12 @@ const AppContent = () => {
 
   const runJob = async (input: unknown) => {
     setSubmitError(null)
+    setIsSubmitting(true)
 
     try {
       const created = await submitPrediction(apiKey, activeWorkflow.model, input)
       const trackingTarget = created.urls?.get ?? created.id
-      await jobs.track(trackingTarget)
+      void jobs.track(trackingTarget)
     } catch (caughtError) {
       if (caughtError instanceof DOMException && caughtError.name === 'AbortError') return
       const message =
@@ -200,6 +202,8 @@ const AppContent = () => {
           ? caughtError.message
           : 'Request failed.'
       setSubmitError(message)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -396,7 +400,7 @@ const AppContent = () => {
             key={activeWorkflow.id}
             apiKey={apiKey}
             pricingModelId={activeWorkflow.model}
-            isSubmitting={jobs.pollingJobId !== null || showPriceConfirm}
+            isSubmitting={isSubmitting || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             workflowCapabilities={activeWorkflow.capabilities}
             onSubmit={prepareRun}
