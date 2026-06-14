@@ -22,29 +22,29 @@ export interface WorkflowDefinition {
 
 export const workflows: WorkflowDefinition[] = [
   {
-    id: 'bytedance-seedance-2-image-to-video',
-    label: 'Bytedance Seedance 2.0 Image to Video',
+    id: 'seedance-2.0/image-to-video',
+    label: 'seedance-2.0/image-to-video',
     submitLabel: 'Generate video',
     model: 'bytedance/seedance-2.0/image-to-video',
     form: SeedanceImageToVideoForm,
   },
   {
-    id: 'bytedance-seedance-2-text-to-video',
-    label: 'Bytedance Seedance 2.0 Text to Video',
+    id: 'seedance-2.0/text-to-video',
+    label: 'seedance-2.0/text-to-video',
     submitLabel: 'Generate video',
     model: 'bytedance/seedance-2.0/text-to-video',
     form: SeedanceTextToVideoForm,
   },
   {
-    id: 'bytedance-seedance-2-video-edit',
-    label: 'Bytedance Seedance 2.0 Video Edit',
+    id: 'seedance-2.0/video-edit',
+    label: 'seedance-2.0/video-edit',
     submitLabel: 'Generate video',
     model: 'bytedance/seedance-2.0/video-edit',
     form: SeedanceVideoEditForm,
   },
   {
-    id: 'bytedance-seedance-2-video-extend',
-    label: 'Bytedance Seedance 2.0 Video Extend',
+    id: 'seedance-2.0/video-extend',
+    label: 'seedance-2.0/video-extend',
     submitLabel: 'Generate video',
     model: 'bytedance/seedance-2.0/video-extend',
     form: SeedanceVideoExtendForm,
