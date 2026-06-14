@@ -243,7 +243,7 @@ const AppContent = () => {
               <div>
                 <h1 className="text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl">WaveSpeedAI API Tool</h1>
                 <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-slate-300 sm:block">
-                  Choose a workflow, review your account status, then send generation jobs with the validated key.
+                  Choose a workflow, fill in inputs, then send generation jobs.
                 </p>
               </div>
               <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-xs font-medium text-emerald-200 sm:gap-2 sm:px-3 sm:py-1.5 sm:text-sm">

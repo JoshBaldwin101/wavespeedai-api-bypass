@@ -172,7 +172,7 @@ export const JobsPanel = ({
           )}
         </div>
 
-        <div className="flex min-h-0 flex-col rounded-xl border border-slate-800 bg-slate-950/35 p-2.5 sm:p-3 lg:h-full">
+        <div className="flex min-h-0 max-h-[24rem] flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950/35 p-2.5 sm:max-h-[30rem] sm:p-3 lg:h-full lg:max-h-[36rem]">
           <p className="px-1 pb-2 text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Recents</p>
           {isLoadingRecents && recentJobs.length === 0 ? <Spinner label="Loading recent jobs..." /> : null}
           {recentsError ? <p className="mb-2 px-1 text-sm text-rose-300">{recentsError}</p> : null}
@@ -180,7 +180,7 @@ export const JobsPanel = ({
             <p className="px-1 text-sm text-slate-400">No recent jobs in the last 7 days.</p>
           ) : null}
           {recentJobs.length > 0 ? (
-            <ul className="min-h-0 max-h-[50vh] flex-1 divide-y divide-slate-800/80 overflow-auto lg:max-h-none">
+            <ul className="min-h-0 flex-1 divide-y divide-slate-800/80 overflow-y-auto pr-1">
               {recentJobs.map((job) => {
                 const isSelected = job.id === selectedJobId
                 const isProcessing = !isTerminalStatus(job.status)
