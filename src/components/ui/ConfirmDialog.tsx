@@ -8,6 +8,7 @@ interface ConfirmDialogProps {
   title: string
   description: ReactNode
   confirmLabel: string
+  confirmDisabled?: boolean
   cancelLabel?: string
   confirmVariant?: ButtonVariant
   dialogClassName?: string
@@ -22,6 +23,7 @@ export const ConfirmDialog = ({
   title,
   description,
   confirmLabel,
+  confirmDisabled = false,
   cancelLabel = 'Cancel',
   confirmVariant = 'danger',
   dialogClassName = 'max-w-md',
@@ -40,7 +42,7 @@ export const ConfirmDialog = ({
 
   if (!open) return null
 
-  const confirmDisabled = requireAcknowledgment && !acknowledged
+  const isConfirmDisabled = confirmDisabled || (requireAcknowledgment && !acknowledged)
 
   return (
     <div
@@ -74,7 +76,7 @@ export const ConfirmDialog = ({
           <Button variant="secondary" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button disabled={confirmDisabled} variant={confirmVariant} onClick={onConfirm}>
+          <Button disabled={isConfirmDisabled} variant={confirmVariant} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

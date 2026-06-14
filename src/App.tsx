@@ -7,8 +7,8 @@ import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
-import type { BalanceResponseData, PredictionResult, SeedanceVideoEditInput } from './lib/types'
-import { pollPrediction, submitVideoEdit, validateKey, WavespeedError } from './lib/wavespeed'
+import type { BalanceResponseData, ModelPricing, PredictionResult, SeedanceVideoEditInput } from './lib/types'
+import { getModelPricing, pollPrediction, submitVideoEdit, validateKey, WavespeedError } from './lib/wavespeed'
 
 const maskApiKey = (key: string): string => {
   if (key.length <= 14) return '********'
@@ -19,6 +19,7 @@ interface WorkflowDefinition {
   id: string
   label: string
   submitLabel: string
+  pricingModelId: string
   submit: (apiKey: string, input: unknown) => Promise<PredictionResult>
   form: typeof SeedanceVideoEditForm
 }
@@ -28,6 +29,7 @@ const workflows: WorkflowDefinition[] = [
     id: 'bytedance-seedance-2-video-edit',
     label: 'Bytedance Seedance 2.0 Video Edit',
     submitLabel: 'Run Seedance video edit',
+    pricingModelId: 'bytedance/seedance-2.0/video-edit',
     submit: (apiKey, input) => submitVideoEdit(apiKey, input as SeedanceVideoEditInput),
     form: SeedanceVideoEditForm,
   },
@@ -35,6 +37,11 @@ const workflows: WorkflowDefinition[] = [
 
 const formatCurrency = (value: number): string =>
   `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+const formatEstimatedPrice = (value: number, currency: string): string => {
+  if (currency === 'USD') return formatCurrency(value)
+  return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
+}
 
 const formatBalanceValue = (value: unknown): string | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return formatCurrency(value)
@@ -96,6 +103,11 @@ const AppContent = () => {
   const [balanceData, setBalanceData] = useState<BalanceResponseData | null>(null)
   const [isBalanceRefreshCooldown, setIsBalanceRefreshCooldown] = useState(false)
   const [showChangeKeyConfirm, setShowChangeKeyConfirm] = useState(false)
+  const [showPriceConfirm, setShowPriceConfirm] = useState(false)
+  const [pendingInput, setPendingInput] = useState<unknown | null>(null)
+  const [pricePreview, setPricePreview] = useState<ModelPricing | null>(null)
+  const [isPricingLoading, setIsPricingLoading] = useState(false)
+  const [pricingError, setPricingError] = useState<string | null>(null)
 
   const maskedKey = useMemo(() => maskApiKey(apiKey), [apiKey])
   const activeWorkflow = useMemo(
@@ -104,6 +116,15 @@ const AppContent = () => {
   )
   const FormComponent = activeWorkflow.form
   const balanceDisplay = useMemo(() => formatBalance(balanceData), [balanceData])
+  const priceDisplay = useMemo(() => {
+    if (!pricePreview) return null
+    return formatEstimatedPrice(pricePreview.unit_price, pricePreview.currency)
+  }, [pricePreview])
+  const priceConfirmLabel = useMemo(() => {
+    if (isPricingLoading) return 'Checking price...'
+    if (priceDisplay) return `Run for ~${priceDisplay}`
+    return 'Run anyway'
+  }, [isPricingLoading, priceDisplay])
 
   const refreshBalance = async (startCooldown: boolean) => {
     if (isBalanceLoading || (startCooldown && isBalanceRefreshCooldown)) return
@@ -175,6 +196,76 @@ const AppContent = () => {
     }
   }, [])
 
+  const runJob = async (input: unknown) => {
+    const controller = new AbortController()
+    abortRef.current?.abort()
+    abortRef.current = controller
+
+    setError(null)
+    setResult(null)
+    setJobVisible(true)
+    setIsRunning(true)
+    setStatusText('Submitting request...')
+    setElapsedSeconds(0)
+
+    const startTime = Date.now()
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
+    }, 1000)
+
+    try {
+      const created = await activeWorkflow.submit(apiKey, input)
+      const trackingTarget = created.urls?.get ?? created.id
+      setStatusText(`Queued (${created.status})`)
+
+      const final = await pollPrediction(apiKey, trackingTarget, controller.signal, (update) => {
+        setStatusText(`Status: ${update.status}`)
+      })
+
+      setStatusText(`Finished: ${final.status}`)
+      setResult(final)
+      if (final.status === 'failed') {
+        setError(final.error || 'Generation failed.')
+      }
+    } catch (caughtError) {
+      if (caughtError instanceof DOMException && caughtError.name === 'AbortError') {
+        setStatusText('Cancelled')
+        setError('Request cancelled.')
+      } else {
+        const message =
+          caughtError instanceof WavespeedError || caughtError instanceof Error
+            ? caughtError.message
+            : 'Request failed.'
+        setStatusText('Failed')
+        setError(message)
+      }
+    } finally {
+      window.clearInterval(timer)
+      setIsRunning(false)
+    }
+  }
+
+  const prepareRun = async (input: unknown) => {
+    setPendingInput(input)
+    setShowPriceConfirm(true)
+    setPricePreview(null)
+    setPricingError(null)
+    setIsPricingLoading(true)
+
+    try {
+      const pricing = await getModelPricing(apiKey, activeWorkflow.pricingModelId, input as Record<string, unknown>)
+      setPricePreview(pricing)
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof WavespeedError || caughtError instanceof Error
+          ? caughtError.message
+          : 'Could not estimate pricing.'
+      setPricingError(message)
+    } finally {
+      setIsPricingLoading(false)
+    }
+  }
+
   if (!isValidated) {
     return <ApiKeyGate />
   }
@@ -214,6 +305,11 @@ const AppContent = () => {
                   setElapsedSeconds(0)
                   setIsRunning(false)
                   setJobVisible(false)
+                  setShowPriceConfirm(false)
+                  setPendingInput(null)
+                  setPricePreview(null)
+                  setIsPricingLoading(false)
+                  setPricingError(null)
                   abortRef.current?.abort()
                 }}
               >
@@ -274,56 +370,9 @@ const AppContent = () => {
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
             apiKey={apiKey}
-            isSubmitting={isRunning}
+            isSubmitting={isRunning || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
-            onSubmit={async (input) => {
-              const controller = new AbortController()
-              abortRef.current?.abort()
-              abortRef.current = controller
-
-              setError(null)
-              setResult(null)
-              setJobVisible(true)
-              setIsRunning(true)
-              setStatusText('Submitting request...')
-              setElapsedSeconds(0)
-
-              const startTime = Date.now()
-              const timer = window.setInterval(() => {
-                setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
-              }, 1000)
-
-              try {
-                const created = await activeWorkflow.submit(apiKey, input)
-                const trackingTarget = created.urls?.get ?? created.id
-                setStatusText(`Queued (${created.status})`)
-
-                const final = await pollPrediction(apiKey, trackingTarget, controller.signal, (update) => {
-                  setStatusText(`Status: ${update.status}`)
-                })
-
-                setStatusText(`Finished: ${final.status}`)
-                setResult(final)
-                if (final.status === 'failed') {
-                  setError(final.error || 'Generation failed.')
-                }
-              } catch (caughtError) {
-                if (caughtError instanceof DOMException && caughtError.name === 'AbortError') {
-                  setStatusText('Cancelled')
-                  setError('Request cancelled.')
-                } else {
-                  const message =
-                    caughtError instanceof WavespeedError || caughtError instanceof Error
-                      ? caughtError.message
-                      : 'Request failed.'
-                  setStatusText('Failed')
-                  setError(message)
-                }
-              } finally {
-                window.clearInterval(timer)
-                setIsRunning(false)
-              }
-            }}
+            onSubmit={prepareRun}
           />
         </section>
 
@@ -341,6 +390,48 @@ const AppContent = () => {
       </div>
 
       <ConfirmDialog
+        open={showPriceConfirm}
+        title="Confirm run"
+        description={
+          <div className="space-y-2">
+            {isPricingLoading ? (
+              <p>Estimating price based on your current settings...</p>
+            ) : priceDisplay ? (
+              <>
+                <p className="text-base font-semibold text-slate-100">Estimated cost: {priceDisplay}</p>
+                <p>This is an estimate. You will run one generation when you confirm.</p>
+              </>
+            ) : (
+              <>
+                <p className="text-rose-300">{pricingError ?? 'Could not estimate pricing.'}</p>
+                <p>You can still continue with this run if you want.</p>
+              </>
+            )}
+          </div>
+        }
+        confirmLabel={priceConfirmLabel}
+        confirmVariant="primary"
+        confirmDisabled={isPricingLoading || !pendingInput}
+        onCancel={() => {
+          setShowPriceConfirm(false)
+          setPendingInput(null)
+          setPricePreview(null)
+          setIsPricingLoading(false)
+          setPricingError(null)
+        }}
+        onConfirm={() => {
+          if (!pendingInput) return
+          const input = pendingInput
+          setShowPriceConfirm(false)
+          setPendingInput(null)
+          setPricePreview(null)
+          setIsPricingLoading(false)
+          setPricingError(null)
+          void runJob(input)
+        }}
+      />
+
+      <ConfirmDialog
         open={showChangeKeyConfirm}
         title="Change API key?"
         description="This will clear everything you've entered so far, including your prompt and uploaded files. You'll need to enter a new key to continue."
@@ -355,6 +446,11 @@ const AppContent = () => {
           setStatusText('Idle')
           setElapsedSeconds(0)
           abortRef.current?.abort()
+          setShowPriceConfirm(false)
+          setPendingInput(null)
+          setPricePreview(null)
+          setIsPricingLoading(false)
+          setPricingError(null)
           reset()
         }}
       />

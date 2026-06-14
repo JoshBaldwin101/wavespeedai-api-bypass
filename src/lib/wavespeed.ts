@@ -1,5 +1,6 @@
 import type {
   BalanceResponseData,
+  ModelPricing,
   PredictionResult,
   SeedanceVideoEditInput,
   UploadedMedia,
@@ -112,6 +113,22 @@ export const validateKey = async (apiKey: string): Promise<BalanceResponseData> 
   const envelope = await requestJson<BalanceResponseData>(`${BASE_URL}/balance`, {
     method: 'GET',
     headers: createAuthHeaders(apiKey),
+  })
+  return envelope.data
+}
+
+export const getModelPricing = async (
+  apiKey: string,
+  modelId: string,
+  inputs: Record<string, unknown>,
+): Promise<ModelPricing> => {
+  const envelope = await requestJson<ModelPricing>(`${BASE_URL}/model/pricing`, {
+    method: 'POST',
+    headers: {
+      ...createAuthHeaders(apiKey),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ model_id: modelId, inputs }),
   })
   return envelope.data
 }

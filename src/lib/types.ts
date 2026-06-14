@@ -37,6 +37,12 @@ export interface PredictionResult {
   error?: string | null
 }
 
+export interface ModelPricing {
+  model_id: string
+  unit_price: number
+  currency: string
+}
+
 export interface BalanceResponseData {
   [key: string]: unknown
 }
