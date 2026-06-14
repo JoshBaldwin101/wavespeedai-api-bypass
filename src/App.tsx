@@ -35,6 +35,12 @@ const BALANCE_PREFERRED_KEYS = [
 
 const TOP_UP_URL = 'https://wavespeed.ai/top-up'
 const BALANCE_REFRESH_MS = 30_000
+const SUBMIT_COOLDOWN_MS = 5_000
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
 
 const parseBalanceValue = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -105,6 +111,7 @@ const formatBalance = (data: BalanceResponseData | null): string => {
 const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
   const balanceRefreshInFlightRef = useRef(false)
+  const balanceRefreshQueuedRef = useRef(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(defaultWorkflowId)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
@@ -152,20 +159,28 @@ const AppContent = () => {
   }, [isConfirmValidating, isPricingLoading, hasInsufficientFunds, priceDisplay])
 
   const refreshBalance = useCallback(async () => {
-    if (balanceRefreshInFlightRef.current) return
+    if (balanceRefreshInFlightRef.current) {
+      balanceRefreshQueuedRef.current = true
+      return
+    }
 
     balanceRefreshInFlightRef.current = true
-    setIsBalanceLoading(true)
-    setBalanceError(null)
     try {
-      const response = await validateKey(apiKey)
-      setBalanceData(response)
-    } catch (caughtError) {
-      const message =
-        caughtError instanceof WavespeedError || caughtError instanceof Error
-          ? caughtError.message
-          : 'Could not refresh balance.'
-      setBalanceError(message)
+      do {
+        balanceRefreshQueuedRef.current = false
+        setIsBalanceLoading(true)
+        setBalanceError(null)
+        try {
+          const response = await validateKey(apiKey)
+          setBalanceData(response)
+        } catch (caughtError) {
+          const message =
+            caughtError instanceof WavespeedError || caughtError instanceof Error
+              ? caughtError.message
+              : 'Could not refresh balance.'
+          setBalanceError(message)
+        }
+      } while (balanceRefreshQueuedRef.current)
     } finally {
       balanceRefreshInFlightRef.current = false
       setIsBalanceLoading(false)
@@ -190,11 +205,14 @@ const AppContent = () => {
   const runJob = async (input: unknown) => {
     setSubmitError(null)
     setIsSubmitting(true)
+    let didQueueJob = false
 
     try {
       const created = await submitPrediction(apiKey, activeWorkflow.model, input)
+      didQueueJob = true
       const trackingTarget = created.urls?.get ?? created.id
       void jobs.track(trackingTarget)
+      void refreshBalance()
     } catch (caughtError) {
       if (caughtError instanceof DOMException && caughtError.name === 'AbortError') return
       const message =
@@ -203,6 +221,9 @@ const AppContent = () => {
           : 'Request failed.'
       setSubmitError(message)
     } finally {
+      if (didQueueJob) {
+        await sleep(SUBMIT_COOLDOWN_MS)
+      }
       setIsSubmitting(false)
     }
   }
