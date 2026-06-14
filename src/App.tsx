@@ -6,7 +6,7 @@ import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
 import type { BalanceResponseData, ModelPricing } from './lib/types'
-import { workflows } from './lib/workflows'
+import { workflowGroups, workflows } from './lib/workflows'
 import { useJobs } from './hooks/useJobs'
 import { getModelPricing, submitPrediction, validateKey, WavespeedError } from './lib/wavespeed'
 
@@ -125,6 +125,14 @@ const AppContent = () => {
   const activeWorkflow = useMemo(
     () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? workflows[0],
     [selectedWorkflowId],
+  )
+  const groupedWorkflows = useMemo(
+    () =>
+      workflowGroups.map((group) => ({
+        ...group,
+        workflows: workflows.filter((workflow) => workflow.group === group.id),
+      })),
+    [],
   )
   const jobModelNeedles = useMemo(() => [activeWorkflow.model], [activeWorkflow.model])
   const jobs = useJobs({ apiKey, modelNeedles: jobModelNeedles, showWorkflowJobsOnly })
@@ -359,10 +367,14 @@ const AppContent = () => {
                   }
                 }}
               >
-                {workflows.map((workflow) => (
-                  <option key={workflow.id} value={workflow.id}>
-                    {workflow.label}
-                  </option>
+                {groupedWorkflows.map((group) => (
+                  <optgroup key={group.id} label={group.label}>
+                    {group.workflows.map((workflow) => (
+                      <option key={workflow.id} value={workflow.id}>
+                        {workflow.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </label>
@@ -415,10 +427,12 @@ const AppContent = () => {
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
+            key={activeWorkflow.id}
             apiKey={apiKey}
             pricingModelId={activeWorkflow.model}
             isSubmitting={jobs.pollingJobId !== null || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
+            workflowCapabilities={activeWorkflow.capabilities}
             onSubmit={prepareRun}
           />
           {submitError ? <p className="mt-3 text-sm text-rose-300">{submitError}</p> : null}

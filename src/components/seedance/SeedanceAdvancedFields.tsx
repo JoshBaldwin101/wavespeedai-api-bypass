@@ -12,8 +12,11 @@ interface SeedanceAdvancedFieldsProps {
   onAspectRatioChange: (value: AspectRatioOption) => void
   resolution: SeedanceResolution
   onResolutionChange: (value: SeedanceResolution) => void
+  resolutionOptions?: SeedanceResolution[]
   duration: string
   onDurationChange: (value: string) => void
+  durationMin?: number
+  durationMax?: number
   enableWebSearch: boolean
   onEnableWebSearchChange: (value: boolean) => void
   generateAudio: boolean
@@ -26,8 +29,11 @@ export const SeedanceAdvancedFields = ({
   onAspectRatioChange,
   resolution,
   onResolutionChange,
+  resolutionOptions = ['480p', '720p', '1080p'],
   duration,
   onDurationChange,
+  durationMin = 4,
+  durationMax = 15,
   enableWebSearch,
   onEnableWebSearchChange,
   generateAudio,
@@ -60,9 +66,11 @@ export const SeedanceAdvancedFields = ({
             value={resolution}
             onChange={(event) => onResolutionChange(event.target.value as SeedanceResolution)}
           >
-            <option value="480p">480p</option>
-            <option value="720p">720p</option>
-            <option value="1080p">1080p</option>
+            {resolutionOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
           </select>
         </Field>
 
@@ -70,7 +78,7 @@ export const SeedanceAdvancedFields = ({
           className={showAspectRatio ? 'col-span-2 md:col-span-1' : 'col-span-2 md:col-span-1'}
           label="Duration (seconds)"
           htmlFor="seedance-duration"
-          hint="Optional. Allowed range: 4-15."
+          hint={`Optional. Allowed range: ${durationMin}-${durationMax}.`}
         >
           <input
             id="seedance-duration"

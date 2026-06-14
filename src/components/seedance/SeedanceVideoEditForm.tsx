@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { SeedanceAspectRatio, SeedanceVideoEditInput } from '../../lib/types'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import type { WorkflowCapabilities } from '../../lib/workflows'
 import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
 import { MediaUpload } from '../MediaUpload'
@@ -12,6 +13,7 @@ interface SeedanceVideoEditFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  workflowCapabilities: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoEditInput) => Promise<void>
 }
 
@@ -22,15 +24,17 @@ export const SeedanceVideoEditForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate video',
+  workflowCapabilities,
   onSubmit,
 }: SeedanceVideoEditFormProps) => {
+  const { durationMin, durationMax, promptRequired, resolutionOptions } = workflowCapabilities
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
   const [prompt, setPrompt] = useState('')
   const [videoUrls, setVideoUrls] = useState<string[]>([])
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
   const [referenceAudioUrls, setReferenceAudioUrls] = useState<string[]>([])
   const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>('720p')
+  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(resolutionOptions[0] ?? '720p')
   const [duration, setDuration] = useState('')
   const [enableWebSearch, setEnableWebSearch] = useState(false)
   const [generateAudio, setGenerateAudio] = useState(true)
@@ -44,17 +48,20 @@ export const SeedanceVideoEditForm = ({
   }, [duration])
 
   const isFormValid = useMemo(() => {
-    if (!prompt.trim()) return false
+    if (promptRequired && !prompt.trim()) return false
     if (!videoUrls[0]) return false
     if (typeof durationValue === 'number' && Number.isNaN(durationValue)) return false
-    if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) return false
+    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) return false
     return true
-  }, [prompt, videoUrls, durationValue])
+  }, [promptRequired, prompt, videoUrls, durationValue, durationMin, durationMax])
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
     const trimmedPrompt = prompt.trim()
-    if (!trimmedPrompt || !videoUrls[0]) return null
-    if (typeof durationValue === 'number' && (Number.isNaN(durationValue) || durationValue < 4 || durationValue > 15)) {
+    if ((promptRequired && !trimmedPrompt) || !videoUrls[0]) return null
+    if (
+      typeof durationValue === 'number' &&
+      (Number.isNaN(durationValue) || durationValue < durationMin || durationValue > durationMax)
+    ) {
       return null
     }
     if (referenceImageUrls.length > limits.referenceImages) return null
@@ -75,8 +82,11 @@ export const SeedanceVideoEditForm = ({
     return payload as Record<string, unknown>
   }, [
     prompt,
+    promptRequired,
     videoUrls,
     durationValue,
+    durationMin,
+    durationMax,
     limits.referenceImages,
     resolution,
     enableWebSearch,
@@ -108,7 +118,7 @@ export const SeedanceVideoEditForm = ({
     setError(null)
 
     const trimmedPrompt = prompt.trim()
-    if (!trimmedPrompt) {
+    if (promptRequired && !trimmedPrompt) {
       setError('Please provide an edit prompt.')
       return
     }
@@ -119,12 +129,12 @@ export const SeedanceVideoEditForm = ({
     }
 
     if (typeof durationValue === 'number' && Number.isNaN(durationValue)) {
-      setError('Duration must be a whole number from 4 to 15.')
+      setError(`Duration must be a whole number from ${durationMin} to ${durationMax}.`)
       return
     }
 
-    if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) {
-      setError('Duration must be in the range 4 to 15 seconds.')
+    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) {
+      setError(`Duration must be in the range ${durationMin} to ${durationMax} seconds.`)
       return
     }
 
@@ -156,7 +166,7 @@ export const SeedanceVideoEditForm = ({
         label="Edit prompt"
         htmlFor="seedance-prompt"
         hint='WaveSpeed prepends "Edit the input video." automatically.'
-        required
+        required={promptRequired}
       >
         <textarea
           id="seedance-prompt"
@@ -175,7 +185,7 @@ export const SeedanceVideoEditForm = ({
         value={videoUrls}
         onChange={setVideoUrls}
         maxItems={limits.video}
-        hint="Single file. WaveSpeed trims source videos longer than 15 seconds."
+        hint="Single file. WaveSpeed trims source videos longer than 15 seconds, and turbo variants can pad very short inputs."
       />
 
       <MediaUpload
@@ -195,15 +205,20 @@ export const SeedanceVideoEditForm = ({
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple
+        hint="Optional. Combined reference audio duration must stay within 15 seconds."
       />
 
       <SeedanceAdvancedFields
+        showAspectRatio={workflowCapabilities.supportsAspectRatio}
         aspectRatio={aspectRatio}
         onAspectRatioChange={setAspectRatio}
         resolution={resolution}
         onResolutionChange={setResolution}
+        resolutionOptions={resolutionOptions}
         duration={duration}
         onDurationChange={setDuration}
+        durationMin={durationMin}
+        durationMax={durationMax}
         enableWebSearch={enableWebSearch}
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}

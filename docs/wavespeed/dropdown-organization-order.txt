@@ -9,6 +9,8 @@ seedance-2.0-fast/video-edit
 seedance-2.0-fast/video-edit-turbo
 seedance-2.0-fast/video-extend
 
+---
+
 seedance-2.0/image-to-video
 seedance-2.0/image-to-video-spicy
 seedance-2.0/image-to-video-turbo

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { SeedanceAspectRatio, SeedanceTextToVideoInput } from '../../lib/types'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import type { WorkflowCapabilities } from '../../lib/workflows'
 import { MediaUpload } from '../MediaUpload'
 import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
@@ -12,6 +13,7 @@ interface SeedanceTextToVideoFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  workflowCapabilities: WorkflowCapabilities
   onSubmit: (input: SeedanceTextToVideoInput) => Promise<void>
 }
 
@@ -22,15 +24,17 @@ export const SeedanceTextToVideoForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate video',
+  workflowCapabilities,
   onSubmit,
 }: SeedanceTextToVideoFormProps) => {
+  const { durationMin, durationMax, promptRequired, resolutionOptions } = workflowCapabilities
   const maxReferenceImages = SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceImages
   const [prompt, setPrompt] = useState('')
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
   const [referenceVideoUrls, setReferenceVideoUrls] = useState<string[]>([])
   const [referenceAudioUrls, setReferenceAudioUrls] = useState<string[]>([])
   const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('16:9')
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>('720p')
+  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(resolutionOptions[0] ?? '720p')
   const [duration, setDuration] = useState('')
   const [enableWebSearch, setEnableWebSearch] = useState(false)
   const [generateAudio, setGenerateAudio] = useState(true)
@@ -44,16 +48,19 @@ export const SeedanceTextToVideoForm = ({
   }, [duration])
 
   const isFormValid = useMemo(() => {
-    if (!prompt.trim()) return false
+    if (promptRequired && !prompt.trim()) return false
     if (typeof durationValue === 'number' && Number.isNaN(durationValue)) return false
-    if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) return false
+    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) return false
     return true
-  }, [prompt, durationValue])
+  }, [promptRequired, prompt, durationValue, durationMin, durationMax])
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
     const trimmedPrompt = prompt.trim()
-    if (!trimmedPrompt) return null
-    if (typeof durationValue === 'number' && (Number.isNaN(durationValue) || durationValue < 4 || durationValue > 15)) {
+    if (promptRequired && !trimmedPrompt) return null
+    if (
+      typeof durationValue === 'number' &&
+      (Number.isNaN(durationValue) || durationValue < durationMin || durationValue > durationMax)
+    ) {
       return null
     }
     if (referenceImageUrls.length > maxReferenceImages) return null
@@ -74,7 +81,10 @@ export const SeedanceTextToVideoForm = ({
     return payload as Record<string, unknown>
   }, [
     prompt,
+    promptRequired,
     durationValue,
+    durationMin,
+    durationMax,
     maxReferenceImages,
     resolution,
     enableWebSearch,
@@ -107,18 +117,18 @@ export const SeedanceTextToVideoForm = ({
     setError(null)
 
     const trimmedPrompt = prompt.trim()
-    if (!trimmedPrompt) {
+    if (promptRequired && !trimmedPrompt) {
       setError('Please provide a prompt.')
       return
     }
 
     if (typeof durationValue === 'number' && Number.isNaN(durationValue)) {
-      setError('Duration must be a whole number from 4 to 15.')
+      setError(`Duration must be a whole number from ${durationMin} to ${durationMax}.`)
       return
     }
 
-    if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) {
-      setError('Duration must be in the range 4 to 15 seconds.')
+    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) {
+      setError(`Duration must be in the range ${durationMin} to ${durationMax} seconds.`)
       return
     }
 
@@ -146,7 +156,7 @@ export const SeedanceTextToVideoForm = ({
 
   return (
     <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
-      <Field label="Prompt" htmlFor="seedance-prompt" required>
+      <Field label="Prompt" htmlFor="seedance-prompt" required={promptRequired}>
         <textarea
           id="seedance-prompt"
           className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
@@ -173,6 +183,7 @@ export const SeedanceTextToVideoForm = ({
         value={referenceVideoUrls}
         onChange={setReferenceVideoUrls}
         multiple
+        hint="Optional. Combined reference video duration must stay within 15 seconds."
       />
 
       <MediaUpload
@@ -182,15 +193,20 @@ export const SeedanceTextToVideoForm = ({
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple
+        hint="Optional. Combined reference audio duration must stay within 15 seconds."
       />
 
       <SeedanceAdvancedFields
+        showAspectRatio={workflowCapabilities.supportsAspectRatio}
         aspectRatio={aspectRatio}
         onAspectRatioChange={setAspectRatio}
         resolution={resolution}
         onResolutionChange={setResolution}
+        resolutionOptions={resolutionOptions}
         duration={duration}
         onDurationChange={setDuration}
+        durationMin={durationMin}
+        durationMax={durationMax}
         enableWebSearch={enableWebSearch}
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}

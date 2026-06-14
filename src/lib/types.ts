@@ -29,6 +29,7 @@ export interface SeedanceImageToVideoInput extends SeedanceCommonInput {
   image?: string
   last_image?: string
   aspect_ratio?: SeedanceAspectRatio
+  seed?: number
 }
 
 export interface SeedanceVideoExtendInput extends SeedanceCommonInput {
