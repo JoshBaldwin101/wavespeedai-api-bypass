@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { uploadFile, WavespeedError } from '../lib/wavespeed'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
@@ -8,10 +9,11 @@ type MediaKind = 'video' | 'image' | 'audio'
 interface MediaUploadProps {
   apiKey: string
   kind: MediaKind
-  label: string
+  label: ReactNode
   value: string[]
   multiple?: boolean
   hint?: string
+  required?: boolean
   onChange: (next: string[]) => void
 }
 
@@ -39,6 +41,7 @@ export const MediaUpload = ({
   kind,
   label,
   multiple = false,
+  required = false,
   onChange,
   value,
 }: MediaUploadProps) => {
@@ -105,7 +108,10 @@ export const MediaUpload = ({
   return (
     <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-900/50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-slate-100">{label}</p>
+        <p className="text-sm font-medium text-slate-100">
+          {label}
+          {required ? <span className="ml-1 text-rose-400">*</span> : null}
+        </p>
         <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
           {multiple ? 'Upload files' : 'Upload file'}
         </Button>

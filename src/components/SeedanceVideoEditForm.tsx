@@ -8,6 +8,7 @@ import { MediaUpload } from './MediaUpload'
 interface SeedanceVideoEditFormProps {
   apiKey: string
   isSubmitting: boolean
+  submitLabel?: string
   onSubmit: (input: SeedanceVideoEditInput) => Promise<void>
 }
 
@@ -15,7 +16,12 @@ type AspectRatioOption = SeedanceAspectRatio | 'auto'
 
 const aspectRatioOptions: AspectRatioOption[] = ['auto', '16:9', '9:16', '4:3', '3:4', '1:1', '21:9']
 
-export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: SeedanceVideoEditFormProps) => {
+export const SeedanceVideoEditForm = ({
+  apiKey,
+  isSubmitting,
+  submitLabel = 'Run Seedance video edit',
+  onSubmit,
+}: SeedanceVideoEditFormProps) => {
   const [prompt, setPrompt] = useState('')
   const [videoUrls, setVideoUrls] = useState<string[]>([])
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
@@ -34,9 +40,23 @@ export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: Seedan
     return parsed
   }, [duration])
 
+  const isFormValid = useMemo(() => {
+    if (!prompt.trim()) return false
+    if (!videoUrls[0]) return false
+    if (typeof durationValue === 'number' && Number.isNaN(durationValue)) return false
+    if (typeof durationValue === 'number' && (durationValue < 4 || durationValue > 15)) return false
+    return true
+  }, [prompt, videoUrls, durationValue])
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
+
+    const trimmedPrompt = prompt.trim()
+    if (!trimmedPrompt) {
+      setError('Please provide an edit prompt.')
+      return
+    }
 
     if (!videoUrls[0]) {
       setError('Please upload one input video.')
@@ -54,14 +74,13 @@ export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: Seedan
     }
 
     const payload: SeedanceVideoEditInput = {
+      prompt: trimmedPrompt,
       resolution,
       video: videoUrls[0],
       enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
-    const trimmedPrompt = prompt.trim()
-    if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -76,6 +95,7 @@ export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: Seedan
         label="Edit prompt"
         htmlFor="seedance-prompt"
         hint='WaveSpeed prepends "Edit the input video." automatically.'
+        required
       >
         <textarea
           id="seedance-prompt"
@@ -90,6 +110,7 @@ export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: Seedan
         apiKey={apiKey}
         kind="video"
         label="Input video"
+        required
         value={videoUrls}
         onChange={setVideoUrls}
         hint="Single file. WaveSpeed trims source videos longer than 15 seconds."
@@ -174,8 +195,8 @@ export const SeedanceVideoEditForm = ({ apiKey, isSubmitting, onSubmit }: Seedan
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
       <div className="flex justify-end">
-        <Button type="submit" isLoading={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Run Seedance video edit'}
+        <Button type="submit" isLoading={isSubmitting} disabled={!isFormValid}>
+          {isSubmitting ? 'Submitting...' : submitLabel}
         </Button>
       </div>
     </form>
