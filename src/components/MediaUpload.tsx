@@ -1,7 +1,6 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { uploadFile, WavespeedError } from '../lib/wavespeed'
-import { ImageLightbox } from './ImageLightbox'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
 
@@ -47,12 +46,19 @@ export const MediaUpload = ({
   value,
 }: MediaUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const urlInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [directUrl, setDirectUrl] = useState('')
+  const [isAddingUrl, setIsAddingUrl] = useState(false)
   const [showPreviews, setShowPreviews] = useState(true)
-  const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isAddingUrl) {
+      urlInputRef.current?.focus()
+    }
+  }, [isAddingUrl])
 
   const validateLocalFile = (file: File): string | null => {
     if (!file.type.startsWith(typePrefixMap[kind])) {
@@ -127,6 +133,7 @@ export const MediaUpload = ({
     const trimmed = directUrl.trim()
     if (!trimmed) {
       setError('Please enter a file URL first.')
+      urlInputRef.current?.focus()
       return
     }
 
@@ -139,6 +146,18 @@ export const MediaUpload = ({
     setError(null)
     onChange(multiple ? [...value, trimmed] : [trimmed])
     setDirectUrl('')
+    setIsAddingUrl(false)
+  }
+
+  const handleStartAddingUrl = () => {
+    setIsAddingUrl(true)
+    setError(null)
+  }
+
+  const handleCancelAddUrl = () => {
+    setIsAddingUrl(false)
+    setDirectUrl('')
+    setError(null)
   }
 
   const renderPreview = (url: string) => {
@@ -152,11 +171,7 @@ export const MediaUpload = ({
       return <audio className="w-full" controls preload="metadata" src={url} />
     }
 
-    return (
-      <button type="button" className="w-full cursor-zoom-in" onClick={() => setExpandedImageUrl(url)}>
-        <img className="max-h-52 w-full rounded object-contain sm:max-h-64" src={url} alt="Uploaded reference preview" />
-      </button>
-    )
+    return <img className="max-h-52 w-full rounded object-contain sm:max-h-64" src={url} alt="Uploaded reference preview" />
   }
 
   return (
@@ -179,22 +194,10 @@ export const MediaUpload = ({
           <Button className="px-3 py-1.5 text-xs sm:px-3.5 sm:py-2.5 sm:text-sm" variant="secondary" onClick={() => fileInputRef.current?.click()}>
             {multiple ? 'Upload files' : 'Upload file'}
           </Button>
+          <Button className="px-2.5 py-1 text-xs sm:px-3 sm:py-2" variant="ghost" onClick={handleStartAddingUrl}>
+            Add URL
+          </Button>
         </div>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <input
-          className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:text-sm"
-          placeholder="Or paste a file URL (https://...)"
-          value={directUrl}
-          onChange={(event) => {
-            setDirectUrl(event.target.value)
-            if (error) setError(null)
-          }}
-        />
-        <Button className="shrink-0 px-3 py-2 text-xs sm:text-sm" variant="secondary" onClick={handleAddUrl}>
-          Add URL
-        </Button>
       </div>
 
       <input
@@ -224,8 +227,41 @@ export const MediaUpload = ({
         </div>
       ) : null}
 
-      {value.length > 0 ? (
+      {value.length > 0 || isAddingUrl ? (
         <ul className="space-y-1.5 pt-1 sm:space-y-2">
+          {isAddingUrl ? (
+            <li className="space-y-2 rounded border border-sky-500/40 bg-slate-950/70 p-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  ref={urlInputRef}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:text-sm"
+                  placeholder="Paste file URL (https://...)"
+                  value={directUrl}
+                  onChange={(event) => {
+                    setDirectUrl(event.target.value)
+                    if (error) setError(null)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      handleAddUrl()
+                    }
+                    if (event.key === 'Escape') {
+                      handleCancelAddUrl()
+                    }
+                  }}
+                />
+                <div className="flex shrink-0 gap-2">
+                  <Button className="px-3 py-2 text-xs sm:text-sm" variant="secondary" onClick={handleAddUrl}>
+                    Use URL
+                  </Button>
+                  <Button className="px-3 py-2 text-xs sm:text-sm" variant="ghost" onClick={handleCancelAddUrl}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </li>
+          ) : null}
           {value.map((url) => (
             <li
               key={url}
@@ -242,13 +278,6 @@ export const MediaUpload = ({
           ))}
         </ul>
       ) : null}
-
-      <ImageLightbox
-        open={expandedImageUrl !== null}
-        src={expandedImageUrl}
-        alt="Uploaded reference image"
-        onClose={() => setExpandedImageUrl(null)}
-      />
     </div>
   )
 }

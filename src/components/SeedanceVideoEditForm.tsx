@@ -212,7 +212,7 @@ export const SeedanceVideoEditForm = ({
       <MediaUpload
         apiKey={apiKey}
         kind="image"
-        label="Reference images (optional)"
+        label="Reference images"
         value={referenceImageUrls}
         onChange={setReferenceImageUrls}
         multiple
@@ -221,7 +221,7 @@ export const SeedanceVideoEditForm = ({
       <MediaUpload
         apiKey={apiKey}
         kind="audio"
-        label="Reference audios (optional)"
+        label="Reference audios"
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple

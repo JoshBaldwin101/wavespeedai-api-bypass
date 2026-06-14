@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import step1and2 from '../assets/step1and2.png'
 import step3 from '../assets/step3.png'
-import { ImageLightbox } from './ImageLightbox'
 import { ConfirmDialog } from './ui/ConfirmDialog'
 import { useApiKey } from '../context/useApiKey'
 import { WavespeedError, validateKey } from '../lib/wavespeed'
@@ -16,7 +15,6 @@ export const ApiKeyGate = () => {
   const [error, setError] = useState<string | null>(null)
   const [showTestKeyConfirm, setShowTestKeyConfirm] = useState(false)
   const [isGuideOpen, setIsGuideOpen] = useState(false)
-  const [expandedGuideImage, setExpandedGuideImage] = useState<string | null>(null)
 
   const startsWithPrefix = useMemo(() => apiKey.startsWith(API_KEY_PREFIX), [apiKey])
   const canTest = apiKey.length > 0 && startsWithPrefix && !isSubmitting
@@ -197,12 +195,10 @@ export const ApiKeyGate = () => {
                     then click <strong className="font-medium text-slate-200">Create Key</strong>.
                   </p>
                   <figure className="mt-3">
-                    <button type="button" className="w-full" onClick={() => setExpandedGuideImage(step1and2)}>
-                      <img
-                        src={step1and2}
-                        alt="WaveSpeed API key form with a name entered and the Create Key button visible"
-                      />
-                    </button>
+                    <img
+                      src={step1and2}
+                      alt="WaveSpeed API key form with a name entered and the Create Key button visible"
+                    />
                     <figcaption>Type a name, then click Create Key.</figcaption>
                   </figure>
                 </li>
@@ -213,12 +209,10 @@ export const ApiKeyGate = () => {
                     Paste it into the field at the top of this page.
                   </p>
                   <figure className="mt-3">
-                    <button type="button" className="w-full" onClick={() => setExpandedGuideImage(step3)}>
-                      <img
-                        src={step3}
-                        alt="Generated WaveSpeed API key with the Copy key button highlighted"
-                      />
-                    </button>
+                    <img
+                      src={step3}
+                      alt="Generated WaveSpeed API key with the Copy key button highlighted"
+                    />
                     <figcaption>Copy the key, then paste it above and click Test key.</figcaption>
                   </figure>
                   <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-amber-100">
@@ -261,13 +255,6 @@ export const ApiKeyGate = () => {
           setShowTestKeyConfirm(false)
           void handleValidate()
         }}
-      />
-
-      <ImageLightbox
-        open={expandedGuideImage !== null}
-        src={expandedGuideImage}
-        alt="WaveSpeed API key guide image"
-        onClose={() => setExpandedGuideImage(null)}
       />
     </main>
   )
