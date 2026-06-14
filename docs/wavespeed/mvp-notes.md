@@ -1,4 +1,4 @@
-# WaveSpeedAI API Bypass MVP Notes
+# WaveSpeedAI API Tool MVP Notes
 
 ## Getting an API key
 

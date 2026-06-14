@@ -34,7 +34,7 @@ const AppContent = () => {
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-6">
         <header className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5">
-          <h1 className="text-2xl font-semibold">WaveSpeedAI API Bypass</h1>
+          <h1 className="text-2xl font-semibold">WaveSpeedAI API Tool</h1>
           <p className="mt-1 text-sm text-slate-300">Workflow: Bytedance Seedance 2.0 Video Edit</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <span className="rounded bg-slate-950 px-2.5 py-1 text-xs text-slate-300">
