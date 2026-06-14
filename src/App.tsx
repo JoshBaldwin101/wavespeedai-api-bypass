@@ -359,15 +359,23 @@ const AppContent = () => {
           <div className="space-y-2">
             {isPricingLoading ? (
               <p>Calculating price based on your current settings...</p>
-            ) : priceDisplay ? (
-              <>
-                <p className="text-base font-semibold text-slate-100">Estimated cost: {priceDisplay}</p>
-                <p>This is an estimate. One generation runs when you confirm.</p>
-              </>
             ) : (
               <>
-                <p className="text-rose-300">{pricingError ?? 'Could not estimate pricing.'}</p>
-                <p>You can still continue with generation if you want.</p>
+                {priceDisplay ? (
+                  <>
+                    <p className="text-base font-semibold text-slate-100">Estimated cost: {priceDisplay}</p>
+                    <p>This is an estimate. One generation runs when you confirm.</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-rose-300">{pricingError ?? 'Could not estimate pricing.'}</p>
+                    <p>You can still continue with generation if you want.</p>
+                  </>
+                )}
+                <p className="text-slate-400">
+                  This estimate may not reflect active discounts on your account, but eligible discounts are applied
+                  automatically when you are charged.
+                </p>
               </>
             )}
           </div>
