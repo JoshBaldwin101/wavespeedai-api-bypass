@@ -125,6 +125,7 @@ export const ApiKeyGate = () => {
                 wavespeed.ai/accesskey
               </a>
             </p>
+            <p className="mt-2 text-sm text-slate-300">Stuck? Read the guide below.</p>
             {!startsWithPrefix && apiKey.length > 0 ? (
               <p className="mt-2 text-xs text-amber-300">
                 API keys should start with <code>wsk_live_</code>.
