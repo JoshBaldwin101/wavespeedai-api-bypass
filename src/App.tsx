@@ -112,6 +112,7 @@ const AppContent = () => {
   const [isBalanceRefreshCooldown, setIsBalanceRefreshCooldown] = useState(false)
   const [showChangeKeyConfirm, setShowChangeKeyConfirm] = useState(false)
   const [showPriceConfirm, setShowPriceConfirm] = useState(false)
+  const [showWorkflowJobsOnly, setShowWorkflowJobsOnly] = useState(false)
   const [pendingInput, setPendingInput] = useState<unknown | null>(null)
   const [pricePreview, setPricePreview] = useState<ModelPricing | null>(null)
   const [isPricingLoading, setIsPricingLoading] = useState(false)
@@ -126,7 +127,7 @@ const AppContent = () => {
     [selectedWorkflowId],
   )
   const jobModelNeedles = useMemo(() => [activeWorkflow.model], [activeWorkflow.model])
-  const jobs = useJobs({ apiKey, modelNeedles: jobModelNeedles })
+  const jobs = useJobs({ apiKey, modelNeedles: jobModelNeedles, showWorkflowJobsOnly })
   const FormComponent = activeWorkflow.form
   const balanceDisplay = useMemo(() => formatBalance(balanceData), [balanceData])
   const priceDisplay = useMemo(() => {
@@ -353,7 +354,9 @@ const AppContent = () => {
                   setSelectedWorkflowId(nextWorkflowId)
                   setSubmitError(null)
                   resetPriceConfirmState()
-                  jobs.reset()
+                  if (showWorkflowJobsOnly) {
+                    jobs.reset()
+                  }
                 }}
               >
                 {workflows.map((workflow) => (
@@ -433,6 +436,8 @@ const AppContent = () => {
           onRefresh={jobs.refreshRecents}
           onSelect={jobs.select}
           onCancel={jobs.cancelActive}
+          showWorkflowJobsOnly={showWorkflowJobsOnly}
+          onShowWorkflowJobsOnlyChange={setShowWorkflowJobsOnly}
         />
       </div>
 

@@ -31,9 +31,10 @@ const toPredictionResult = (item: PredictionListItem): PredictionResult => ({
 interface UseJobsParams {
   apiKey: string
   modelNeedles: string[]
+  showWorkflowJobsOnly: boolean
 }
 
-export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
+export const useJobs = ({ apiKey, modelNeedles, showWorkflowJobsOnly }: UseJobsParams) => {
   const [jobsById, setJobsById] = useState<Record<string, PredictionResult>>({})
   const [recentIds, setRecentIds] = useState<string[]>([])
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
@@ -91,6 +92,7 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
     try {
       const response = await listPredictions(apiKey, { page: 1, page_size: 100 })
       const filtered = response.items.filter((item) => {
+        if (!showWorkflowJobsOnly) return true
         if (!item.model) return false
         const model = item.model.toLowerCase()
         return normalizedNeedles.some((needle) => model.includes(needle))
@@ -114,7 +116,10 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
 
       setRecentIds(filtered.map((item) => item.id))
       setLastRefreshedAt(Date.now())
-      setSelectedJobId((previous) => previous ?? filtered[0]?.id ?? null)
+      setSelectedJobId((previous) => {
+        if (!previous) return filtered[0]?.id ?? null
+        return filtered.some((item) => item.id === previous) ? previous : filtered[0]?.id ?? null
+      })
     } catch (error) {
       if (error instanceof Error) {
         setRecentsError(error.message)
@@ -125,7 +130,7 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
       refreshInFlightRef.current = false
       setIsLoadingRecents(false)
     }
-  }, [apiKey, normalizedNeedles])
+  }, [apiKey, normalizedNeedles, showWorkflowJobsOnly])
 
   const track = useCallback(
     async (predictionUrlOrId: string) => {

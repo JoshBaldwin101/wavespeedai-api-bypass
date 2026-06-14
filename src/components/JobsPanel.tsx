@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { PredictionResult } from '../lib/types'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
+import { Toggle } from './ui/Toggle'
 
 interface JobsPanelProps {
   jobsById: Record<string, PredictionResult>
@@ -15,6 +16,8 @@ interface JobsPanelProps {
   onRefresh: () => Promise<void> | void
   onSelect: (jobId: string) => void
   onCancel: () => void
+  showWorkflowJobsOnly: boolean
+  onShowWorkflowJobsOnlyChange: (value: boolean) => void
 }
 
 const statusColorMap: Record<string, string> = {
@@ -58,6 +61,8 @@ export const JobsPanel = ({
   onRefresh,
   onSelect,
   onCancel,
+  showWorkflowJobsOnly,
+  onShowWorkflowJobsOnlyChange,
 }: JobsPanelProps) => {
   const [showRawJson, setShowRawJson] = useState(false)
   const [now, setNow] = useState(Date.now())
@@ -101,9 +106,19 @@ export const JobsPanel = ({
           <h3 className="text-sm font-semibold text-slate-100">Generation jobs</h3>
           <p className="mt-1 text-xs text-slate-400">Updated {formatRelativeSeconds(lastRefreshedAt, now)}</p>
         </div>
-        <Button variant="secondary" disabled={isLoadingRecents} onClick={() => void onRefresh()}>
-          {isLoadingRecents ? 'Refreshing...' : 'Refresh'}
-        </Button>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div className="min-w-0 flex-1 sm:w-[22rem] sm:flex-none">
+            <Toggle
+              checked={showWorkflowJobsOnly}
+              onChange={onShowWorkflowJobsOnlyChange}
+              label="Show jobs from this workflow only"
+              id="show-workflow-jobs-only"
+            />
+          </div>
+          <Button variant="secondary" disabled={isLoadingRecents} onClick={() => void onRefresh()}>
+            {isLoadingRecents ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid items-stretch gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)] lg:gap-4">
