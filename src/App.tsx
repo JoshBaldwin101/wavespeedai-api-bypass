@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiKeyGate } from './components/ApiKeyGate'
 import { JobsPanel } from './components/JobsPanel'
 import { Button } from './components/ui/Button'
@@ -34,6 +34,7 @@ const BALANCE_PREFERRED_KEYS = [
 ] as const
 
 const TOP_UP_URL = 'https://wavespeed.ai/top-up'
+const BALANCE_REFRESH_MS = 30_000
 
 const parseBalanceValue = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -103,13 +104,12 @@ const formatBalance = (data: BalanceResponseData | null): string => {
 
 const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
-  const balanceCooldownTimerRef = useRef<number | null>(null)
+  const balanceRefreshInFlightRef = useRef(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(defaultWorkflowId)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceData, setBalanceData] = useState<BalanceResponseData | null>(null)
-  const [isBalanceRefreshCooldown, setIsBalanceRefreshCooldown] = useState(false)
   const [showChangeKeyConfirm, setShowChangeKeyConfirm] = useState(false)
   const [showPriceConfirm, setShowPriceConfirm] = useState(false)
   const [showWorkflowJobsOnly, setShowWorkflowJobsOnly] = useState(false)
@@ -150,9 +150,10 @@ const AppContent = () => {
     return 'Generate anyway'
   }, [isConfirmValidating, isPricingLoading, hasInsufficientFunds, priceDisplay])
 
-  const refreshBalance = async (startCooldown: boolean) => {
-    if (isBalanceLoading || (startCooldown && isBalanceRefreshCooldown)) return
+  const refreshBalance = useCallback(async () => {
+    if (balanceRefreshInFlightRef.current) return
 
+    balanceRefreshInFlightRef.current = true
     setIsBalanceLoading(true)
     setBalanceError(null)
     try {
@@ -165,60 +166,25 @@ const AppContent = () => {
           : 'Could not refresh balance.'
       setBalanceError(message)
     } finally {
+      balanceRefreshInFlightRef.current = false
       setIsBalanceLoading(false)
-      if (startCooldown) {
-        setIsBalanceRefreshCooldown(true)
-        if (balanceCooldownTimerRef.current) {
-          window.clearTimeout(balanceCooldownTimerRef.current)
-        }
-        balanceCooldownTimerRef.current = window.setTimeout(() => {
-          setIsBalanceRefreshCooldown(false)
-        }, 5000)
-      }
-    }
-  }
-
-  useEffect(() => {
-    let cancelled = false
-
-    const loadInitialBalance = async () => {
-      setIsBalanceLoading(true)
-      setBalanceError(null)
-      try {
-        const response = await validateKey(apiKey)
-        if (!cancelled) {
-          setBalanceData(response)
-        }
-      } catch (caughtError) {
-        if (cancelled) return
-        const message =
-          caughtError instanceof WavespeedError || caughtError instanceof Error
-            ? caughtError.message
-            : 'Could not refresh balance.'
-        setBalanceError(message)
-      } finally {
-        if (!cancelled) {
-          setIsBalanceLoading(false)
-        }
-      }
-    }
-
-    window.setTimeout(() => {
-      void loadInitialBalance()
-    }, 0)
-
-    return () => {
-      cancelled = true
     }
   }, [apiKey])
 
   useEffect(() => {
+    const initialTimer = window.setTimeout(() => {
+      void refreshBalance()
+    }, 0)
+
+    const interval = window.setInterval(() => {
+      void refreshBalance()
+    }, BALANCE_REFRESH_MS)
+
     return () => {
-      if (balanceCooldownTimerRef.current) {
-        window.clearTimeout(balanceCooldownTimerRef.current)
-      }
+      window.clearTimeout(initialTimer)
+      window.clearInterval(interval)
     }
-  }, [])
+  }, [refreshBalance])
 
   const runJob = async (input: unknown) => {
     setSubmitError(null)
@@ -391,11 +357,11 @@ const AppContent = () => {
                   <Button
                     variant="secondary"
                     className="rounded-full px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-                    disabled={isBalanceLoading || isBalanceRefreshCooldown}
+                    disabled={isBalanceLoading}
                     aria-label="Refresh balance"
-                    title={isBalanceRefreshCooldown ? 'Balance refresh is cooling down' : 'Refresh balance'}
+                    title="Refresh balance"
                     onClick={() => {
-                      void refreshBalance(true)
+                      void refreshBalance()
                     }}
                   >
                     {isBalanceLoading ? 'Refreshing' : 'Refresh'}
