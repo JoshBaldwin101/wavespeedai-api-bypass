@@ -43,11 +43,55 @@ const formatEstimatedPrice = (value: number, currency: string): string => {
   return `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`
 }
 
-const formatBalanceValue = (value: unknown): string | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) return formatCurrency(value)
+const BALANCE_PREFERRED_KEYS = [
+  'balance',
+  'credits',
+  'credit',
+  'remaining',
+  'available',
+  'available_balance',
+  'total_balance',
+] as const
+
+const TOP_UP_URL = 'https://wavespeed.ai/top-up'
+
+const parseBalanceValue = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string' && value.trim()) {
     const parsed = Number.parseFloat(value.replace(/[$,]/g, ''))
-    if (Number.isFinite(parsed)) return formatCurrency(parsed)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return null
+}
+
+const parseBalanceAmount = (data: BalanceResponseData | null): number | null => {
+  if (!data || typeof data !== 'object') return null
+
+  const readPreferred = (payload: Record<string, unknown>): number | null => {
+    for (const key of BALANCE_PREFERRED_KEYS) {
+      if (!(key in payload)) continue
+      const parsed = parseBalanceValue(payload[key])
+      if (parsed !== null) return parsed
+    }
+    return null
+  }
+
+  const topLevelValue = readPreferred(data as Record<string, unknown>)
+  if (topLevelValue !== null) return topLevelValue
+
+  for (const nested of Object.values(data as Record<string, unknown>)) {
+    if (!nested || typeof nested !== 'object') continue
+    const nestedValue = readPreferred(nested as Record<string, unknown>)
+    if (nestedValue !== null) return nestedValue
+  }
+
+  return null
+}
+
+const formatBalanceValue = (value: unknown): string | null => {
+  const parsed = parseBalanceValue(value)
+  if (parsed !== null) return formatCurrency(parsed)
+  if (typeof value === 'string' && value.trim()) {
     return value.startsWith('$') ? value : `$${value}`
   }
   return null
@@ -56,18 +100,8 @@ const formatBalanceValue = (value: unknown): string | null => {
 const formatBalance = (data: BalanceResponseData | null): string => {
   if (!data || typeof data !== 'object') return 'Unavailable'
 
-  const preferredKeys = [
-    'balance',
-    'credits',
-    'credit',
-    'remaining',
-    'available',
-    'available_balance',
-    'total_balance',
-  ]
-
   const readPreferred = (payload: Record<string, unknown>): string | null => {
-    for (const key of preferredKeys) {
+    for (const key of BALANCE_PREFERRED_KEYS) {
       if (!(key in payload)) continue
       const formatted = formatBalanceValue(payload[key])
       if (formatted) return formatted
@@ -102,6 +136,9 @@ const AppContent = () => {
   const [pricePreview, setPricePreview] = useState<ModelPricing | null>(null)
   const [isPricingLoading, setIsPricingLoading] = useState(false)
   const [pricingError, setPricingError] = useState<string | null>(null)
+  const [isConfirmValidating, setIsConfirmValidating] = useState(false)
+  const [confirmValidationError, setConfirmValidationError] = useState<string | null>(null)
+  const [hasInsufficientFunds, setHasInsufficientFunds] = useState(false)
 
   const maskedKey = useMemo(() => maskApiKey(apiKey), [apiKey])
   const activeWorkflow = useMemo(
@@ -117,10 +154,12 @@ const AppContent = () => {
     return formatEstimatedPrice(pricePreview.unit_price, pricePreview.currency)
   }, [pricePreview])
   const priceConfirmLabel = useMemo(() => {
+    if (isConfirmValidating) return 'Checking balance...'
     if (isPricingLoading) return 'Calculating price...'
+    if (hasInsufficientFunds) return 'Check again'
     if (priceDisplay) return `Generate ${priceDisplay}`
     return 'Generate anyway'
-  }, [isPricingLoading, priceDisplay])
+  }, [isConfirmValidating, isPricingLoading, hasInsufficientFunds, priceDisplay])
 
   const refreshBalance = async (startCooldown: boolean) => {
     if (isBalanceLoading || (startCooldown && isBalanceRefreshCooldown)) return
@@ -209,11 +248,25 @@ const AppContent = () => {
     }
   }
 
+  const resetPriceConfirmState = () => {
+    setShowPriceConfirm(false)
+    setPendingInput(null)
+    setPricePreview(null)
+    setIsPricingLoading(false)
+    setPricingError(null)
+    setIsConfirmValidating(false)
+    setConfirmValidationError(null)
+    setHasInsufficientFunds(false)
+  }
+
   const prepareRun = async (input: unknown) => {
     setPendingInput(input)
     setShowPriceConfirm(true)
     setPricePreview(null)
     setPricingError(null)
+    setConfirmValidationError(null)
+    setHasInsufficientFunds(false)
+    setIsConfirmValidating(false)
     setIsPricingLoading(true)
 
     try {
@@ -228,6 +281,61 @@ const AppContent = () => {
     } finally {
       setIsPricingLoading(false)
     }
+  }
+
+  const confirmRun = async () => {
+    if (!pendingInput || isConfirmValidating) return
+
+    setIsConfirmValidating(true)
+    setConfirmValidationError(null)
+    setHasInsufficientFunds(false)
+
+    try {
+      const [pricing, freshBalance] = await Promise.all([
+        getModelPricing(apiKey, activeWorkflow.pricingModelId, pendingInput as Record<string, unknown>),
+        validateKey(apiKey),
+      ])
+
+      setPricePreview(pricing)
+      setBalanceData(freshBalance)
+      setPricingError(null)
+      setBalanceError(null)
+
+      const balanceAmount = parseBalanceAmount(freshBalance)
+      if (balanceAmount === null) {
+        setConfirmValidationError('Could not read your wallet balance. Refresh your balance and try again.')
+        return
+      }
+
+      if (pricing.unit_price > balanceAmount) {
+        const costDisplay = formatEstimatedPrice(pricing.unit_price, pricing.currency)
+        const balanceDisplayValue = formatCurrency(balanceAmount)
+        setHasInsufficientFunds(true)
+        setConfirmValidationError(
+          `This run costs ${costDisplay}, but your wallet only has ${balanceDisplayValue}. Add credits before continuing.`,
+        )
+        return
+      }
+
+      const input = pendingInput
+      resetPriceConfirmState()
+      void runJob(input)
+    } catch (caughtError) {
+      const message =
+        caughtError instanceof WavespeedError || caughtError instanceof Error
+          ? caughtError.message
+          : 'Could not verify price and balance.'
+      setConfirmValidationError(message)
+    } finally {
+      setIsConfirmValidating(false)
+    }
+  }
+
+  const forceConfirmRun = () => {
+    if (!pendingInput || isConfirmValidating) return
+    const input = pendingInput
+    resetPriceConfirmState()
+    void runJob(input)
   }
 
   if (!isValidated) {
@@ -264,11 +372,7 @@ const AppContent = () => {
                   const nextWorkflowId = event.target.value
                   setSelectedWorkflowId(nextWorkflowId)
                   setSubmitError(null)
-                  setShowPriceConfirm(false)
-                  setPendingInput(null)
-                  setPricePreview(null)
-                  setIsPricingLoading(false)
-                  setPricingError(null)
+                  resetPriceConfirmState()
                   jobs.reset()
                 }}
               >
@@ -359,19 +463,49 @@ const AppContent = () => {
           <div className="space-y-2">
             {isPricingLoading ? (
               <p>Calculating price based on your current settings...</p>
+            ) : isConfirmValidating ? (
+              <p>Recalculating price and checking your wallet balance before starting...</p>
             ) : (
               <>
                 {priceDisplay ? (
                   <>
                     <p className="text-base font-semibold text-slate-100">Estimated cost: {priceDisplay}</p>
-                    <p>This is an estimate. One generation runs when you confirm.</p>
+                    <p>
+                      Wallet balance: <span className="font-medium text-slate-100">{balanceDisplay}</span>
+                    </p>
+                    <p>One generation runs when you confirm. Price and balance are checked again right before submission.</p>
                   </>
                 ) : (
                   <>
                     <p className="text-rose-300">{pricingError ?? 'Could not estimate pricing.'}</p>
-                    <p>You can still continue with generation if you want.</p>
+                    <p>You need a valid price estimate and enough wallet balance before generation can start.</p>
                   </>
                 )}
+                {confirmValidationError ? (
+                  <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-rose-200">
+                    <p>{confirmValidationError}</p>
+                    {hasInsufficientFunds ? (
+                      <p className="mt-2">
+                        <a
+                          className="font-medium text-sky-300 underline decoration-sky-400/60 underline-offset-2 hover:text-sky-200"
+                          href={TOP_UP_URL}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Top up your WaveSpeed wallet
+                        </a>{' '}
+                        to add credits, then try again.{' '}
+                        <button
+                          className="text-slate-300 underline decoration-slate-500/60 underline-offset-2 hover:text-slate-100"
+                          type="button"
+                          onClick={forceConfirmRun}
+                        >
+                          Force anyways.
+                        </button>
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
                 <p className="text-slate-400">
                   This estimate may not reflect active discounts on your account, but eligible discounts are applied
                   automatically when you are charged.
@@ -382,23 +516,10 @@ const AppContent = () => {
         }
         confirmLabel={priceConfirmLabel}
         confirmVariant="primary"
-        confirmDisabled={isPricingLoading || !pendingInput}
-        onCancel={() => {
-          setShowPriceConfirm(false)
-          setPendingInput(null)
-          setPricePreview(null)
-          setIsPricingLoading(false)
-          setPricingError(null)
-        }}
+        confirmDisabled={isPricingLoading || isConfirmValidating || !pendingInput || !pricePreview}
+        onCancel={resetPriceConfirmState}
         onConfirm={() => {
-          if (!pendingInput) return
-          const input = pendingInput
-          setShowPriceConfirm(false)
-          setPendingInput(null)
-          setPricePreview(null)
-          setIsPricingLoading(false)
-          setPricingError(null)
-          void runJob(input)
+          void confirmRun()
         }}
       />
 
@@ -412,11 +533,7 @@ const AppContent = () => {
           setShowChangeKeyConfirm(false)
           jobs.reset()
           setSubmitError(null)
-          setShowPriceConfirm(false)
-          setPendingInput(null)
-          setPricePreview(null)
-          setIsPricingLoading(false)
-          setPricingError(null)
+          resetPriceConfirmState()
           reset()
         }}
       />
