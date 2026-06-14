@@ -240,7 +240,7 @@ export const ApiKeyGate = () => {
               <span className="font-semibold text-slate-100">Risk agreement:</span> By clicking &ldquo;I understand&rdquo;, you
               understand that using this tool may incur unexpected or additional costs and that using this tool involves doing so
               at your own risk. Using this tool means you understand that your use may or may not be in compliance with third
-              party services involved, this is at your own risk.
+              party services involved; this is at your own risk of WaveSpeedAI's penalties
             </p>
             <p>
               <span className="font-semibold text-slate-100">Privacy disclosure:</span> The creator and host of this tool does
