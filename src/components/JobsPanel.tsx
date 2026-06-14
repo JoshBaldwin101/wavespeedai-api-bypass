@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { PredictionResult } from '../lib/types'
+import { inferOutputMediaKind } from '../lib/outputMedia'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
 import { Toggle } from './ui/Toggle'
@@ -83,7 +84,6 @@ export const JobsPanel = ({
 
   const selectedJob = selectedJobId ? jobsById[selectedJobId] ?? null : null
   const isPollingSelected = selectedJobId !== null && pollingJobId === selectedJobId
-  const outputUrl = selectedJob?.outputs?.[0]
   const detailTimestamp = selectedJob?.created_at
     ? formatRelativeDate(selectedJob.created_at, now)
     : selectedJob?.executionTime
@@ -150,17 +150,30 @@ export const JobsPanel = ({
                 <p className="rounded-lg border border-rose-900/40 bg-rose-950/40 p-3 text-sm text-rose-200">{selectedJob.error}</p>
               ) : null}
 
-              {outputUrl ? (
+              {selectedJob?.outputs?.length ? (
                 <div className="space-y-3">
-                  <video className="aspect-video w-full rounded bg-black" controls src={outputUrl} preload="metadata" />
-                  <a
-                    className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
-                    href={outputUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open / download output
-                  </a>
+                  {selectedJob.outputs.map((outputUrl) => {
+                    const mediaKind = inferOutputMediaKind(outputUrl, selectedJob.model)
+                    return (
+                      <div key={outputUrl} className="space-y-2">
+                        {mediaKind === 'image' ? (
+                          <img className="w-full rounded bg-black object-contain" src={outputUrl} alt="Generated output" />
+                        ) : mediaKind === 'audio' ? (
+                          <audio className="w-full" controls preload="metadata" src={outputUrl} />
+                        ) : (
+                          <video className="aspect-video w-full rounded bg-black" controls src={outputUrl} preload="metadata" />
+                        )}
+                        <a
+                          className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+                          href={outputUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open / download output
+                        </a>
+                      </div>
+                    )
+                  })}
                 </div>
               ) : null}
 

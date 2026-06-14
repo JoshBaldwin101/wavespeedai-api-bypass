@@ -13,7 +13,7 @@ interface SeedanceVideoExtendFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
-  workflowCapabilities: WorkflowCapabilities
+  workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoExtendInput) => Promise<void>
 }
 
@@ -27,7 +27,13 @@ export const SeedanceVideoExtendForm = ({
   workflowCapabilities,
   onSubmit,
 }: SeedanceVideoExtendFormProps) => {
-  const { durationMin, durationMax, promptRequired, resolutionOptions } = workflowCapabilities
+  const {
+    durationMin = 4,
+    durationMax = 15,
+    promptRequired = true,
+    resolutionOptions = ['480p', '720p', '1080p'],
+    supportsAspectRatio = false,
+  } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoExtend
   const [prompt, setPrompt] = useState('')
   const [videoUrls, setVideoUrls] = useState<string[]>([])
@@ -185,7 +191,7 @@ export const SeedanceVideoExtendForm = ({
       />
 
       <SeedanceAdvancedFields
-        showAspectRatio={workflowCapabilities.supportsAspectRatio}
+        showAspectRatio={supportsAspectRatio}
         aspectRatio={aspectRatio}
         onAspectRatioChange={setAspectRatio}
         resolution={resolution}

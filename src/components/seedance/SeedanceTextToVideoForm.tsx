@@ -13,7 +13,7 @@ interface SeedanceTextToVideoFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
-  workflowCapabilities: WorkflowCapabilities
+  workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceTextToVideoInput) => Promise<void>
 }
 
@@ -27,7 +27,13 @@ export const SeedanceTextToVideoForm = ({
   workflowCapabilities,
   onSubmit,
 }: SeedanceTextToVideoFormProps) => {
-  const { durationMin, durationMax, promptRequired, resolutionOptions } = workflowCapabilities
+  const {
+    durationMin = 4,
+    durationMax = 15,
+    promptRequired = true,
+    resolutionOptions = ['480p', '720p', '1080p'],
+    supportsAspectRatio = true,
+  } = workflowCapabilities ?? {}
   const maxReferenceImages = SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceImages
   const [prompt, setPrompt] = useState('')
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
@@ -197,7 +203,7 @@ export const SeedanceTextToVideoForm = ({
       />
 
       <SeedanceAdvancedFields
-        showAspectRatio={workflowCapabilities.supportsAspectRatio}
+        showAspectRatio={supportsAspectRatio}
         aspectRatio={aspectRatio}
         onAspectRatioChange={setAspectRatio}
         resolution={resolution}

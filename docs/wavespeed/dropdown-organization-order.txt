@@ -21,3 +21,8 @@ seedance-2.0-fast/text-to-video-turbo
 seedance-2.0-fast/video-edit
 seedance-2.0-fast/video-edit-turbo
 seedance-2.0-fast/video-extend
+
+---
+
+openai/gpt-image-2/edit
+openai/gpt-image-2/text-to-image

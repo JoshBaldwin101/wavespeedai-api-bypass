@@ -2,6 +2,25 @@ export type PredictionStatus = 'created' | 'queued' | 'pending' | 'processing' |
 
 export type SeedanceAspectRatio = '16:9' | '9:16' | '4:3' | '3:4' | '1:1' | '21:9'
 export type SeedanceResolution = '480p' | '720p' | '1080p'
+export type GptImageAspectRatio =
+  | '1:1'
+  | '1:2'
+  | '2:1'
+  | '1:3'
+  | '3:1'
+  | '2:3'
+  | '3:2'
+  | '3:4'
+  | '4:3'
+  | '4:5'
+  | '5:4'
+  | '9:16'
+  | '16:9'
+  | '9:21'
+  | '21:9'
+export type GptImageResolution = '1k' | '2k' | '4k'
+export type GptImageQuality = 'low' | 'medium' | 'high'
+export type GptImageOutputFormat = 'png' | 'jpeg' | 'webp'
 
 export interface SeedanceCommonInput {
   prompt?: string
@@ -36,6 +55,20 @@ export interface SeedanceVideoExtendInput extends SeedanceCommonInput {
   video?: string
   last_image?: string
 }
+
+export interface GptImageCommonInput {
+  prompt: string
+  aspect_ratio?: GptImageAspectRatio
+  resolution?: GptImageResolution
+  quality?: GptImageQuality
+  output_format?: GptImageOutputFormat
+}
+
+export interface GptImageEditInput extends GptImageCommonInput {
+  images: string[]
+}
+
+export type GptImageTextToImageInput = GptImageCommonInput
 
 export interface UploadedMedia {
   type: 'image' | 'video' | 'audio' | string

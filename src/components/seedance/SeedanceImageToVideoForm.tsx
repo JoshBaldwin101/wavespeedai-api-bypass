@@ -13,7 +13,7 @@ interface SeedanceImageToVideoFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
-  workflowCapabilities: WorkflowCapabilities
+  workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceImageToVideoInput) => Promise<void>
 }
 
@@ -28,7 +28,14 @@ export const SeedanceImageToVideoForm = ({
   onSubmit,
 }: SeedanceImageToVideoFormProps) => {
   const limits = SEEDANCE_ATTACHMENT_LIMITS.imageToVideo
-  const { durationMin, durationMax, promptRequired, resolutionOptions, supportsSeed } = workflowCapabilities
+  const {
+    durationMin = 4,
+    durationMax = 15,
+    promptRequired = true,
+    resolutionOptions = ['480p', '720p', '1080p'],
+    supportsSeed = false,
+    supportsAspectRatio = true,
+  } = workflowCapabilities ?? {}
   const [prompt, setPrompt] = useState('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [lastImageUrls, setLastImageUrls] = useState<string[]>([])
@@ -232,7 +239,7 @@ export const SeedanceImageToVideoForm = ({
       ) : null}
 
       <SeedanceAdvancedFields
-        showAspectRatio={workflowCapabilities.supportsAspectRatio}
+        showAspectRatio={supportsAspectRatio}
         aspectRatio={aspectRatio}
         onAspectRatioChange={setAspectRatio}
         resolution={resolution}

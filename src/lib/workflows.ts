@@ -1,4 +1,6 @@
 import type { ComponentType } from 'react'
+import { GptImageEditForm } from '../components/gptImage/GptImageEditForm'
+import { GptImageTextToImageForm } from '../components/gptImage/GptImageTextToImageForm'
 import { SeedanceImageToVideoForm } from '../components/seedance/SeedanceImageToVideoForm'
 import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVideoForm'
 import { SeedanceVideoEditForm } from '../components/seedance/SeedanceVideoEditForm'
@@ -11,10 +13,10 @@ export interface WorkflowFormProps {
   isSubmitting: boolean
   submitLabel?: string
   onSubmit: (input: unknown) => Promise<void>
-  workflowCapabilities: WorkflowCapabilities
+  workflowCapabilities?: WorkflowCapabilities
 }
 
-export type WorkflowGroupId = 'seedance-2.0-fast' | 'seedance-2.0'
+export type WorkflowGroupId = 'seedance-2.0-fast' | 'seedance-2.0' | 'gpt-image-2'
 
 export interface WorkflowGroupDefinition {
   id: WorkflowGroupId
@@ -36,13 +38,14 @@ export interface WorkflowDefinition {
   group: WorkflowGroupId
   submitLabel: string
   model: string
-  capabilities: WorkflowCapabilities
+  capabilities?: WorkflowCapabilities
   form: ComponentType<WorkflowFormProps>
 }
 
 export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'seedance-2.0', label: 'seedance-2.0' },
   { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
+  { id: 'gpt-image-2', label: 'openai/gpt-image-2' },
 ]
 
 const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
@@ -248,6 +251,22 @@ export const workflows: WorkflowDefinition[] = [
     model: 'bytedance/seedance-2.0-fast/video-extend',
     capabilities: videoExtendCapabilities,
     form: SeedanceVideoExtendForm,
+  },
+  {
+    id: 'openai/gpt-image-2/edit',
+    label: 'openai/gpt-image-2/edit',
+    group: 'gpt-image-2',
+    submitLabel: 'Generate image',
+    model: 'openai/gpt-image-2/edit',
+    form: GptImageEditForm,
+  },
+  {
+    id: 'openai/gpt-image-2/text-to-image',
+    label: 'openai/gpt-image-2/text-to-image',
+    group: 'gpt-image-2',
+    submitLabel: 'Generate image',
+    model: 'openai/gpt-image-2/text-to-image',
+    form: GptImageTextToImageForm,
   },
 ]
 

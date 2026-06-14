@@ -1,0 +1,147 @@
+# openai/gpt-image-2/text-to-image 
+
+> OpenAI&#39;s GPT Image 2 Text-to-Image generates high-quality images from natural-language prompts. Ready-to-use REST inference API, best performance, no coldstarts, affordable pricing.
+
+
+## Overview
+
+- **Endpoint**: `https://api.wavespeed.ai/api/v3/openai/gpt-image-2/text-to-image`
+- **Model ID**: `openai/gpt-image-2/text-to-image`
+- **Category**: text-to-image 
+**Tags**: 
+
+
+
+## API Information
+
+This model can be used via our HTTP API or more conveniently via our client libraries.
+See the input and output schema below, as well as the usage examples.
+
+
+### Input Schema
+
+The API accepts the following input parameters:
+
+- **`prompt`** (`string`, _required_):
+  The positive prompt for the generation.
+
+- **`aspect_ratio`** (`string`, _optional_):
+  The aspect ratio of the generated image.
+  - Options: "1:1", "1:2", "2:1", "1:3", "3:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "9:21", "21:9"
+
+- **`resolution`** (`string`, _optional_):
+  The resolution of the output image.
+  - Default: `"1k"`
+  - Options: "1k", "2k", "4k"
+
+- **`quality`** (`string`, _optional_):
+  The quality of the generated image. Higher quality costs more.
+  - Default: `"medium"`
+  - Options: "low", "medium", "high"
+
+- **`output_format`** (`string`, _optional_):
+  The format of the output image.
+  - Default: `"png"`
+  - Options: "png", "jpeg", "webp"
+
+- **`enable_sync_mode`** (`boolean`, _optional_):
+  If set to true, the function will wait for the result to be generated and uploaded before returning the response. It allows you to get the result directly in the response. This property is only available through the API.
+  - Default: `false`
+
+- **`enable_base64_output`** (`boolean`, _optional_):
+  If enabled, the output will be encoded into a BASE64 string instead of a URL. This property is only available through the API.
+  - Default: `false`
+
+
+
+
+**Required Parameters Example**:
+
+```json
+{
+  "prompt": ""
+}
+```
+
+
+**Full Example**:
+
+```json
+{
+  "aspect_ratio": "1:1",
+  "enable_base64_output": false,
+  "enable_sync_mode": false,
+  "output_format": "png",
+  "prompt": "",
+  "quality": "medium",
+  "resolution": "1k"
+}
+```
+
+
+### Output Schema
+
+The API returns the following output format:
+
+
+- **`status`** (`string`, _optional_):
+  Status of the task: created, processing, completed, or failed.
+
+- **`urls`** (`object`, _optional_):
+  Object containing related API endpoints.
+
+- **`created_at`** (`string (date-time)`, _optional_):
+  ISO timestamp of when the request was created (e.g., â€œ2023-04-01T12:34:56.789Zâ€).
+
+- **`has_nsfw_contents`** (`array of boolean`, _optional_):
+  Array of boolean values indicating NSFW detection for each output.
+
+- **`id`** (`string`, _optional_):
+  Unique identifier for the prediction, the ID of the prediction to get.
+
+- **`model`** (`string`, _optional_):
+  Model ID used for the prediction.
+
+- **`outputs`** (`array of string`, _optional_):
+  Array of URLs to the generated content (empty when status is not completed).
+
+
+
+
+
+**Example Response**:
+
+```json
+{
+  "created_at": "",
+  "has_nsfw_contents": [],
+  "id": "",
+  "model": "",
+  "outputs": [],
+  "status": "",
+  "urls": {}
+}
+```
+
+
+## Usage Examples
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://api.wavespeed.ai/api/v3/openai/gpt-image-2/text-to-image \
+  --header "Authorization: Bearer ${WAVESPEED_API_KEY}" \
+  --header "Content-Type: application/json" \
+  --data '{
+  "prompt": ""
+}'
+```
+
+## Additional Resources
+
+### Documentation
+
+- [Model Playground](https://wavespeed.ai/models/openai/gpt-image-2/text-to-image)
+- [API Documentation](https://wavespeed.ai/docs/docs-api/openai/gpt-image-2/text-to-image)
+- [Blog](https://wavespeed.ai/blog)
