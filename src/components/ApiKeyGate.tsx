@@ -19,18 +19,6 @@ export const ApiKeyGate = () => {
   const startsWithPrefix = useMemo(() => apiKey.startsWith(API_KEY_PREFIX), [apiKey])
   const canTest = apiKey.length > 0 && startsWithPrefix && !isSubmitting
 
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText()
-      if (!text) return
-      setApiKey(text.trim())
-      setMessage(null)
-      setError(null)
-    } catch {
-      setError('Clipboard access was blocked. Paste manually with Ctrl+V.')
-    }
-  }
-
   const handleValidate = async () => {
     if (!canTest) return
     setIsSubmitting(true)
@@ -132,16 +120,9 @@ export const ApiKeyGate = () => {
               </p>
             ) : null}
           </div>
-          <div className="flex shrink-0 flex-col gap-2 sm:w-32">
+          <div className="flex shrink-0 sm:w-32">
             <button
-              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-slate-100 transition hover:bg-slate-700"
-              type="button"
-              onClick={handlePaste}
-            >
-              Paste
-            </button>
-            <button
-              className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              className="w-full rounded-lg bg-sky-500 px-3 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
               type="button"
               disabled={!canTest}
               onClick={() => setShowTestKeyConfirm(true)}
