@@ -1,4 +1,4 @@
-export type PredictionStatus = 'pending' | 'processing' | 'completed' | 'failed'
+export type PredictionStatus = 'created' | 'queued' | 'pending' | 'processing' | 'completed' | 'failed'
 
 export type SeedanceAspectRatio = '16:9' | '9:16' | '4:3' | '3:4' | '1:1' | '21:9'
 export type SeedanceResolution = '480p' | '720p' | '1080p'
@@ -35,6 +35,25 @@ export interface PredictionResult {
   urls?: PredictionUrls
   created_at?: string
   error?: string | null
+  executionTime?: number
+  timings?: Record<string, unknown>
+}
+
+export interface PredictionListItem {
+  id: string
+  status: PredictionStatus
+  model?: string
+  outputs?: string[]
+  urls?: PredictionUrls
+  created_at?: string
+  error?: string | null
+  executionTime?: number
+  timings?: Record<string, unknown>
+}
+
+export interface PredictionListResponse {
+  page: number
+  items: PredictionListItem[]
 }
 
 export interface ModelPricing {

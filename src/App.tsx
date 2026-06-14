@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ApiKeyGate } from './components/ApiKeyGate'
-import { JobRunner } from './components/JobRunner'
-import { ResultView } from './components/ResultView'
+import { JobsPanel } from './components/JobsPanel'
 import { SeedanceVideoEditForm } from './components/SeedanceVideoEditForm'
 import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
 import type { BalanceResponseData, ModelPricing, PredictionResult, SeedanceVideoEditInput } from './lib/types'
-import { getModelPricing, pollPrediction, submitVideoEdit, validateKey, WavespeedError } from './lib/wavespeed'
+import { useJobs } from './hooks/useJobs'
+import { getModelPricing, submitVideoEdit, validateKey, WavespeedError } from './lib/wavespeed'
 
 const maskApiKey = (key: string): string => {
   if (key.length <= 14) return '********'
@@ -89,14 +89,8 @@ const formatBalance = (data: BalanceResponseData | null): string => {
 
 const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
-  const abortRef = useRef<AbortController | null>(null)
   const balanceCooldownTimerRef = useRef<number | null>(null)
-  const [isRunning, setIsRunning] = useState(false)
-  const [jobVisible, setJobVisible] = useState(false)
-  const [statusText, setStatusText] = useState('Idle')
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<PredictionResult | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [selectedWorkflowId, setSelectedWorkflowId] = useState(workflows[0].id)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
@@ -114,6 +108,7 @@ const AppContent = () => {
     () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? workflows[0],
     [selectedWorkflowId],
   )
+  const jobs = useJobs({ apiKey, modelNeedles: [activeWorkflow.pricingModelId] })
   const FormComponent = activeWorkflow.form
   const balanceDisplay = useMemo(() => formatBalance(balanceData), [balanceData])
   const priceDisplay = useMemo(() => {
@@ -197,51 +192,19 @@ const AppContent = () => {
   }, [])
 
   const runJob = async (input: unknown) => {
-    const controller = new AbortController()
-    abortRef.current?.abort()
-    abortRef.current = controller
-
-    setError(null)
-    setResult(null)
-    setJobVisible(true)
-    setIsRunning(true)
-    setStatusText('Submitting request...')
-    setElapsedSeconds(0)
-
-    const startTime = Date.now()
-    const timer = window.setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
-    }, 1000)
+    setSubmitError(null)
 
     try {
       const created = await activeWorkflow.submit(apiKey, input)
       const trackingTarget = created.urls?.get ?? created.id
-      setStatusText(`Queued (${created.status})`)
-
-      const final = await pollPrediction(apiKey, trackingTarget, controller.signal, (update) => {
-        setStatusText(`Status: ${update.status}`)
-      })
-
-      setStatusText(`Finished: ${final.status}`)
-      setResult(final)
-      if (final.status === 'failed') {
-        setError(final.error || 'Generation failed.')
-      }
+      await jobs.track(trackingTarget)
     } catch (caughtError) {
-      if (caughtError instanceof DOMException && caughtError.name === 'AbortError') {
-        setStatusText('Cancelled')
-        setError('Request cancelled.')
-      } else {
-        const message =
-          caughtError instanceof WavespeedError || caughtError instanceof Error
-            ? caughtError.message
-            : 'Request failed.'
-        setStatusText('Failed')
-        setError(message)
-      }
-    } finally {
-      window.clearInterval(timer)
-      setIsRunning(false)
+      if (caughtError instanceof DOMException && caughtError.name === 'AbortError') return
+      const message =
+        caughtError instanceof WavespeedError || caughtError instanceof Error
+          ? caughtError.message
+          : 'Request failed.'
+      setSubmitError(message)
     }
   }
 
@@ -299,18 +262,13 @@ const AppContent = () => {
                 onChange={(event) => {
                   const nextWorkflowId = event.target.value
                   setSelectedWorkflowId(nextWorkflowId)
-                  setResult(null)
-                  setError(null)
-                  setStatusText('Idle')
-                  setElapsedSeconds(0)
-                  setIsRunning(false)
-                  setJobVisible(false)
+                  setSubmitError(null)
                   setShowPriceConfirm(false)
                   setPendingInput(null)
                   setPricePreview(null)
                   setIsPricingLoading(false)
                   setPricingError(null)
-                  abortRef.current?.abort()
+                  jobs.reset()
                 }}
               >
                 {workflows.map((workflow) => (
@@ -371,23 +329,26 @@ const AppContent = () => {
           <FormComponent
             apiKey={apiKey}
             pricingModelId={activeWorkflow.pricingModelId}
-            isSubmitting={isRunning || showPriceConfirm}
+            isSubmitting={jobs.pollingJobId !== null || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             onSubmit={prepareRun}
           />
+          {submitError ? <p className="mt-3 text-sm text-rose-300">{submitError}</p> : null}
         </section>
 
-        <JobRunner
-          visible={jobVisible}
-          isRunning={isRunning}
-          statusText={statusText}
-          elapsedSeconds={elapsedSeconds}
-          onCancel={() => {
-            abortRef.current?.abort()
-          }}
+        <JobsPanel
+          jobsById={jobs.jobsById}
+          recentIds={jobs.recentIds}
+          selectedJobId={jobs.selectedJobId}
+          pollingJobId={jobs.pollingJobId}
+          elapsedSeconds={jobs.elapsedSeconds}
+          isLoadingRecents={jobs.isLoadingRecents}
+          recentsError={jobs.recentsError}
+          lastRefreshedAt={jobs.lastRefreshedAt}
+          onRefresh={jobs.refreshRecents}
+          onSelect={jobs.select}
+          onCancel={jobs.cancelActive}
         />
-
-        <ResultView error={error} result={result} />
       </div>
 
       <ConfirmDialog
@@ -440,13 +401,8 @@ const AppContent = () => {
         onCancel={() => setShowChangeKeyConfirm(false)}
         onConfirm={() => {
           setShowChangeKeyConfirm(false)
-          setResult(null)
-          setError(null)
-          setIsRunning(false)
-          setJobVisible(false)
-          setStatusText('Idle')
-          setElapsedSeconds(0)
-          abortRef.current?.abort()
+          jobs.reset()
+          setSubmitError(null)
           setShowPriceConfirm(false)
           setPendingInput(null)
           setPricePreview(null)

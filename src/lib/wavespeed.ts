@@ -1,6 +1,7 @@
 import type {
   BalanceResponseData,
   ModelPricing,
+  PredictionListResponse,
   PredictionResult,
   SeedanceVideoEditInput,
   UploadedMedia,
@@ -8,7 +9,7 @@ import type {
 } from './types'
 
 export const BASE_URL = 'https://api.wavespeed.ai/api/v3'
-const DEFAULT_POLL_INTERVAL_MS = 1500
+const DEFAULT_POLL_INTERVAL_MS = 5000
 
 export class WavespeedError extends Error {
   status: number
@@ -190,6 +191,38 @@ export const getPredictionResult = async (
     method: 'GET',
     headers: createAuthHeaders(apiKey),
   })
+  return envelope.data
+}
+
+export const listPredictions = async (
+  apiKey: string,
+  options?: {
+    page?: number
+    page_size?: number
+    model?: string
+    status?: 'completed' | 'failed' | 'processing'
+    created_after?: string
+    created_before?: string
+  },
+): Promise<PredictionListResponse> => {
+  const payload = {
+    page: options?.page ?? 1,
+    page_size: options?.page_size ?? 100,
+    ...(options?.model ? { model: options.model } : {}),
+    ...(options?.status ? { status: options.status } : {}),
+    ...(options?.created_after ? { created_after: options.created_after } : {}),
+    ...(options?.created_before ? { created_before: options.created_before } : {}),
+  }
+
+  const envelope = await requestJson<PredictionListResponse>(`${BASE_URL}/predictions`, {
+    method: 'POST',
+    headers: {
+      ...createAuthHeaders(apiKey),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
   return envelope.data
 }
 
