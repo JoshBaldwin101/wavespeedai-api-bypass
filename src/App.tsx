@@ -6,7 +6,7 @@ import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
 import type { BalanceResponseData, ModelPricing } from './lib/types'
-import { workflowGroups, workflows } from './lib/workflows'
+import { defaultWorkflow, defaultWorkflowId, workflowGroups, workflows } from './lib/workflows'
 import { useJobs } from './hooks/useJobs'
 import { getModelPricing, submitPrediction, validateKey, WavespeedError } from './lib/wavespeed'
 
@@ -105,7 +105,7 @@ const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
   const balanceCooldownTimerRef = useRef<number | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState(workflows[0].id)
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(defaultWorkflowId)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceData, setBalanceData] = useState<BalanceResponseData | null>(null)
@@ -123,7 +123,7 @@ const AppContent = () => {
 
   const maskedKey = useMemo(() => maskApiKey(apiKey), [apiKey])
   const activeWorkflow = useMemo(
-    () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? workflows[0],
+    () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? defaultWorkflow,
     [selectedWorkflowId],
   )
   const groupedWorkflows = useMemo(

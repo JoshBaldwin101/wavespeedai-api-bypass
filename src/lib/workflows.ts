@@ -41,8 +41,8 @@ export interface WorkflowDefinition {
 }
 
 export const workflowGroups: WorkflowGroupDefinition[] = [
-  { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
   { id: 'seedance-2.0', label: 'seedance-2.0' },
+  { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
 ]
 
 const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
@@ -105,78 +105,6 @@ const videoExtendCapabilities: WorkflowCapabilities = {
 }
 
 export const workflows: WorkflowDefinition[] = [
-  {
-    id: 'seedance-2.0-fast/image-to-video',
-    label: 'seedance-2.0-fast/image-to-video',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/image-to-video',
-    capabilities: imageToVideoCapabilities,
-    form: SeedanceImageToVideoForm,
-  },
-  {
-    id: 'seedance-2.0-fast/image-to-video-spicy',
-    label: 'seedance-2.0-fast/image-to-video-spicy',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/image-to-video-spicy',
-    capabilities: imageToVideoSpicyCapabilities,
-    form: SeedanceImageToVideoForm,
-  },
-  {
-    id: 'seedance-2.0-fast/image-to-video-turbo',
-    label: 'seedance-2.0-fast/image-to-video-turbo',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/image-to-video-turbo',
-    capabilities: imageToVideoTurboCapabilities,
-    form: SeedanceImageToVideoForm,
-  },
-  {
-    id: 'seedance-2.0-fast/text-to-video',
-    label: 'seedance-2.0-fast/text-to-video',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/text-to-video',
-    capabilities: textToVideoCapabilities,
-    form: SeedanceTextToVideoForm,
-  },
-  {
-    id: 'seedance-2.0-fast/text-to-video-turbo',
-    label: 'seedance-2.0-fast/text-to-video-turbo',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/text-to-video-turbo',
-    capabilities: textToVideoTurboCapabilities,
-    form: SeedanceTextToVideoForm,
-  },
-  {
-    id: 'seedance-2.0-fast/video-edit',
-    label: 'seedance-2.0-fast/video-edit',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/video-edit',
-    capabilities: videoEditCapabilities,
-    form: SeedanceVideoEditForm,
-  },
-  {
-    id: 'seedance-2.0-fast/video-edit-turbo',
-    label: 'seedance-2.0-fast/video-edit-turbo',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/video-edit-turbo',
-    capabilities: videoEditTurboCapabilities,
-    form: SeedanceVideoEditForm,
-  },
-  {
-    id: 'seedance-2.0-fast/video-extend',
-    label: 'seedance-2.0-fast/video-extend',
-    group: 'seedance-2.0-fast',
-    submitLabel: 'Generate video',
-    model: 'bytedance/seedance-2.0-fast/video-extend',
-    capabilities: videoExtendCapabilities,
-    form: SeedanceVideoExtendForm,
-  },
   {
     id: 'seedance-2.0/image-to-video',
     label: 'seedance-2.0/image-to-video',
@@ -249,4 +177,81 @@ export const workflows: WorkflowDefinition[] = [
     capabilities: videoExtendCapabilities,
     form: SeedanceVideoExtendForm,
   },
+  {
+    id: 'seedance-2.0-fast/image-to-video',
+    label: 'seedance-2.0-fast/image-to-video',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/image-to-video',
+    capabilities: imageToVideoCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.0-fast/image-to-video-spicy',
+    label: 'seedance-2.0-fast/image-to-video-spicy',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/image-to-video-spicy',
+    capabilities: imageToVideoSpicyCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.0-fast/image-to-video-turbo',
+    label: 'seedance-2.0-fast/image-to-video-turbo',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/image-to-video-turbo',
+    capabilities: imageToVideoTurboCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.0-fast/text-to-video',
+    label: 'seedance-2.0-fast/text-to-video',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/text-to-video',
+    capabilities: textToVideoCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.0-fast/text-to-video-turbo',
+    label: 'seedance-2.0-fast/text-to-video-turbo',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/text-to-video-turbo',
+    capabilities: textToVideoTurboCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.0-fast/video-edit',
+    label: 'seedance-2.0-fast/video-edit',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/video-edit',
+    capabilities: videoEditCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.0-fast/video-edit-turbo',
+    label: 'seedance-2.0-fast/video-edit-turbo',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/video-edit-turbo',
+    capabilities: videoEditTurboCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.0-fast/video-extend',
+    label: 'seedance-2.0-fast/video-extend',
+    group: 'seedance-2.0-fast',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.0-fast/video-extend',
+    capabilities: videoExtendCapabilities,
+    form: SeedanceVideoExtendForm,
+  },
 ]
+
+export const defaultWorkflowId = 'seedance-2.0/text-to-video'
+
+export const defaultWorkflow =
+  workflows.find((workflow) => workflow.id === defaultWorkflowId) ?? workflows[0]
