@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { ConfirmDialog } from './ui/ConfirmDialog'
 import { useApiKey } from '../context/useApiKey'
 import { WavespeedError, validateKey } from '../lib/wavespeed'
 
@@ -10,6 +11,7 @@ export const ApiKeyGate = () => {
   const [isRevealed, setIsRevealed] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showTestKeyConfirm, setShowTestKeyConfirm] = useState(false)
 
   const startsWithPrefix = useMemo(() => apiKey.startsWith(API_KEY_PREFIX), [apiKey])
   const canTest = apiKey.length > 0 && startsWithPrefix && !isSubmitting
@@ -137,7 +139,7 @@ export const ApiKeyGate = () => {
               className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-medium text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
               type="button"
               disabled={!canTest}
-              onClick={handleValidate}
+              onClick={() => setShowTestKeyConfirm(true)}
             >
               {isSubmitting ? 'Testing...' : 'Test key'}
             </button>
@@ -147,6 +149,37 @@ export const ApiKeyGate = () => {
         {error ? <p className="mt-4 text-sm text-rose-300">{error}</p> : null}
         {message ? <p className="mt-4 text-sm text-emerald-300">{message}</p> : null}
       </section>
+
+      <ConfirmDialog
+        open={showTestKeyConfirm}
+        title="Before you continue"
+        dialogClassName="max-w-lg"
+        confirmLabel="Proceed"
+        confirmVariant="primary"
+        requireAcknowledgment
+        description={
+          <div className="space-y-4">
+            <p>
+              <span className="font-semibold text-slate-100">Risk agreement:</span> By clicking &ldquo;I understand&rdquo;, you
+              understand that using this tool may incur unexpected or additional costs and that using this tool involves doing so
+              at your own risk. Using this tool means you understand that your use may or may not be in compliance with third
+              party services involved, this is at your own risk.
+            </p>
+            <p>
+              <span className="font-semibold text-slate-100">Privacy disclosure:</span> The creator and host of this tool does
+              NOT see your API key, balance, prompts, videos, images, inputs, outputs, or anything. It is entirely within your
+              own browser. The creator does not gain or suffer from your use or misuse of the tool in any capacity. No financial
+              cut is taken whatsoever. No personal data is collected. Anonymized visitor metrics (like monthly visitors) are
+              counted via GoatCounter.
+            </p>
+          </div>
+        }
+        onCancel={() => setShowTestKeyConfirm(false)}
+        onConfirm={() => {
+          setShowTestKeyConfirm(false)
+          void handleValidate()
+        }}
+      />
     </main>
   )
 }
