@@ -108,7 +108,8 @@ const AppContent = () => {
     () => workflows.find((workflow) => workflow.id === selectedWorkflowId) ?? workflows[0],
     [selectedWorkflowId],
   )
-  const jobs = useJobs({ apiKey, modelNeedles: [activeWorkflow.pricingModelId] })
+  const jobModelNeedles = useMemo(() => [activeWorkflow.pricingModelId], [activeWorkflow.pricingModelId])
+  const jobs = useJobs({ apiKey, modelNeedles: jobModelNeedles })
   const FormComponent = activeWorkflow.form
   const balanceDisplay = useMemo(() => formatBalance(balanceData), [balanceData])
   const priceDisplay = useMemo(() => {

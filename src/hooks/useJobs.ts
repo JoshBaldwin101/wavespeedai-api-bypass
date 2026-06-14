@@ -45,8 +45,11 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
 
   const activeControllerRef = useRef<AbortController | null>(null)
   const elapsedTimerRef = useRef<number | null>(null)
+  const refreshInFlightRef = useRef(false)
+  const lastRefreshAttemptRef = useRef(0)
 
-  const normalizedNeedles = useMemo(() => modelNeedles.map((item) => item.toLowerCase()), [modelNeedles])
+  const modelNeedlesKey = modelNeedles.join('|').toLowerCase()
+  const normalizedNeedles = useMemo(() => modelNeedles.map((item) => item.toLowerCase()), [modelNeedlesKey])
 
   const mergeJob = useCallback((job: PredictionResult) => {
     setJobsById((previous) => ({
@@ -72,6 +75,17 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
   }, [stopElapsedTimer])
 
   const refreshRecents = useCallback(async () => {
+    if (refreshInFlightRef.current) {
+      return
+    }
+
+    const now = Date.now()
+    if (now - lastRefreshAttemptRef.current < 500) {
+      return
+    }
+
+    refreshInFlightRef.current = true
+    lastRefreshAttemptRef.current = now
     setIsLoadingRecents(true)
     setRecentsError(null)
     try {
@@ -108,6 +122,7 @@ export const useJobs = ({ apiKey, modelNeedles }: UseJobsParams) => {
         setRecentsError('Could not load recent jobs.')
       }
     } finally {
+      refreshInFlightRef.current = false
       setIsLoadingRecents(false)
     }
   }, [apiKey, normalizedNeedles])
