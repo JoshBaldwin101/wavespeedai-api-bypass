@@ -35,6 +35,8 @@ export const SeedanceTextToVideoForm = ({
     supportsAspectRatio = true,
   } = workflowCapabilities ?? {}
   const maxReferenceImages = SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceImages
+  const maxReferenceVideos = SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceVideos
+  const maxReferenceAudios = SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceAudios
   const [prompt, setPrompt] = useState('')
   const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
   const [referenceVideoUrls, setReferenceVideoUrls] = useState<string[]>([])
@@ -189,6 +191,7 @@ export const SeedanceTextToVideoForm = ({
         value={referenceVideoUrls}
         onChange={setReferenceVideoUrls}
         multiple
+        maxItems={maxReferenceVideos}
         hint="Optional. Combined reference video duration must stay within 15 seconds."
       />
 
@@ -199,6 +202,7 @@ export const SeedanceTextToVideoForm = ({
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple
+        maxItems={maxReferenceAudios}
         hint="Optional. Combined reference audio duration must stay within 15 seconds."
       />
 

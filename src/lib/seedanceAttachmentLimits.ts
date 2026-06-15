@@ -4,11 +4,14 @@ export const SEEDANCE_ATTACHMENT_LIMITS = {
     lastImage: 1,
   },
   textToVideo: {
-    referenceImages: 4,
+    referenceImages: 9,
+    referenceVideos: 9,
+    referenceAudios: 9,
   },
   videoEdit: {
     video: 1,
-    referenceImages: 4,
+    referenceImages: 9,
+    referenceAudios: 9,
   },
   videoExtend: {
     video: 1,

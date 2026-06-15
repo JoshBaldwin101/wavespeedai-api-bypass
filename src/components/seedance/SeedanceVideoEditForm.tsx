@@ -211,6 +211,7 @@ export const SeedanceVideoEditForm = ({
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple
+        maxItems={limits.referenceAudios}
         hint="Optional. Combined reference audio duration must stay within 15 seconds."
       />
 
