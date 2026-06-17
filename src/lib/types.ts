@@ -21,6 +21,8 @@ export type GptImageAspectRatio =
 export type GptImageResolution = '1k' | '2k' | '4k'
 export type GptImageQuality = 'low' | 'medium' | 'high'
 export type GptImageOutputFormat = 'png' | 'jpeg' | 'webp'
+export type Scail2Mode = 'animate' | 'replace'
+export type Scail2Resolution = '480p' | '720p'
 
 export interface SeedanceCommonInput {
   prompt?: string
@@ -69,6 +71,15 @@ export interface GptImageEditInput extends GptImageCommonInput {
 }
 
 export type GptImageTextToImageInput = GptImageCommonInput
+
+export interface Scail2Input {
+  image: string
+  video: string
+  prompt?: string
+  mode?: Scail2Mode
+  resolution?: Scail2Resolution
+  seed?: number
+}
 
 export interface UploadedMedia {
   type: 'image' | 'video' | 'audio' | string

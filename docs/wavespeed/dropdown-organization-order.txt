@@ -24,5 +24,9 @@ seedance-2.0-fast/video-extend
 
 ---
 
+wavespeed-ai/scail-2 
+
+---
+
 openai/gpt-image-2/edit
 openai/gpt-image-2/text-to-image

@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { GptImageEditForm } from '../components/gptImage/GptImageEditForm'
 import { GptImageTextToImageForm } from '../components/gptImage/GptImageTextToImageForm'
+import { Scail2Form } from '../components/scail/Scail2Form'
 import { SeedanceImageToVideoForm } from '../components/seedance/SeedanceImageToVideoForm'
 import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVideoForm'
 import { SeedanceVideoEditForm } from '../components/seedance/SeedanceVideoEditForm'
@@ -16,7 +17,7 @@ export interface WorkflowFormProps {
   workflowCapabilities?: WorkflowCapabilities
 }
 
-export type WorkflowGroupId = 'seedance-2.0-fast' | 'seedance-2.0' | 'gpt-image-2'
+export type WorkflowGroupId = 'seedance-2.0-fast' | 'seedance-2.0' | 'wavespeed-ai' | 'gpt-image-2'
 
 export interface WorkflowGroupDefinition {
   id: WorkflowGroupId
@@ -45,6 +46,7 @@ export interface WorkflowDefinition {
 export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'seedance-2.0', label: 'seedance-2.0' },
   { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
+  { id: 'wavespeed-ai', label: 'wavespeed-ai' },
   { id: 'gpt-image-2', label: 'openai/gpt-image-2' },
 ]
 
@@ -251,6 +253,14 @@ export const workflows: WorkflowDefinition[] = [
     model: 'bytedance/seedance-2.0-fast/video-extend',
     capabilities: videoExtendCapabilities,
     form: SeedanceVideoExtendForm,
+  },
+  {
+    id: 'wavespeed-ai/scail-2',
+    label: 'wavespeed-ai/scail-2',
+    group: 'wavespeed-ai',
+    submitLabel: 'Generate video',
+    model: 'wavespeed-ai/scail-2',
+    form: Scail2Form,
   },
   {
     id: 'openai/gpt-image-2/edit',
