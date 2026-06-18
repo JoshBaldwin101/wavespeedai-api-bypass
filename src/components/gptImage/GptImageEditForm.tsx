@@ -100,7 +100,7 @@ export const GptImageEditForm = ({
       <Field label="Edit prompt" htmlFor="gpt-image-edit-prompt" required>
         <textarea
           id="gpt-image-edit-prompt"
-          className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
+          className="min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-44"
           placeholder="Add dramatic sunset lighting and subtle film grain."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}

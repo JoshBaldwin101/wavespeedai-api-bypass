@@ -141,7 +141,7 @@ export const Scail2Form = ({
       >
         <textarea
           id="scail-2-prompt"
-          className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
+          className="min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-44"
           placeholder="Keep identity and outfit details, cinematic lighting."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}

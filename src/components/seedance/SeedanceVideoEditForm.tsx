@@ -176,7 +176,7 @@ export const SeedanceVideoEditForm = ({
       >
         <textarea
           id="seedance-prompt"
-          className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
+          className="min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-44"
           placeholder="Change the time to a rainy night."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
@@ -212,7 +212,7 @@ export const SeedanceVideoEditForm = ({
         onChange={setReferenceAudioUrls}
         multiple
         maxItems={limits.referenceAudios}
-        hint="Optional. Combined reference audio duration must stay within 15 seconds."
+        hint="Optional."
       />
 
       <SeedanceAdvancedFields

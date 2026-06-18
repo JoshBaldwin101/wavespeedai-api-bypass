@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { DragEvent, ReactNode } from 'react'
 import { uploadFile, WavespeedError } from '../lib/wavespeed'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
@@ -36,6 +36,8 @@ const typePrefixMap: Record<MediaKind, string> = {
   audio: 'audio/',
 }
 
+const DESKTOP_POINTER_QUERY = '(hover: hover) and (pointer: fine)'
+
 export const MediaUpload = ({
   apiKey,
   hint,
@@ -55,12 +57,32 @@ export const MediaUpload = ({
   const [directUrl, setDirectUrl] = useState('')
   const [isAddingUrl, setIsAddingUrl] = useState(false)
   const [showPreviews, setShowPreviews] = useState(true)
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragDepthRef = useRef(0)
 
   useEffect(() => {
     if (isAddingUrl) {
       urlInputRef.current?.focus()
     }
   }, [isAddingUrl])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mediaQuery = window.matchMedia(DESKTOP_POINTER_QUERY)
+    const syncDesktopState = () => {
+      setIsDesktop(mediaQuery.matches)
+    }
+
+    syncDesktopState()
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncDesktopState)
+      return () => mediaQuery.removeEventListener('change', syncDesktopState)
+    }
+
+    mediaQuery.addListener(syncDesktopState)
+    return () => mediaQuery.removeListener(syncDesktopState)
+  }, [])
 
   const isAtLimit = typeof maxItems === 'number' && value.length >= maxItems
 
@@ -143,27 +165,35 @@ export const MediaUpload = ({
     }
   }
 
-  const handleAddUrl = () => {
-    const trimmed = directUrl.trim()
+  const commitUrl = (candidate: string): boolean => {
+    const trimmed = candidate.trim()
     if (!trimmed) {
       setError('Please enter a file URL first.')
-      urlInputRef.current?.focus()
-      return
+      return false
     }
 
     const urlError = validateRemoteUrl(trimmed)
     if (urlError) {
       setError(urlError)
-      return
+      return false
     }
 
     if (typeof maxItems === 'number' && value.length + 1 > maxItems) {
       setError(buildMaxItemsError(1))
-      return
+      return false
     }
 
     setError(null)
     onChange(multiple ? [...value, trimmed] : [trimmed])
+    return true
+  }
+
+  const handleAddUrl = () => {
+    if (!commitUrl(directUrl)) {
+      urlInputRef.current?.focus()
+      return
+    }
+
     setDirectUrl('')
     setIsAddingUrl(false)
   }
@@ -193,13 +223,110 @@ export const MediaUpload = ({
     return <img className="max-h-52 w-full rounded object-contain sm:max-h-64" src={url} alt="Uploaded reference preview" />
   }
 
+  const hasDropPayload = (dataTransfer: DataTransfer) => {
+    const types = Array.from(dataTransfer.types)
+    return types.includes('Files') || types.includes('text/uri-list') || types.includes('text/plain')
+  }
+
+  const extractDroppedUrl = (dataTransfer: DataTransfer): string | null => {
+    const uriList = dataTransfer.getData('text/uri-list')
+    const plainText = dataTransfer.getData('text/plain')
+    const firstSource = uriList || plainText
+
+    if (!firstSource) return null
+
+    const candidates = firstSource
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'))
+
+    return candidates[0] ?? null
+  }
+
+  const resetDragState = () => {
+    dragDepthRef.current = 0
+    setIsDragging(false)
+  }
+
+  const handleDragEnter = (event: DragEvent<HTMLDivElement>) => {
+    if (!isDesktop || !hasDropPayload(event.dataTransfer)) return
+    event.preventDefault()
+    dragDepthRef.current += 1
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    if (!isDesktop || !hasDropPayload(event.dataTransfer)) return
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1)
+    if (dragDepthRef.current === 0) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (!isDesktop || !hasDropPayload(event.dataTransfer)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = !isUploading && !isAtLimit ? 'copy' : 'none'
+  }
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    if (!isDesktop || !hasDropPayload(event.dataTransfer)) return
+    event.preventDefault()
+    resetDragState()
+
+    if (isUploading) return
+
+    const droppedFiles = event.dataTransfer.files
+    if (droppedFiles.length > 0) {
+      if (typeof maxItems === 'number' && value.length + droppedFiles.length > maxItems) {
+        setError(buildMaxItemsError(droppedFiles.length))
+        return
+      }
+
+      void handleFileSelect(droppedFiles)
+      return
+    }
+
+    const droppedUrl = extractDroppedUrl(event.dataTransfer)
+    if (!droppedUrl) {
+      setError('Drop a local file or a valid media URL.')
+      return
+    }
+
+    commitUrl(droppedUrl)
+  }
+
   return (
-    <div className="space-y-1.5 rounded-lg border border-slate-800 bg-slate-900/50 p-3 sm:space-y-2 sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-medium text-slate-100">
-          {label}
-          {required ? <span className="ml-1 text-rose-400">*</span> : null}
-        </p>
+    <div
+      className={`relative space-y-1.5 rounded-lg border bg-slate-900/50 p-3 sm:space-y-2 sm:p-4 ${
+        isDesktop && isDragging ? 'border-sky-500/70' : 'border-slate-800'
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {isDesktop && isDragging ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sky-400/80 bg-sky-500/10 p-4 text-center text-xs font-medium text-sky-100 sm:text-sm">
+          {isAtLimit ? 'Attachment limit reached' : `Drop ${multiple ? kind + ' files' : kind + ' file'} here`}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-sm font-medium text-slate-100">
+            {label}
+            {required ? <span className="ml-1 text-rose-400">*</span> : null}
+          </p>
+          {hint || typeof maxItems === 'number' ? (
+            <p className="text-xs text-slate-400">
+              {hint ? <span>{hint}</span> : null}
+              {hint && typeof maxItems === 'number' ? <span className="px-1.5 text-slate-600">&middot;</span> : null}
+              {typeof maxItems === 'number' ? (
+                <span className="text-slate-500">Up to {maxItems === 1 ? '1 file' : `${maxItems} files`}</span>
+              ) : null}
+            </p>
+          ) : null}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           {value.length > 1 ? (
             <Button
@@ -236,10 +363,6 @@ export const MediaUpload = ({
         }}
       />
 
-      {hint ? <p className="hidden text-xs text-slate-400 sm:block">{hint}</p> : null}
-      {typeof maxItems === 'number' ? (
-        <p className="hidden text-xs text-slate-500 sm:block">Attachment limit: {maxItems === 1 ? '1 file' : `${maxItems} files`}.</p>
-      ) : null}
       {error ? <p className="text-xs text-rose-300">{error}</p> : null}
 
       {isUploading ? (

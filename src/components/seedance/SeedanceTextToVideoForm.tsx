@@ -167,7 +167,7 @@ export const SeedanceTextToVideoForm = ({
       <Field label="Prompt" htmlFor="seedance-prompt" required={promptRequired}>
         <textarea
           id="seedance-prompt"
-          className="min-h-20 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-28"
+          className="min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-44"
           placeholder="A cinematic tracking shot through a neon city at dusk."
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
@@ -192,7 +192,7 @@ export const SeedanceTextToVideoForm = ({
         onChange={setReferenceVideoUrls}
         multiple
         maxItems={maxReferenceVideos}
-        hint="Optional. Combined reference video duration must stay within 15 seconds."
+        hint="Optional."
       />
 
       <MediaUpload
@@ -203,7 +203,7 @@ export const SeedanceTextToVideoForm = ({
         onChange={setReferenceAudioUrls}
         multiple
         maxItems={maxReferenceAudios}
-        hint="Optional. Combined reference audio duration must stay within 15 seconds."
+        hint="Optional."
       />
 
       <SeedanceAdvancedFields
