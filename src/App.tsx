@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiKeyGate } from './components/ApiKeyGate'
 import { JobsPanel } from './components/JobsPanel'
+import { AboutButton } from './components/ui/AboutButton'
 import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
 import { ApiKeyProvider } from './context/ApiKeyContext'
@@ -329,7 +330,10 @@ const AppContent = () => {
           <div className="border-b border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/40 p-3.5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h1 className="text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl">WaveSpeedAI API Tool</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl">WaveSpeedAI API Tool</h1>
+                  <AboutButton />
+                </div>
                 <p className="mt-2 hidden max-w-2xl text-sm leading-6 text-slate-300 sm:block">
                   Choose a workflow, fill in inputs, then send generation jobs.
                 </p>

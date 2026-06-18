@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import step1and2 from '../assets/step1and2.png'
 import step3 from '../assets/step3.png'
+import { AboutButton } from './ui/AboutButton'
 import { ConfirmDialog } from './ui/ConfirmDialog'
 import { useApiKey } from '../context/useApiKey'
 import { WavespeedError, validateKey } from '../lib/wavespeed'
@@ -45,7 +46,10 @@ export const ApiKeyGate = () => {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-full items-start p-3 sm:max-w-4xl sm:items-center sm:p-6">
       <section className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl shadow-black/20 sm:p-6">
-        <h1 className="text-2xl font-semibold text-slate-100">WaveSpeedAI API Tool</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-slate-100">WaveSpeedAI API Tool</h1>
+          <AboutButton />
+        </div>
         <p className="mt-2 text-sm text-slate-300">
           Paste your WaveSpeed API key to begin. This app <strong className="font-semibold text-slate-100">never</strong> stores keys in browser storage.
         </p>
