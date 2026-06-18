@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { evaluateIntegerField } from '../../lib/numericField'
 import type { Scail2Input, Scail2Mode, Scail2Resolution } from '../../lib/types'
 import { MediaUpload } from '../MediaUpload'
 import { Button } from '../ui/Button'
@@ -33,25 +34,25 @@ export const Scail2Form = ({
   const [seed, setSeed] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const parsedSeed = useMemo(() => {
-    if (!seed.trim()) return undefined
-    const parsed = Number.parseInt(seed.trim(), 10)
-    if (!Number.isFinite(parsed)) return Number.NaN
-    return parsed
-  }, [seed])
+  const { value: seedValue, error: seedError } = useMemo(
+    () =>
+      evaluateIntegerField(seed, {
+        label: 'Seed',
+        min: -1,
+        max: 2147483647,
+      }),
+    [seed],
+  )
 
   const hasAttachmentOverflow = imageUrls.length > MAX_IMAGE_ITEMS || videoUrls.length > MAX_VIDEO_ITEMS
 
-  const isSeedValid =
-    typeof parsedSeed !== 'number' || (!Number.isNaN(parsedSeed) && parsedSeed >= -1 && parsedSeed <= 2147483647)
-
   const isFormValid = useMemo(
-    () => Boolean(imageUrls[0] && videoUrls[0] && !hasAttachmentOverflow && isSeedValid),
-    [imageUrls, videoUrls, hasAttachmentOverflow, isSeedValid],
+    () => Boolean(imageUrls[0] && videoUrls[0] && !hasAttachmentOverflow && !seedError),
+    [imageUrls, videoUrls, hasAttachmentOverflow, seedError],
   )
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
-    if (!imageUrls[0] || !videoUrls[0] || hasAttachmentOverflow || !isSeedValid) return null
+    if (!imageUrls[0] || !videoUrls[0] || hasAttachmentOverflow || seedError) return null
 
     const payload: Record<string, unknown> = {
       image: imageUrls[0],
@@ -62,10 +63,10 @@ export const Scail2Form = ({
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (mode !== DEFAULT_MODE) payload.mode = mode
     if (resolution !== DEFAULT_RESOLUTION) payload.resolution = resolution
-    if (typeof parsedSeed === 'number') payload.seed = parsedSeed
+    if (typeof seedValue === 'number') payload.seed = seedValue
 
     return payload
-  }, [imageUrls, videoUrls, hasAttachmentOverflow, isSeedValid, prompt, mode, resolution, parsedSeed])
+  }, [imageUrls, videoUrls, hasAttachmentOverflow, seedError, prompt, mode, resolution, seedValue])
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,
@@ -108,13 +109,8 @@ export const Scail2Form = ({
       return
     }
 
-    if (typeof parsedSeed === 'number' && Number.isNaN(parsedSeed)) {
-      setError('Seed must be a whole number from -1 to 2147483647.')
-      return
-    }
-
-    if (typeof parsedSeed === 'number' && (parsedSeed < -1 || parsedSeed > 2147483647)) {
-      setError('Seed must be in the range -1 to 2147483647.')
+    if (seedError) {
+      setError(seedError)
       return
     }
 
@@ -127,7 +123,7 @@ export const Scail2Form = ({
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (mode !== DEFAULT_MODE) payload.mode = mode
     if (resolution !== DEFAULT_RESOLUTION) payload.resolution = resolution
-    if (typeof parsedSeed === 'number') payload.seed = parsedSeed
+    if (typeof seedValue === 'number') payload.seed = seedValue
 
     await onSubmit(payload)
   }
@@ -195,7 +191,7 @@ export const Scail2Form = ({
         </Field>
       </div>
 
-      <Field label="Seed" htmlFor="scail-2-seed" hint="Optional. Use -1 for random output.">
+      <Field label="Seed" htmlFor="scail-2-seed" error={seedError ?? undefined} hint="Optional. Use -1 for random output.">
         <input
           id="scail-2-seed"
           className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"

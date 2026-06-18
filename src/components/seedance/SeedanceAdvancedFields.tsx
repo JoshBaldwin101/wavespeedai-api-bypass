@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { SeedanceAspectRatio, SeedanceResolution } from '../../lib/types'
 import { Field } from '../ui/Field'
 import { Toggle } from '../ui/Toggle'
@@ -15,6 +16,7 @@ interface SeedanceAdvancedFieldsProps {
   resolutionOptions?: SeedanceResolution[]
   duration: string
   onDurationChange: (value: string) => void
+  durationError?: ReactNode
   durationMin?: number
   durationMax?: number
   enableWebSearch: boolean
@@ -32,6 +34,7 @@ export const SeedanceAdvancedFields = ({
   resolutionOptions = ['480p', '720p', '1080p'],
   duration,
   onDurationChange,
+  durationError,
   durationMin = 4,
   durationMax = 15,
   enableWebSearch,
@@ -78,6 +81,7 @@ export const SeedanceAdvancedFields = ({
           className={showAspectRatio ? 'col-span-2 md:col-span-1' : 'col-span-2 md:col-span-1'}
           label="Duration (seconds)"
           htmlFor="seedance-duration"
+          error={durationError}
           hint={`Optional. Allowed range: ${durationMin}-${durationMax}.`}
         >
           <input

@@ -21,6 +21,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 2. Create a workflow form in the proper folder (`src/components/seedance/` or `src/components/gptImage/`):
    - Keep payload assembly explicit.
    - Validate required fields and any model-specific ranges/options.
+   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
    - Enforce documented WaveSpeed attachment-count limits in both UI and submit-time validation.
    - Reuse `MediaUpload`, `useLivePricing`, and shared advanced-fields components where possible.
 3. Register the workflow in `src/lib/workflows.ts`:
@@ -47,6 +48,15 @@ Current documented limits used in this app:
 - Seedance reference images are capped at 4 files.
 - Seedance `reference_videos[]` and `reference_audios[]` docs currently specify total duration limits (15 seconds), not an item-count cap, so do not invent a count limit unless WaveSpeed documents one.
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
+
+## Numeric field validation
+
+For optional integer fields with known ranges (for example `duration` or `seed`), use `evaluateIntegerField` from `src/lib/numericField.ts` as the single source of truth.
+
+- Use the helper to derive `{ value, error }` from the raw input string.
+- Pass `error` to the corresponding `Field` via `error={...}` so users immediately see what is invalid.
+- Gate `isFormValid`, `pricingInput`, and submit-time checks from the same `error` value instead of duplicating number parsing logic.
+- Use `value` when building payloads only when it is a number.
 
 ## Current workflow schema notes (dropdown order)
 

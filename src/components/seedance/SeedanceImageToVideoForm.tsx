@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { SeedanceAspectRatio, SeedanceImageToVideoInput } from '../../lib/types'
+import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
 import type { WorkflowCapabilities } from '../../lib/workflows'
@@ -47,40 +48,36 @@ export const SeedanceImageToVideoForm = ({
   const [generateAudio, setGenerateAudio] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const durationValue = useMemo(() => {
-    if (!duration.trim()) return undefined
-    const parsed = Number.parseInt(duration.trim(), 10)
-    if (!Number.isFinite(parsed)) return Number.NaN
-    return parsed
-  }, [duration])
+  const { value: durationValue, error: durationError } = useMemo(
+    () => evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax }),
+    [duration, durationMin, durationMax],
+  )
 
-  const parsedSeed = useMemo(() => {
-    if (!supportsSeed || !seed.trim()) return undefined
-    const parsed = Number.parseInt(seed.trim(), 10)
-    if (!Number.isFinite(parsed)) return Number.NaN
-    return parsed
+  const { value: seedValue, error: seedError } = useMemo(() => {
+    if (!supportsSeed) {
+      return { value: undefined, error: null }
+    }
+
+    return evaluateIntegerField(seed, {
+      label: 'Seed',
+      min: -1,
+      max: 2147483647,
+    })
   }, [seed, supportsSeed])
 
   const isFormValid = useMemo(() => {
     if (promptRequired && !prompt.trim()) return false
     if (!imageUrls[0]) return false
-    if (typeof durationValue === 'number' && Number.isNaN(durationValue)) return false
-    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) return false
-    if (typeof parsedSeed === 'number' && (Number.isNaN(parsedSeed) || parsedSeed < -1 || parsedSeed > 2147483647)) return false
+    if (durationError) return false
+    if (seedError) return false
     return true
-  }, [promptRequired, prompt, imageUrls, durationValue, durationMin, durationMax, parsedSeed])
+  }, [promptRequired, prompt, imageUrls, durationError, seedError])
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
     const trimmedPrompt = prompt.trim()
     if (promptRequired && !trimmedPrompt) return null
     if (!imageUrls[0]) return null
-    if (
-      typeof durationValue === 'number' &&
-      (Number.isNaN(durationValue) || durationValue < durationMin || durationValue > durationMax)
-    ) {
-      return null
-    }
-    if (typeof parsedSeed === 'number' && (Number.isNaN(parsedSeed) || parsedSeed < -1 || parsedSeed > 2147483647)) return null
+    if (durationError || seedError) return null
 
     const payload: SeedanceImageToVideoInput = {
       image: imageUrls[0],
@@ -93,17 +90,17 @@ export const SeedanceImageToVideoForm = ({
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
-    if (typeof parsedSeed === 'number') payload.seed = parsedSeed
+    if (typeof seedValue === 'number') payload.seed = seedValue
 
     return payload as Record<string, unknown>
   }, [
     prompt,
     promptRequired,
     imageUrls,
+    durationError,
     durationValue,
-    durationMin,
-    durationMax,
-    parsedSeed,
+    seedError,
+    seedValue,
     resolution,
     enableWebSearch,
     generateAudio,
@@ -143,23 +140,13 @@ export const SeedanceImageToVideoForm = ({
       return
     }
 
-    if (typeof durationValue === 'number' && Number.isNaN(durationValue)) {
-      setError(`Duration must be a whole number from ${durationMin} to ${durationMax}.`)
+    if (durationError) {
+      setError(durationError)
       return
     }
 
-    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) {
-      setError(`Duration must be in the range ${durationMin} to ${durationMax} seconds.`)
-      return
-    }
-
-    if (typeof parsedSeed === 'number' && Number.isNaN(parsedSeed)) {
-      setError('Seed must be a whole number from -1 to 2147483647.')
-      return
-    }
-
-    if (typeof parsedSeed === 'number' && (parsedSeed < -1 || parsedSeed > 2147483647)) {
-      setError('Seed must be in the range -1 to 2147483647.')
+    if (seedError) {
+      setError(seedError)
       return
     }
 
@@ -174,7 +161,7 @@ export const SeedanceImageToVideoForm = ({
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
-    if (typeof parsedSeed === 'number') payload.seed = parsedSeed
+    if (typeof seedValue === 'number') payload.seed = seedValue
 
     await onSubmit(payload)
   }
@@ -225,6 +212,7 @@ export const SeedanceImageToVideoForm = ({
         <Field
           label="Seed"
           htmlFor="seedance-seed"
+          error={seedError ?? undefined}
           hint="Optional. Set -1 for random output, or a fixed value for repeatability."
         >
           <input
@@ -247,6 +235,7 @@ export const SeedanceImageToVideoForm = ({
         resolutionOptions={resolutionOptions}
         duration={duration}
         onDurationChange={setDuration}
+        durationError={durationError}
         durationMin={durationMin}
         durationMax={durationMax}
         enableWebSearch={enableWebSearch}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { SeedanceAspectRatio, SeedanceTextToVideoInput } from '../../lib/types'
+import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
 import type { WorkflowCapabilities } from '../../lib/workflows'
@@ -48,29 +49,21 @@ export const SeedanceTextToVideoForm = ({
   const [generateAudio, setGenerateAudio] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const durationValue = useMemo(() => {
-    if (!duration.trim()) return undefined
-    const parsed = Number.parseInt(duration.trim(), 10)
-    if (!Number.isFinite(parsed)) return Number.NaN
-    return parsed
-  }, [duration])
+  const { value: durationValue, error: durationError } = useMemo(
+    () => evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax }),
+    [duration, durationMin, durationMax],
+  )
 
   const isFormValid = useMemo(() => {
     if (promptRequired && !prompt.trim()) return false
-    if (typeof durationValue === 'number' && Number.isNaN(durationValue)) return false
-    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) return false
+    if (durationError) return false
     return true
-  }, [promptRequired, prompt, durationValue, durationMin, durationMax])
+  }, [promptRequired, prompt, durationError])
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
     const trimmedPrompt = prompt.trim()
     if (promptRequired && !trimmedPrompt) return null
-    if (
-      typeof durationValue === 'number' &&
-      (Number.isNaN(durationValue) || durationValue < durationMin || durationValue > durationMax)
-    ) {
-      return null
-    }
+    if (durationError) return null
     if (referenceImageUrls.length > maxReferenceImages) return null
 
     const payload: SeedanceTextToVideoInput = {
@@ -90,9 +83,8 @@ export const SeedanceTextToVideoForm = ({
   }, [
     prompt,
     promptRequired,
+    durationError,
     durationValue,
-    durationMin,
-    durationMax,
     maxReferenceImages,
     resolution,
     enableWebSearch,
@@ -130,13 +122,8 @@ export const SeedanceTextToVideoForm = ({
       return
     }
 
-    if (typeof durationValue === 'number' && Number.isNaN(durationValue)) {
-      setError(`Duration must be a whole number from ${durationMin} to ${durationMax}.`)
-      return
-    }
-
-    if (typeof durationValue === 'number' && (durationValue < durationMin || durationValue > durationMax)) {
-      setError(`Duration must be in the range ${durationMin} to ${durationMax} seconds.`)
+    if (durationError) {
+      setError(durationError)
       return
     }
 
@@ -215,6 +202,7 @@ export const SeedanceTextToVideoForm = ({
         resolutionOptions={resolutionOptions}
         duration={duration}
         onDurationChange={setDuration}
+        durationError={durationError}
         durationMin={durationMin}
         durationMax={durationMax}
         enableWebSearch={enableWebSearch}
