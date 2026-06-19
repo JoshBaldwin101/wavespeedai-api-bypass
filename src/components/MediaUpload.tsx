@@ -36,6 +36,12 @@ const typePrefixMap: Record<MediaKind, string> = {
   audio: 'audio/',
 }
 
+const acceptedTypesLabelMap: Record<MediaKind, string> = {
+  image: '.png, .jpg, .jpeg, .webp, .gif, .bmp, .svg',
+  video: '.mp4, .mov, .webm, .avi, .mkv, .mpeg',
+  audio: '.mp3, .wav, .ogg, .m4a, .aac, .flac',
+}
+
 const DESKTOP_POINTER_QUERY = '(hover: hover) and (pointer: fine)'
 
 export const MediaUpload = ({
@@ -94,7 +100,7 @@ export const MediaUpload = ({
 
   const validateLocalFile = (file: File): string | null => {
     if (!file.type.startsWith(typePrefixMap[kind])) {
-      return `Please upload a ${kind} file.`
+      return `Please upload a ${kind} file: ${acceptedTypesLabelMap[kind]}`
     }
 
     if (file.size > fileLimitBytes[kind]) {
