@@ -306,11 +306,6 @@ export const MediaUpload = ({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      {isDesktop && isDragging ? (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sky-400/80 bg-sky-500/10 p-4 text-center text-xs font-medium text-sky-100 sm:text-sm">
-          {isAtLimit ? 'Attachment limit reached' : `Drop ${multiple ? kind + ' files' : kind + ' file'} here`}
-        </div>
-      ) : null}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div className="min-w-0 space-y-0.5">
           <p className="text-sm font-medium text-slate-100">
@@ -427,6 +422,12 @@ export const MediaUpload = ({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {isDesktop && isDragging ? (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sky-400/80 bg-sky-500/10 p-4 text-center text-xs font-medium text-sky-100 sm:text-sm">
+          {isAtLimit ? 'Attachment limit reached' : `Drop ${multiple ? kind + ' files' : kind + ' file'} here`}
+        </div>
       ) : null}
     </div>
   )
