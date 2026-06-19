@@ -21,6 +21,23 @@ export type GptImageAspectRatio =
 export type GptImageResolution = '1k' | '2k' | '4k'
 export type GptImageQuality = 'low' | 'medium' | 'high'
 export type GptImageOutputFormat = 'png' | 'jpeg' | 'webp'
+export type NanoBananaAspectRatio =
+  | '1:1'
+  | '3:2'
+  | '2:3'
+  | '3:4'
+  | '4:3'
+  | '4:5'
+  | '5:4'
+  | '9:16'
+  | '16:9'
+  | '21:9'
+  | '1:4'
+  | '4:1'
+  | '1:8'
+  | '8:1'
+export type NanoBananaResolution = '0.5k' | '1k' | '2k' | '4k' | '8k'
+export type NanoBananaOutputFormat = 'png' | 'jpeg' | 'webp'
 export type Scail2Mode = 'animate' | 'replace'
 export type Scail2Resolution = '480p' | '720p'
 
@@ -71,6 +88,22 @@ export interface GptImageEditInput extends GptImageCommonInput {
 }
 
 export type GptImageTextToImageInput = GptImageCommonInput
+
+export interface NanoBananaCommonInput {
+  prompt: string
+  aspect_ratio?: NanoBananaAspectRatio
+  resolution?: NanoBananaResolution
+  output_format?: NanoBananaOutputFormat
+  enable_web_search?: boolean
+  enable_image_search?: boolean
+  num_images?: number
+}
+
+export interface NanoBananaEditInput extends NanoBananaCommonInput {
+  images: string[]
+}
+
+export type NanoBananaTextToImageInput = NanoBananaCommonInput
 
 export interface Scail2Input {
   image: string

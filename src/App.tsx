@@ -428,6 +428,7 @@ const AppContent = () => {
             isSubmitting={isSubmitting || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             workflowCapabilities={activeWorkflow.capabilities}
+            nanoBananaConfig={activeWorkflow.nanoBananaConfig}
             onSubmit={prepareRun}
           />
           {submitError ? <p className="mt-3 text-sm text-rose-300">{submitError}</p> : null}

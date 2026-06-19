@@ -1,6 +1,9 @@
 import type { ComponentType } from 'react'
 import { GptImageEditForm } from '../components/gptImage/GptImageEditForm'
 import { GptImageTextToImageForm } from '../components/gptImage/GptImageTextToImageForm'
+import { NanoBananaEditForm } from '../components/nanoBanana/NanoBananaEditForm'
+import { NanoBananaTextToImageForm } from '../components/nanoBanana/NanoBananaTextToImageForm'
+import { nanoBananaConfigs, type NanoBananaConfig } from '../components/nanoBananaConfig'
 import { Scail2Form } from '../components/scail/Scail2Form'
 import { SeedanceImageToVideoForm } from '../components/seedance/SeedanceImageToVideoForm'
 import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVideoForm'
@@ -15,9 +18,16 @@ export interface WorkflowFormProps {
   submitLabel?: string
   onSubmit: (input: unknown) => Promise<void>
   workflowCapabilities?: WorkflowCapabilities
+  nanoBananaConfig?: NanoBananaConfig
 }
 
-export type WorkflowGroupId = 'seedance-2.0-fast' | 'seedance-2.0' | 'wavespeed-ai' | 'gpt-image-2'
+export type WorkflowGroupId =
+  | 'seedance-2.0-fast'
+  | 'seedance-2.0'
+  | 'wavespeed-ai'
+  | 'gpt-image-2'
+  | 'nano-banana-pro'
+  | 'nano-banana-2'
 
 export interface WorkflowGroupDefinition {
   id: WorkflowGroupId
@@ -40,6 +50,7 @@ export interface WorkflowDefinition {
   submitLabel: string
   model: string
   capabilities?: WorkflowCapabilities
+  nanoBananaConfig?: NanoBananaConfig
   form: ComponentType<WorkflowFormProps>
 }
 
@@ -48,6 +59,8 @@ export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
   { id: 'wavespeed-ai', label: 'wavespeed-ai' },
   { id: 'gpt-image-2', label: 'openai/gpt-image-2' },
+  { id: 'nano-banana-pro', label: 'google/nano-banana-pro' },
+  { id: 'nano-banana-2', label: 'google/nano-banana-2' },
 ]
 
 const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
@@ -277,6 +290,78 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate image',
     model: 'openai/gpt-image-2/text-to-image',
     form: GptImageTextToImageForm,
+  },
+  {
+    id: 'google/nano-banana-pro/edit-ultra',
+    label: 'google/nano-banana-pro/edit-ultra',
+    group: 'nano-banana-pro',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-pro/edit-ultra',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-pro/edit-ultra'],
+    form: NanoBananaEditForm,
+  },
+  {
+    id: 'google/nano-banana-pro/edit-multi',
+    label: 'google/nano-banana-pro/edit-multi',
+    group: 'nano-banana-pro',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-pro/edit-multi',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-pro/edit-multi'],
+    form: NanoBananaEditForm,
+  },
+  {
+    id: 'google/nano-banana-pro/edit',
+    label: 'google/nano-banana-pro/edit',
+    group: 'nano-banana-pro',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-pro/edit',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-pro/edit'],
+    form: NanoBananaEditForm,
+  },
+  {
+    id: 'google/nano-banana-pro/text-to-image',
+    label: 'google/nano-banana-pro/text-to-image',
+    group: 'nano-banana-pro',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-pro/text-to-image',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-pro/text-to-image'],
+    form: NanoBananaTextToImageForm,
+  },
+  {
+    id: 'google/nano-banana-2/text-to-image',
+    label: 'google/nano-banana-2/text-to-image',
+    group: 'nano-banana-2',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2/text-to-image',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2/text-to-image'],
+    form: NanoBananaTextToImageForm,
+  },
+  {
+    id: 'google/nano-banana-2/text-to-image-fast',
+    label: 'google/nano-banana-2/text-to-image-fast',
+    group: 'nano-banana-2',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2/text-to-image-fast',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2/text-to-image-fast'],
+    form: NanoBananaTextToImageForm,
+  },
+  {
+    id: 'google/nano-banana-2/edit',
+    label: 'google/nano-banana-2/edit',
+    group: 'nano-banana-2',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2/edit',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2/edit'],
+    form: NanoBananaEditForm,
+  },
+  {
+    id: 'google/nano-banana-2/edit-fast',
+    label: 'google/nano-banana-2/edit-fast',
+    group: 'nano-banana-2',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2/edit-fast',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2/edit-fast'],
+    form: NanoBananaEditForm,
   },
 ]
 

@@ -30,3 +30,15 @@ wavespeed-ai/scail-2
 
 openai/gpt-image-2/edit
 openai/gpt-image-2/text-to-image
+
+--- 
+
+google/nano-banana-pro/edit-ultra
+google/nano-banana-pro/edit-multi
+google/nano-banana-pro/edit
+google/nano-banana-pro/text-to-image
+
+google/nano-banana-2/text-to-image
+google/nano-banana-2/text-to-image-fast
+google/nano-banana-2/edit
+google/nano-banana-2/edit-fast
