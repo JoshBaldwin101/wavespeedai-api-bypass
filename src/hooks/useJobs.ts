@@ -245,7 +245,6 @@ export const useJobs = ({ apiKey, modelNeedles, showWorkflowJobsOnly }: UseJobsP
     refreshRecents,
     track,
     select,
-    cancelActive,
     reset,
   }
 }

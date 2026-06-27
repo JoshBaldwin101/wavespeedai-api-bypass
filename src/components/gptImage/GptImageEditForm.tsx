@@ -17,6 +17,7 @@ interface GptImageEditFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   onSubmit: (input: GptImageEditInput) => Promise<void>
 }
 
@@ -27,14 +28,57 @@ export const GptImageEditForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate image',
+  initialValues,
   onSubmit,
 }: GptImageEditFormProps) => {
-  const [prompt, setPrompt] = useState('')
-  const [imageUrls, setImageUrls] = useState<string[]>([])
-  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<GptImageResolution>('1k')
-  const [quality, setQuality] = useState<GptImageQuality>('medium')
-  const [outputFormat, setOutputFormat] = useState<GptImageOutputFormat>('png')
+  const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
+  const [imageUrls, setImageUrls] = useState<string[]>(() =>
+    Array.isArray(initialValues?.images) ? initialValues.images.filter((value): value is string => typeof value === 'string') : [],
+  )
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>(() => {
+    const nextAspectRatio = initialValues?.aspect_ratio
+    if (
+      nextAspectRatio === '1:1' ||
+      nextAspectRatio === '1:2' ||
+      nextAspectRatio === '2:1' ||
+      nextAspectRatio === '1:3' ||
+      nextAspectRatio === '3:1' ||
+      nextAspectRatio === '2:3' ||
+      nextAspectRatio === '3:2' ||
+      nextAspectRatio === '3:4' ||
+      nextAspectRatio === '4:3' ||
+      nextAspectRatio === '4:5' ||
+      nextAspectRatio === '5:4' ||
+      nextAspectRatio === '9:16' ||
+      nextAspectRatio === '16:9' ||
+      nextAspectRatio === '9:21' ||
+      nextAspectRatio === '21:9'
+    ) {
+      return nextAspectRatio
+    }
+    return 'auto'
+  })
+  const [resolution, setResolution] = useState<GptImageResolution>(() => {
+    const nextResolution = initialValues?.resolution
+    if (nextResolution === '1k' || nextResolution === '2k' || nextResolution === '4k') {
+      return nextResolution
+    }
+    return '1k'
+  })
+  const [quality, setQuality] = useState<GptImageQuality>(() => {
+    const nextQuality = initialValues?.quality
+    if (nextQuality === 'low' || nextQuality === 'medium' || nextQuality === 'high') {
+      return nextQuality
+    }
+    return 'medium'
+  })
+  const [outputFormat, setOutputFormat] = useState<GptImageOutputFormat>(() => {
+    const nextOutputFormat = initialValues?.output_format
+    if (nextOutputFormat === 'png' || nextOutputFormat === 'jpeg' || nextOutputFormat === 'webp') {
+      return nextOutputFormat
+    }
+    return 'png'
+  })
   const [error, setError] = useState<string | null>(null)
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {

@@ -1,0 +1,132 @@
+import { useCallback, useState } from 'react'
+import {
+  createSavedParamSet,
+  loadState,
+  saveState,
+  type SavedParamSet,
+  wipeState,
+  type PersistedState,
+} from '../lib/localPersistence'
+
+const createEmptyState = (): PersistedState => ({
+  savedParams: {},
+})
+
+interface SaveParamSetArgs {
+  workflowId: string
+  model: string
+  input: Record<string, unknown>
+}
+
+interface LocalPersistenceState {
+  enabled: boolean
+  state: PersistedState
+}
+
+const getInitialState = (): LocalPersistenceState => {
+  const loaded = loadState()
+  if (!loaded) {
+    return {
+      enabled: false,
+      state: createEmptyState(),
+    }
+  }
+
+  return {
+    enabled: true,
+    state: loaded,
+  }
+}
+
+export const useLocalPersistence = () => {
+  const [storage, setStorage] = useState<LocalPersistenceState>(getInitialState)
+
+  const enabled = storage.enabled
+  const savedParams = storage.state.savedParams
+  const lastWorkflowId = storage.state.lastWorkflowId
+
+  const enable = useCallback(() => {
+    setStorage((previous) => {
+      if (previous.enabled) return previous
+      const nextState = saveState(previous.state)
+      if (!nextState) return previous
+      return {
+        enabled: true,
+        state: nextState,
+      }
+    })
+  }, [])
+
+  const disableAndWipe = useCallback(() => {
+    wipeState()
+    setStorage({
+      enabled: false,
+      state: createEmptyState(),
+    })
+  }, [])
+
+  const setLastWorkflowId = useCallback(
+    (workflowId: string) => {
+      setStorage((previous) => {
+        if (!previous.enabled) return previous
+        const normalizedWorkflowId = workflowId.trim()
+        if (!normalizedWorkflowId) return previous
+        const nextState = saveState({
+          ...previous.state,
+          lastWorkflowId: normalizedWorkflowId,
+        })
+        if (!nextState) return previous
+        return {
+          ...previous,
+          state: nextState,
+        }
+      })
+    },
+    [],
+  )
+
+  const getParamSet = useCallback((predictionId: string): SavedParamSet | undefined => savedParams[predictionId], [savedParams])
+
+  const saveParamSet = useCallback((predictionId: string, args: SaveParamSetArgs) => {
+    setStorage((previous) => {
+      if (!previous.enabled) return previous
+
+      const normalizedPredictionId = predictionId.trim()
+      const normalizedWorkflowId = args.workflowId.trim()
+      const normalizedModel = args.model.trim()
+
+      if (!normalizedPredictionId || !normalizedWorkflowId || !normalizedModel) return previous
+
+      const nextState = saveState({
+        ...previous.state,
+        savedParams: {
+          ...previous.state.savedParams,
+          [normalizedPredictionId]: createSavedParamSet(
+            normalizedPredictionId,
+            normalizedWorkflowId,
+            normalizedModel,
+            args.input,
+          ),
+        },
+      })
+
+      if (!nextState) return previous
+
+      return {
+        ...previous,
+        state: nextState,
+      }
+    })
+  }, [])
+
+  return {
+    enabled,
+    enable,
+    disableAndWipe,
+    lastWorkflowId,
+    setLastWorkflowId,
+    savedParams,
+    getParamSet,
+    saveParamSet,
+  }
+}

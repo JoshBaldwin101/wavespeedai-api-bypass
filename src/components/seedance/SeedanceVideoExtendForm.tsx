@@ -14,6 +14,7 @@ interface SeedanceVideoExtendFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoExtendInput) => Promise<void>
 }
@@ -25,6 +26,7 @@ export const SeedanceVideoExtendForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate video',
+  initialValues,
   workflowCapabilities,
   onSubmit,
 }: SeedanceVideoExtendFormProps) => {
@@ -36,14 +38,28 @@ export const SeedanceVideoExtendForm = ({
     supportsAspectRatio = false,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoExtend
-  const [prompt, setPrompt] = useState('')
-  const [videoUrls, setVideoUrls] = useState<string[]>([])
-  const [lastImageUrls, setLastImageUrls] = useState<string[]>([])
+  const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
+  const [videoUrls, setVideoUrls] = useState<string[]>(() =>
+    typeof initialValues?.video === 'string' ? [initialValues.video] : [],
+  )
+  const [lastImageUrls, setLastImageUrls] = useState<string[]>(() =>
+    typeof initialValues?.last_image === 'string' ? [initialValues.last_image] : [],
+  )
   const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(resolutionOptions[0] ?? '720p')
-  const [duration, setDuration] = useState('')
-  const [enableWebSearch, setEnableWebSearch] = useState(false)
-  const [generateAudio, setGenerateAudio] = useState(true)
+  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(() => {
+    const nextResolution = initialValues?.resolution
+    if (nextResolution === '480p' || nextResolution === '720p' || nextResolution === '1080p') {
+      return nextResolution
+    }
+    return resolutionOptions[0] ?? '720p'
+  })
+  const [duration, setDuration] = useState(() =>
+    typeof initialValues?.duration === 'number' ? String(initialValues.duration) : '',
+  )
+  const [enableWebSearch, setEnableWebSearch] = useState(() => initialValues?.enable_web_search === true)
+  const [generateAudio, setGenerateAudio] = useState(() =>
+    typeof initialValues?.generate_audio === 'boolean' ? initialValues.generate_audio : true,
+  )
   const [error, setError] = useState<string | null>(null)
 
   const { value: durationValue, error: durationError } = useMemo(
