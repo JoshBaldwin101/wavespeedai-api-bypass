@@ -3,6 +3,7 @@ import type { PredictionListItem, PredictionResult } from '../lib/types'
 import { listPredictions, pollPrediction } from '../lib/wavespeed'
 
 const RECENTS_POLL_MS = 5000
+const RECENTS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const POLLING_STATUSES = new Set(['created', 'queued', 'pending', 'processing'])
 
 const isTerminalStatus = (status: string): boolean => status === 'completed' || status === 'failed'
@@ -27,6 +28,13 @@ const toPredictionResult = (item: PredictionListItem): PredictionResult => ({
   executionTime: item.executionTime,
   timings: item.timings,
 })
+
+const isWithinRecentsWindow = (createdAt: string | undefined, now: number): boolean => {
+  if (!createdAt) return true
+  const timestamp = Date.parse(createdAt)
+  if (!Number.isFinite(timestamp)) return true
+  return now - timestamp <= RECENTS_WINDOW_MS
+}
 
 interface UseJobsParams {
   apiKey: string
@@ -90,8 +98,10 @@ export const useJobs = ({ apiKey, modelNeedles, showWorkflowJobsOnly }: UseJobsP
     setIsLoadingRecents(true)
     setRecentsError(null)
     try {
+      const windowNow = Date.now()
       const response = await listPredictions(apiKey, { page: 1, page_size: 100 })
       const filtered = response.items.filter((item) => {
+        if (!isWithinRecentsWindow(item.created_at, windowNow)) return false
         if (!showWorkflowJobsOnly) return true
         if (!item.model) return false
         const model = item.model.toLowerCase()

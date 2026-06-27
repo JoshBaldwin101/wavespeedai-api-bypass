@@ -181,13 +181,13 @@ export const JobsPanel = ({
               ) : null}
 
               {selectedSavedParams ? (
-                <div className="space-y-2 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                <div className="space-y-2">
                   <p className="text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Saved settings</p>
                   <p className="text-sm text-slate-300">Workflow: {getWorkflowLabel(selectedSavedParams.workflowId)}</p>
                   <p className="text-xs text-slate-400">Stored {formatRelativeSeconds(selectedSavedParams.savedAt, now)}</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button className="px-3 py-1.5 text-xs" variant="secondary" onClick={() => onLoadParams(selectedSavedParams)}>
-                      Load these settings into the form
+                      Load these settings
                     </Button>
                     <button
                       className="text-xs text-slate-300 underline decoration-slate-600 underline-offset-2 hover:text-slate-100"
@@ -266,6 +266,11 @@ export const JobsPanel = ({
                   </li>
                 )
               })}
+              <li className="px-2 py-3 sm:px-2.5">
+                <p className="text-xs leading-relaxed text-slate-500">
+                  WaveSpeed outputs are stored for 7 days only. Make sure to download and save them before they expire.
+                </p>
+              </li>
             </ul>
           ) : null}
         </div>

@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'wavespeed-tool:v1'
-const TTL_MS = 14 * 24 * 60 * 60 * 1000
+const TTL_MS = 7 * 24 * 60 * 60 * 1000
 const MAX_SAVED_PARAM_SETS = 200
 
 export interface SavedParamSet {

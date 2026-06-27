@@ -479,7 +479,7 @@ const AppContent = () => {
                   label="Save settings on this device"
                   description={
                     isPersistenceEnabled
-                      ? 'Enabled. Submitted settings are stored locally for up to 14 days.'
+                      ? 'Enabled. Submitted settings are stored locally for up to 7 days.'
                       : 'Disabled. Submitted settings are not stored in this browser.'
                   }
                 />
@@ -599,7 +599,7 @@ const AppContent = () => {
               you can reload them from generation jobs later.
             </p>
             <p>
-              This data stays on this device and expires after 14 days. Anyone with access to this browser profile may be able to
+              This data stays on this device and expires after 7 days. Anyone with access to this browser profile may be able to
               view it.
             </p>
           </div>
