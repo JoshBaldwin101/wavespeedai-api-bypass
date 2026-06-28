@@ -15,7 +15,7 @@ export const Toggle = ({ checked, onChange, label, description, id }: ToggleProp
       <span className="block text-sm font-medium text-slate-100">{label}</span>
       {description ? <span className="hidden text-xs text-slate-400 sm:block">{description}</span> : null}
     </span>
-    <span className="relative inline-flex h-6 w-11 items-center">
+    <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
       <input
         id={id}
         checked={checked}
