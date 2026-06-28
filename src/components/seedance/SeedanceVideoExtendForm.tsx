@@ -3,6 +3,7 @@ import type { SeedanceAspectRatio, SeedanceVideoExtendInput } from '../../lib/ty
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
 import { MediaUpload } from '../MediaUpload'
 import { Button } from '../ui/Button'
@@ -15,6 +16,7 @@ interface SeedanceVideoExtendFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoExtendInput) => Promise<void>
 }
@@ -27,6 +29,7 @@ export const SeedanceVideoExtendForm = ({
   isSubmitting,
   submitLabel = 'Generate video',
   initialValues,
+  onValuesChange,
   workflowCapabilities,
   onSubmit,
 }: SeedanceVideoExtendFormProps) => {
@@ -103,6 +106,23 @@ export const SeedanceVideoExtendForm = ({
     generateAudio,
     lastImageUrls,
   ])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      resolution,
+      enable_web_search: enableWebSearch,
+      generate_audio: generateAudio,
+    }
+
+    if (videoUrls[0]) payload.video = videoUrls[0]
+    if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
+    if (typeof durationValue === 'number') payload.duration = durationValue
+
+    return payload
+  }, [prompt, videoUrls, lastImageUrls, resolution, enableWebSearch, generateAudio, durationValue])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

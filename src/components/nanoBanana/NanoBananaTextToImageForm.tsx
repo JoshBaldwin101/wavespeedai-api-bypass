@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type {
   NanoBananaAspectRatio,
   NanoBananaOutputFormat,
@@ -19,6 +20,7 @@ interface NanoBananaTextToImageFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   nanoBananaConfig?: NanoBananaConfig
   onSubmit: (input: NanoBananaTextToImageInput) => Promise<void>
 }
@@ -29,6 +31,7 @@ export const NanoBananaTextToImageForm = ({
   isSubmitting,
   submitLabel = 'Generate image',
   initialValues,
+  onValuesChange,
   nanoBananaConfig,
   onSubmit,
 }: NanoBananaTextToImageFormProps) => {
@@ -95,6 +98,22 @@ export const NanoBananaTextToImageForm = ({
 
     return payload
   }, [prompt, nanoBananaConfig, outputFormat, aspectRatio, resolution, enableWebSearch, enableImageSearch])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      output_format: outputFormat,
+    }
+
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (nanoBananaConfig?.resolutionOptions && resolution) payload.resolution = resolution
+    if (nanoBananaConfig?.supportsWebSearch && enableWebSearch) payload.enable_web_search = true
+    if (nanoBananaConfig?.supportsImageSearch && enableImageSearch) payload.enable_image_search = true
+
+    return payload
+  }, [prompt, outputFormat, aspectRatio, resolution, enableWebSearch, enableImageSearch, nanoBananaConfig])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

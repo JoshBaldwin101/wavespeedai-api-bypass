@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import { evaluateIntegerField } from '../../lib/numericField'
 import type { Scail2Input, Scail2Mode, Scail2Resolution } from '../../lib/types'
 import { MediaUpload } from '../MediaUpload'
@@ -12,6 +13,7 @@ interface Scail2FormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   onSubmit: (input: Scail2Input) => Promise<void>
 }
 
@@ -26,6 +28,7 @@ export const Scail2Form = ({
   isSubmitting,
   submitLabel = 'Generate video',
   initialValues,
+  onValuesChange,
   onSubmit,
 }: Scail2FormProps) => {
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
@@ -75,6 +78,21 @@ export const Scail2Form = ({
 
     return payload
   }, [imageUrls, videoUrls, hasAttachmentOverflow, seedError, prompt, mode, resolution, seedValue])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {}
+
+    if (prompt) payload.prompt = prompt
+    if (imageUrls[0]) payload.image = imageUrls[0]
+    if (videoUrls[0]) payload.video = videoUrls[0]
+    if (mode !== DEFAULT_MODE) payload.mode = mode
+    if (resolution !== DEFAULT_RESOLUTION) payload.resolution = resolution
+    if (typeof seedValue === 'number') payload.seed = seedValue
+
+    return payload
+  }, [prompt, imageUrls, videoUrls, mode, resolution, seedValue])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

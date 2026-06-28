@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type {
   GptImageAspectRatio,
   GptImageEditInput,
@@ -18,6 +19,7 @@ interface GptImageEditFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   onSubmit: (input: GptImageEditInput) => Promise<void>
 }
 
@@ -29,6 +31,7 @@ export const GptImageEditForm = ({
   isSubmitting,
   submitLabel = 'Generate image',
   initialValues,
+  onValuesChange,
   onSubmit,
 }: GptImageEditFormProps) => {
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
@@ -95,6 +98,20 @@ export const GptImageEditForm = ({
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     return payload
   }, [prompt, imageUrls, aspectRatio, resolution, quality, outputFormat])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      resolution,
+      quality,
+      output_format: outputFormat,
+    }
+    if (imageUrls.length > 0) payload.images = imageUrls
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    return payload
+  }, [prompt, imageUrls, aspectRatio, resolution, quality, outputFormat])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,
