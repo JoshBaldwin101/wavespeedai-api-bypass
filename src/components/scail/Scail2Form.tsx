@@ -11,6 +11,7 @@ interface Scail2FormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   onSubmit: (input: Scail2Input) => Promise<void>
 }
 
@@ -24,14 +25,21 @@ export const Scail2Form = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate video',
+  initialValues,
   onSubmit,
 }: Scail2FormProps) => {
-  const [prompt, setPrompt] = useState('')
-  const [imageUrls, setImageUrls] = useState<string[]>([])
-  const [videoUrls, setVideoUrls] = useState<string[]>([])
-  const [mode, setMode] = useState<Scail2Mode>(DEFAULT_MODE)
-  const [resolution, setResolution] = useState<Scail2Resolution>(DEFAULT_RESOLUTION)
-  const [seed, setSeed] = useState('')
+  const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
+  const [imageUrls, setImageUrls] = useState<string[]>(() =>
+    typeof initialValues?.image === 'string' ? [initialValues.image] : [],
+  )
+  const [videoUrls, setVideoUrls] = useState<string[]>(() =>
+    typeof initialValues?.video === 'string' ? [initialValues.video] : [],
+  )
+  const [mode, setMode] = useState<Scail2Mode>(() => (initialValues?.mode === 'replace' ? 'replace' : DEFAULT_MODE))
+  const [resolution, setResolution] = useState<Scail2Resolution>(() =>
+    initialValues?.resolution === '720p' ? '720p' : DEFAULT_RESOLUTION,
+  )
+  const [seed, setSeed] = useState(() => (typeof initialValues?.seed === 'number' ? String(initialValues.seed) : ''))
   const [error, setError] = useState<string | null>(null)
 
   const { value: seedValue, error: seedError } = useMemo(

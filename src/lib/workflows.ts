@@ -16,6 +16,7 @@ export interface WorkflowFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   onSubmit: (input: unknown) => Promise<void>
   workflowCapabilities?: WorkflowCapabilities
   nanoBananaConfig?: NanoBananaConfig

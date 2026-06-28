@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { SavedParamSet } from '../lib/localPersistence'
 import type { PredictionResult } from '../lib/types'
 import { inferOutputMediaKind } from '../lib/outputMedia'
 import { Button } from './ui/Button'
@@ -16,9 +17,11 @@ interface JobsPanelProps {
   lastRefreshedAt: number | null
   onRefresh: () => Promise<void> | void
   onSelect: (jobId: string) => void
-  onCancel: () => void
   showWorkflowJobsOnly: boolean
   onShowWorkflowJobsOnlyChange: (value: boolean) => void
+  getSavedParams: (jobId: string) => SavedParamSet | undefined
+  getWorkflowLabel: (workflowId: string) => string
+  onLoadParams: (savedParamSet: SavedParamSet) => void
 }
 
 const statusColorMap: Record<string, string> = {
@@ -61,11 +64,14 @@ export const JobsPanel = ({
   lastRefreshedAt,
   onRefresh,
   onSelect,
-  onCancel,
   showWorkflowJobsOnly,
   onShowWorkflowJobsOnlyChange,
+  getSavedParams,
+  getWorkflowLabel,
+  onLoadParams,
 }: JobsPanelProps) => {
   const [showRawJson, setShowRawJson] = useState(false)
+  const [showSavedParamsJson, setShowSavedParamsJson] = useState(false)
   const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
@@ -80,9 +86,11 @@ export const JobsPanel = ({
 
   useEffect(() => {
     setShowRawJson(false)
+    setShowSavedParamsJson(false)
   }, [selectedJobId])
 
   const selectedJob = selectedJobId ? jobsById[selectedJobId] ?? null : null
+  const selectedSavedParams = selectedJobId ? getSavedParams(selectedJobId) : undefined
   const isPollingSelected = selectedJobId !== null && pollingJobId === selectedJobId
   const detailTimestamp = selectedJob?.created_at
     ? formatRelativeDate(selectedJob.created_at, now)
@@ -132,11 +140,6 @@ export const JobsPanel = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-slate-400">{detailTimestamp}</span>
-                  {isPollingSelected ? (
-                    <Button variant="secondary" className="px-2.5 py-1.5 text-xs" onClick={onCancel}>
-                      Cancel
-                    </Button>
-                  ) : null}
                 </div>
               </div>
 
@@ -174,6 +177,31 @@ export const JobsPanel = ({
                       </div>
                     )
                   })}
+                </div>
+              ) : null}
+
+              {selectedSavedParams ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Saved settings</p>
+                  <p className="text-sm text-slate-300">Workflow: {getWorkflowLabel(selectedSavedParams.workflowId)}</p>
+                  <p className="text-xs text-slate-400">Stored {formatRelativeSeconds(selectedSavedParams.savedAt, now)}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button className="px-3 py-1.5 text-xs" variant="secondary" onClick={() => onLoadParams(selectedSavedParams)}>
+                      Load these settings
+                    </Button>
+                    <button
+                      className="text-xs text-slate-300 underline decoration-slate-600 underline-offset-2 hover:text-slate-100"
+                      type="button"
+                      onClick={() => setShowSavedParamsJson((previous) => !previous)}
+                    >
+                      {showSavedParamsJson ? 'Hide saved input JSON' : 'Show saved input JSON'}
+                    </button>
+                  </div>
+                  {showSavedParamsJson ? (
+                    <pre className="max-h-64 overflow-auto rounded border border-slate-800 bg-slate-950 p-3 text-xs text-slate-300">
+                      {JSON.stringify(selectedSavedParams.input, null, 2)}
+                    </pre>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -238,6 +266,11 @@ export const JobsPanel = ({
                   </li>
                 )
               })}
+              <li className="px-2 py-3 sm:px-2.5">
+                <p className="text-xs leading-relaxed text-slate-500">
+                  WaveSpeed outputs are stored for 7 days only. Make sure to download and save them before they expire.
+                </p>
+              </li>
             </ul>
           ) : null}
         </div>

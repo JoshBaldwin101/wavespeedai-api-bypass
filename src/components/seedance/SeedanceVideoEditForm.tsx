@@ -14,6 +14,7 @@ interface SeedanceVideoEditFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoEditInput) => Promise<void>
 }
@@ -25,6 +26,7 @@ export const SeedanceVideoEditForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate video',
+  initialValues,
   workflowCapabilities,
   onSubmit,
 }: SeedanceVideoEditFormProps) => {
@@ -36,15 +38,48 @@ export const SeedanceVideoEditForm = ({
     supportsAspectRatio = true,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
-  const [prompt, setPrompt] = useState('')
-  const [videoUrls, setVideoUrls] = useState<string[]>([])
-  const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>([])
-  const [referenceAudioUrls, setReferenceAudioUrls] = useState<string[]>([])
-  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(resolutionOptions[0] ?? '720p')
-  const [duration, setDuration] = useState('')
-  const [enableWebSearch, setEnableWebSearch] = useState(false)
-  const [generateAudio, setGenerateAudio] = useState(true)
+  const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
+  const [videoUrls, setVideoUrls] = useState<string[]>(() =>
+    typeof initialValues?.video === 'string' ? [initialValues.video] : [],
+  )
+  const [referenceImageUrls, setReferenceImageUrls] = useState<string[]>(() =>
+    Array.isArray(initialValues?.reference_images)
+      ? initialValues.reference_images.filter((value): value is string => typeof value === 'string')
+      : [],
+  )
+  const [referenceAudioUrls, setReferenceAudioUrls] = useState<string[]>(() =>
+    Array.isArray(initialValues?.reference_audios)
+      ? initialValues.reference_audios.filter((value): value is string => typeof value === 'string')
+      : [],
+  )
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>(() => {
+    const nextAspectRatio = initialValues?.aspect_ratio
+    if (
+      nextAspectRatio === '16:9' ||
+      nextAspectRatio === '9:16' ||
+      nextAspectRatio === '4:3' ||
+      nextAspectRatio === '3:4' ||
+      nextAspectRatio === '1:1' ||
+      nextAspectRatio === '21:9'
+    ) {
+      return nextAspectRatio
+    }
+    return 'auto'
+  })
+  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(() => {
+    const nextResolution = initialValues?.resolution
+    if (nextResolution === '480p' || nextResolution === '720p' || nextResolution === '1080p') {
+      return nextResolution
+    }
+    return resolutionOptions[0] ?? '720p'
+  })
+  const [duration, setDuration] = useState(() =>
+    typeof initialValues?.duration === 'number' ? String(initialValues.duration) : '',
+  )
+  const [enableWebSearch, setEnableWebSearch] = useState(() => initialValues?.enable_web_search === true)
+  const [generateAudio, setGenerateAudio] = useState(() =>
+    typeof initialValues?.generate_audio === 'boolean' ? initialValues.generate_audio : true,
+  )
   const [error, setError] = useState<string | null>(null)
 
   const { value: durationValue, error: durationError } = useMemo(

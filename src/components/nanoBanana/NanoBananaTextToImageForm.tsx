@@ -18,6 +18,7 @@ interface NanoBananaTextToImageFormProps {
   pricingModelId: string
   isSubmitting: boolean
   submitLabel?: string
+  initialValues?: Record<string, unknown>
   nanoBananaConfig?: NanoBananaConfig
   onSubmit: (input: NanoBananaTextToImageInput) => Promise<void>
 }
@@ -27,15 +28,55 @@ export const NanoBananaTextToImageForm = ({
   pricingModelId,
   isSubmitting,
   submitLabel = 'Generate image',
+  initialValues,
   nanoBananaConfig,
   onSubmit,
 }: NanoBananaTextToImageFormProps) => {
-  const [prompt, setPrompt] = useState('')
-  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<NanoBananaResolution | ''>(nanoBananaConfig?.defaultResolution ?? '')
-  const [outputFormat, setOutputFormat] = useState<NanoBananaOutputFormat>(nanoBananaConfig?.defaultOutputFormat ?? 'png')
-  const [enableWebSearch, setEnableWebSearch] = useState(false)
-  const [enableImageSearch, setEnableImageSearch] = useState(false)
+  const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>(() => {
+    const nextAspectRatio = initialValues?.aspect_ratio
+    if (
+      nextAspectRatio === '1:1' ||
+      nextAspectRatio === '3:2' ||
+      nextAspectRatio === '2:3' ||
+      nextAspectRatio === '3:4' ||
+      nextAspectRatio === '4:3' ||
+      nextAspectRatio === '4:5' ||
+      nextAspectRatio === '5:4' ||
+      nextAspectRatio === '9:16' ||
+      nextAspectRatio === '16:9' ||
+      nextAspectRatio === '21:9' ||
+      nextAspectRatio === '1:4' ||
+      nextAspectRatio === '4:1' ||
+      nextAspectRatio === '1:8' ||
+      nextAspectRatio === '8:1'
+    ) {
+      return nextAspectRatio
+    }
+    return 'auto'
+  })
+  const [resolution, setResolution] = useState<NanoBananaResolution | ''>(() => {
+    const nextResolution = initialValues?.resolution
+    if (
+      nextResolution === '0.5k' ||
+      nextResolution === '1k' ||
+      nextResolution === '2k' ||
+      nextResolution === '4k' ||
+      nextResolution === '8k'
+    ) {
+      return nextResolution
+    }
+    return nanoBananaConfig?.defaultResolution ?? ''
+  })
+  const [outputFormat, setOutputFormat] = useState<NanoBananaOutputFormat>(() => {
+    const nextOutputFormat = initialValues?.output_format
+    if (nextOutputFormat === 'png' || nextOutputFormat === 'jpeg' || nextOutputFormat === 'webp') {
+      return nextOutputFormat
+    }
+    return nanoBananaConfig?.defaultOutputFormat ?? 'png'
+  })
+  const [enableWebSearch, setEnableWebSearch] = useState(() => initialValues?.enable_web_search === true)
+  const [enableImageSearch, setEnableImageSearch] = useState(() => initialValues?.enable_image_search === true)
   const [error, setError] = useState<string | null>(null)
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {

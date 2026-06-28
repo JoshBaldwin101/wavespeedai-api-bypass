@@ -4,8 +4,11 @@ import { JobsPanel } from './components/JobsPanel'
 import { AboutButton } from './components/ui/AboutButton'
 import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
+import { Toggle } from './components/ui/Toggle'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
+import { useLocalPersistence } from './hooks/useLocalPersistence'
+import type { SavedParamSet } from './lib/localPersistence'
 import type { BalanceResponseData, ModelPricing } from './lib/types'
 import { defaultWorkflow, defaultWorkflowId, workflowGroups, workflows } from './lib/workflows'
 import { useJobs } from './hooks/useJobs'
@@ -42,6 +45,9 @@ const sleep = (ms: number) =>
   new Promise<void>((resolve) => {
     window.setTimeout(resolve, ms)
   })
+
+const resolveWorkflowId = (workflowId: string | undefined): string =>
+  workflows.some((workflow) => workflow.id === workflowId) ? (workflowId as string) : defaultWorkflowId
 
 const parseBalanceValue = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value)) return value
@@ -111,14 +117,27 @@ const formatBalance = (data: BalanceResponseData | null): string => {
 
 const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
+  const {
+    enabled: isPersistenceEnabled,
+    enable: enablePersistence,
+    disableAndWipe: disablePersistenceAndWipe,
+    lastWorkflowId,
+    setLastWorkflowId,
+    getParamSet,
+    saveParamSet,
+  } = useLocalPersistence()
   const balanceRefreshInFlightRef = useRef(false)
   const balanceRefreshQueuedRef = useRef(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState(defaultWorkflowId)
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(() => resolveWorkflowId(lastWorkflowId))
+  const [formNonce, setFormNonce] = useState(0)
+  const [pendingInitialValues, setPendingInitialValues] = useState<Record<string, unknown> | null>(null)
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceData, setBalanceData] = useState<BalanceResponseData | null>(null)
   const [showChangeKeyConfirm, setShowChangeKeyConfirm] = useState(false)
+  const [showEnablePersistenceConfirm, setShowEnablePersistenceConfirm] = useState(false)
+  const [showDisablePersistenceConfirm, setShowDisablePersistenceConfirm] = useState(false)
   const [showPriceConfirm, setShowPriceConfirm] = useState(false)
   const [showWorkflowJobsOnly, setShowWorkflowJobsOnly] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -158,6 +177,27 @@ const AppContent = () => {
     if (priceDisplay) return `Generate ${priceDisplay}`
     return 'Generate anyway'
   }, [isConfirmValidating, isPricingLoading, hasInsufficientFunds, priceDisplay])
+  const getWorkflowLabel = useCallback(
+    (workflowId: string) => workflows.find((workflow) => workflow.id === workflowId)?.label ?? workflowId,
+    [],
+  )
+
+  const handleLoadParams = useCallback(
+    (savedParamSet: SavedParamSet) => {
+      const nextWorkflowId = resolveWorkflowId(savedParamSet.workflowId)
+      setSelectedWorkflowId(nextWorkflowId)
+      setPendingInitialValues(savedParamSet.input)
+      setFormNonce((previous) => previous + 1)
+      setSubmitError(null)
+      resetPriceConfirmState()
+    },
+    [],
+  )
+
+  useEffect(() => {
+    if (!isPersistenceEnabled) return
+    setLastWorkflowId(selectedWorkflowId)
+  }, [isPersistenceEnabled, selectedWorkflowId, setLastWorkflowId])
 
   const refreshBalance = useCallback(async () => {
     if (balanceRefreshInFlightRef.current) {
@@ -210,6 +250,13 @@ const AppContent = () => {
 
     try {
       const created = await submitPrediction(apiKey, activeWorkflow.model, input)
+      if (isPersistenceEnabled && input && typeof input === 'object' && !Array.isArray(input)) {
+        saveParamSet(created.id, {
+          workflowId: activeWorkflow.id,
+          model: activeWorkflow.model,
+          input: input as Record<string, unknown>,
+        })
+      }
       didQueueJob = true
       const trackingTarget = created.urls?.get ?? created.id
       void jobs.track(trackingTarget)
@@ -229,7 +276,7 @@ const AppContent = () => {
     }
   }
 
-  const resetPriceConfirmState = () => {
+  function resetPriceConfirmState() {
     setShowPriceConfirm(false)
     setPendingInput(null)
     setPricePreview(null)
@@ -355,6 +402,7 @@ const AppContent = () => {
                 onChange={(event) => {
                   const nextWorkflowId = event.target.value
                   setSelectedWorkflowId(nextWorkflowId)
+                  setPendingInitialValues(null)
                   setSubmitError(null)
                   resetPriceConfirmState()
                   if (showWorkflowJobsOnly) {
@@ -416,17 +464,38 @@ const AppContent = () => {
                   </Button>
                 </div>
               </section>
+
+              <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
+                <Toggle
+                  id="save-settings-locally"
+                  checked={isPersistenceEnabled}
+                  onChange={(checked) => {
+                    if (checked) {
+                      setShowEnablePersistenceConfirm(true)
+                      return
+                    }
+                    setShowDisablePersistenceConfirm(true)
+                  }}
+                  label="Save settings on this device"
+                  description={
+                    isPersistenceEnabled
+                      ? 'Enabled. Submitted settings are stored locally for up to 7 days.'
+                      : 'Disabled. Submitted settings are not stored in this browser.'
+                  }
+                />
+              </section>
             </div>
           </div>
         </header>
 
         <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3.5 sm:p-5">
           <FormComponent
-            key={activeWorkflow.id}
+            key={`${activeWorkflow.id}:${formNonce}`}
             apiKey={apiKey}
             pricingModelId={activeWorkflow.model}
             isSubmitting={isSubmitting || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
+            initialValues={pendingInitialValues ?? undefined}
             workflowCapabilities={activeWorkflow.capabilities}
             nanoBananaConfig={activeWorkflow.nanoBananaConfig}
             onSubmit={prepareRun}
@@ -445,9 +514,11 @@ const AppContent = () => {
           lastRefreshedAt={jobs.lastRefreshedAt}
           onRefresh={jobs.refreshRecents}
           onSelect={jobs.select}
-          onCancel={jobs.cancelActive}
           showWorkflowJobsOnly={showWorkflowJobsOnly}
           onShowWorkflowJobsOnlyChange={setShowWorkflowJobsOnly}
+          getSavedParams={getParamSet}
+          getWorkflowLabel={getWorkflowLabel}
+          onLoadParams={handleLoadParams}
         />
       </div>
 
@@ -515,6 +586,53 @@ const AppContent = () => {
         onCancel={resetPriceConfirmState}
         onConfirm={() => {
           void confirmRun()
+        }}
+      />
+
+      <ConfirmDialog
+        open={showEnablePersistenceConfirm}
+        title="Enable local settings storage?"
+        description={
+          <div className="space-y-3">
+            <p>
+              By enabling this, the app stores submitted generation settings (including prompts and media URLs) in your browser so
+              you can reload them from generation jobs later.
+            </p>
+            <p>
+              This data stays on this device and expires after 7 days. Anyone with access to this browser profile may be able to
+              view it.
+            </p>
+          </div>
+        }
+        confirmLabel="Enable local storage"
+        confirmVariant="primary"
+        requireAcknowledgment
+        acknowledgmentLabel="I accept the risks and want to enable local settings storage."
+        onCancel={() => setShowEnablePersistenceConfirm(false)}
+        onConfirm={() => {
+          setShowEnablePersistenceConfirm(false)
+          enablePersistence()
+          setLastWorkflowId(selectedWorkflowId)
+        }}
+      />
+
+      <ConfirmDialog
+        open={showDisablePersistenceConfirm}
+        title="Delete saved settings?"
+        description={
+          <div className="space-y-3">
+            <p>Disabling local settings storage will delete all settings saved by this site in this browser.</p>
+            <p>This cannot be undone.</p>
+          </div>
+        }
+        confirmLabel="Delete and disable"
+        confirmVariant="danger"
+        onCancel={() => setShowDisablePersistenceConfirm(false)}
+        onConfirm={() => {
+          setShowDisablePersistenceConfirm(false)
+          disablePersistenceAndWipe()
+          setPendingInitialValues(null)
+          setFormNonce((previous) => previous + 1)
         }}
       />
 
