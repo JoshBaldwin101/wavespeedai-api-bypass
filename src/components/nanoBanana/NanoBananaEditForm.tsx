@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import { evaluateIntegerField } from '../../lib/numericField'
 import type {
   NanoBananaAspectRatio,
@@ -21,6 +22,7 @@ interface NanoBananaEditFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   nanoBananaConfig?: NanoBananaConfig
   onSubmit: (input: NanoBananaEditInput) => Promise<void>
 }
@@ -31,6 +33,7 @@ export const NanoBananaEditForm = ({
   isSubmitting,
   submitLabel = 'Generate image',
   initialValues,
+  onValuesChange,
   nanoBananaConfig,
   onSubmit,
 }: NanoBananaEditFormProps) => {
@@ -140,6 +143,36 @@ export const NanoBananaEditForm = ({
     enableImageSearch,
     numImagesValue,
   ])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      output_format: outputFormat,
+    }
+
+    if (imageUrls.length > 0) payload.images = imageUrls
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (nanoBananaConfig?.resolutionOptions && resolution) payload.resolution = resolution
+    if (nanoBananaConfig?.supportsWebSearch && enableWebSearch) payload.enable_web_search = true
+    if (nanoBananaConfig?.supportsImageSearch && enableImageSearch) payload.enable_image_search = true
+    if (nanoBananaConfig?.supportsNumImages && typeof numImagesValue === 'number' && numImagesValue > 1) {
+      payload.num_images = numImagesValue
+    }
+
+    return payload
+  }, [
+    prompt,
+    imageUrls,
+    outputFormat,
+    aspectRatio,
+    resolution,
+    enableWebSearch,
+    enableImageSearch,
+    numImagesValue,
+    nanoBananaConfig,
+  ])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type {
   GptImageAspectRatio,
   GptImageOutputFormat,
@@ -17,6 +18,7 @@ interface GptImageTextToImageFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   onSubmit: (input: GptImageTextToImageInput) => Promise<void>
 }
 
@@ -28,6 +30,7 @@ export const GptImageTextToImageForm = ({
   isSubmitting,
   submitLabel = 'Generate image',
   initialValues,
+  onValuesChange,
   onSubmit,
 }: GptImageTextToImageFormProps) => {
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
@@ -90,6 +93,19 @@ export const GptImageTextToImageForm = ({
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     return payload
   }, [prompt, aspectRatio, resolution, quality, outputFormat])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      resolution,
+      quality,
+      output_format: outputFormat,
+    }
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    return payload
+  }, [prompt, aspectRatio, resolution, quality, outputFormat])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

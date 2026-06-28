@@ -8,7 +8,7 @@ import { Toggle } from './components/ui/Toggle'
 import { ApiKeyProvider } from './context/ApiKeyContext'
 import { useApiKey } from './context/useApiKey'
 import { useLocalPersistence } from './hooks/useLocalPersistence'
-import type { SavedParamSet } from './lib/localPersistence'
+import { loadState, type SavedParamSet } from './lib/localPersistence'
 import type { BalanceResponseData, ModelPricing } from './lib/types'
 import { defaultWorkflow, defaultWorkflowId, workflowGroups, workflows } from './lib/workflows'
 import { useJobs } from './hooks/useJobs'
@@ -115,6 +115,8 @@ const formatBalance = (data: BalanceResponseData | null): string => {
   return JSON.stringify(data)
 }
 
+const DRAFT_SAVE_DEBOUNCE_MS = 400
+
 const AppContent = () => {
   const { apiKey, isValidated, reset } = useApiKey()
   const {
@@ -125,13 +127,27 @@ const AppContent = () => {
     setLastWorkflowId,
     getParamSet,
     saveParamSet,
+    getDraftInput,
+    saveDraftInput,
+    saveApiKey,
+    clearApiKey,
   } = useLocalPersistence()
   const balanceRefreshInFlightRef = useRef(false)
   const balanceRefreshQueuedRef = useRef(false)
+  const draftSaveTimerRef = useRef<number | null>(null)
+  const latestDraftRef = useRef<Record<string, unknown> | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState(() => resolveWorkflowId(lastWorkflowId))
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState(() => {
+    const loaded = loadState()
+    return resolveWorkflowId(loaded?.lastWorkflowId ?? lastWorkflowId)
+  })
   const [formNonce, setFormNonce] = useState(0)
-  const [pendingInitialValues, setPendingInitialValues] = useState<Record<string, unknown> | null>(null)
+  const [pendingInitialValues, setPendingInitialValues] = useState<Record<string, unknown> | null>(() => {
+    const loaded = loadState()
+    if (!loaded) return null
+    const workflowId = resolveWorkflowId(loaded.lastWorkflowId)
+    return loaded.draftInputs[workflowId]?.input ?? null
+  })
   const [isBalanceLoading, setIsBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [balanceData, setBalanceData] = useState<BalanceResponseData | null>(null)
@@ -198,6 +214,35 @@ const AppContent = () => {
     if (!isPersistenceEnabled) return
     setLastWorkflowId(selectedWorkflowId)
   }, [isPersistenceEnabled, selectedWorkflowId, setLastWorkflowId])
+
+  useEffect(() => {
+    if (!isPersistenceEnabled || !isValidated || !apiKey) return
+    saveApiKey(apiKey)
+  }, [apiKey, isPersistenceEnabled, isValidated, saveApiKey])
+
+  useEffect(
+    () => () => {
+      if (draftSaveTimerRef.current !== null) {
+        window.clearTimeout(draftSaveTimerRef.current)
+      }
+    },
+    [],
+  )
+
+  const handleFormValuesChange = useCallback(
+    (input: Record<string, unknown>) => {
+      latestDraftRef.current = input
+      if (!isPersistenceEnabled) return
+      if (draftSaveTimerRef.current !== null) {
+        window.clearTimeout(draftSaveTimerRef.current)
+      }
+      draftSaveTimerRef.current = window.setTimeout(() => {
+        saveDraftInput(selectedWorkflowId, input)
+        draftSaveTimerRef.current = null
+      }, DRAFT_SAVE_DEBOUNCE_MS)
+    },
+    [isPersistenceEnabled, saveDraftInput, selectedWorkflowId],
+  )
 
   const refreshBalance = useCallback(async () => {
     if (balanceRefreshInFlightRef.current) {
@@ -402,7 +447,9 @@ const AppContent = () => {
                 onChange={(event) => {
                   const nextWorkflowId = event.target.value
                   setSelectedWorkflowId(nextWorkflowId)
-                  setPendingInitialValues(null)
+                  const draft = isPersistenceEnabled ? getDraftInput(nextWorkflowId) : undefined
+                  setPendingInitialValues(draft?.input ?? null)
+                  setFormNonce((previous) => previous + 1)
                   setSubmitError(null)
                   resetPriceConfirmState()
                   if (showWorkflowJobsOnly) {
@@ -479,8 +526,8 @@ const AppContent = () => {
                   label="Save settings on this device"
                   description={
                     isPersistenceEnabled
-                      ? 'Enabled. Submitted settings are stored locally for up to 7 days.'
-                      : 'Disabled. Submitted settings are not stored in this browser.'
+                      ? 'Enabled. Your in-progress inputs, API key, and submitted settings are stored locally for up to 7 days.'
+                      : 'Disabled. Nothing from this session is stored in this browser.'
                   }
                 />
               </section>
@@ -496,6 +543,7 @@ const AppContent = () => {
             isSubmitting={isSubmitting || showPriceConfirm}
             submitLabel={activeWorkflow.submitLabel}
             initialValues={pendingInitialValues ?? undefined}
+            onValuesChange={handleFormValuesChange}
             workflowCapabilities={activeWorkflow.capabilities}
             nanoBananaConfig={activeWorkflow.nanoBananaConfig}
             onSubmit={prepareRun}
@@ -595,8 +643,9 @@ const AppContent = () => {
         description={
           <div className="space-y-3">
             <p>
-              By enabling this, the app stores submitted generation settings (including prompts and media URLs) in your browser so
-              you can reload them from generation jobs later.
+              By enabling this, the app stores your API key, in-progress form inputs (including prompts and media URLs),
+              and submitted generation settings in your browser so you can pick up where you left off after refreshing or
+              closing the tab.
             </p>
             <p>
               This data stays on this device and expires after 7 days. Anyone with access to this browser profile may be able to
@@ -613,6 +662,10 @@ const AppContent = () => {
           setShowEnablePersistenceConfirm(false)
           enablePersistence()
           setLastWorkflowId(selectedWorkflowId)
+          if (apiKey) saveApiKey(apiKey)
+          if (latestDraftRef.current) {
+            saveDraftInput(selectedWorkflowId, latestDraftRef.current)
+          }
         }}
       />
 
@@ -639,7 +692,7 @@ const AppContent = () => {
       <ConfirmDialog
         open={showChangeKeyConfirm}
         title="Change API key?"
-        description="This will clear everything you've entered so far, including your prompt and uploaded files. You'll need to enter a new key to continue."
+        description="This will clear your saved API key and everything you've entered so far, including your prompt and uploaded files. You'll need to enter a new key to continue."
         confirmLabel="Change key"
         onCancel={() => setShowChangeKeyConfirm(false)}
         onConfirm={() => {
@@ -647,6 +700,7 @@ const AppContent = () => {
           jobs.reset()
           setSubmitError(null)
           resetPriceConfirmState()
+          clearApiKey()
           reset()
         }}
       />

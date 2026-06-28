@@ -1,14 +1,17 @@
 import { useCallback, useState } from 'react'
 import {
+  createDraftInput,
   createSavedParamSet,
   loadState,
   saveState,
+  type DraftInput,
   type SavedParamSet,
   wipeState,
   type PersistedState,
 } from '../lib/localPersistence'
 
 const createEmptyState = (): PersistedState => ({
+  draftInputs: {},
   savedParams: {},
 })
 
@@ -43,7 +46,9 @@ export const useLocalPersistence = () => {
 
   const enabled = storage.enabled
   const savedParams = storage.state.savedParams
+  const draftInputs = storage.state.draftInputs
   const lastWorkflowId = storage.state.lastWorkflowId
+  const persistedApiKey = storage.state.apiKey
 
   const enable = useCallback(() => {
     setStorage((previous) => {
@@ -65,27 +70,27 @@ export const useLocalPersistence = () => {
     })
   }, [])
 
-  const setLastWorkflowId = useCallback(
-    (workflowId: string) => {
-      setStorage((previous) => {
-        if (!previous.enabled) return previous
-        const normalizedWorkflowId = workflowId.trim()
-        if (!normalizedWorkflowId) return previous
-        const nextState = saveState({
-          ...previous.state,
-          lastWorkflowId: normalizedWorkflowId,
-        })
-        if (!nextState) return previous
-        return {
-          ...previous,
-          state: nextState,
-        }
+  const setLastWorkflowId = useCallback((workflowId: string) => {
+    setStorage((previous) => {
+      if (!previous.enabled) return previous
+      const normalizedWorkflowId = workflowId.trim()
+      if (!normalizedWorkflowId) return previous
+      const nextState = saveState({
+        ...previous.state,
+        lastWorkflowId: normalizedWorkflowId,
       })
-    },
-    [],
-  )
+      if (!nextState) return previous
+      return {
+        ...previous,
+        state: nextState,
+      }
+    })
+  }, [])
 
-  const getParamSet = useCallback((predictionId: string): SavedParamSet | undefined => savedParams[predictionId], [savedParams])
+  const getParamSet = useCallback(
+    (predictionId: string): SavedParamSet | undefined => savedParams[predictionId],
+    [savedParams],
+  )
 
   const saveParamSet = useCallback((predictionId: string, args: SaveParamSetArgs) => {
     setStorage((previous) => {
@@ -119,14 +124,88 @@ export const useLocalPersistence = () => {
     })
   }, [])
 
+  const getDraftInput = useCallback(
+    (workflowId: string): DraftInput | undefined => {
+      const normalizedWorkflowId = workflowId.trim()
+      if (!normalizedWorkflowId) return undefined
+      return draftInputs[normalizedWorkflowId]
+    },
+    [draftInputs],
+  )
+
+  const saveDraftInput = useCallback((workflowId: string, input: Record<string, unknown>) => {
+    setStorage((previous) => {
+      if (!previous.enabled) return previous
+
+      const normalizedWorkflowId = workflowId.trim()
+      if (!normalizedWorkflowId) return previous
+
+      const nextState = saveState({
+        ...previous.state,
+        draftInputs: {
+          ...previous.state.draftInputs,
+          [normalizedWorkflowId]: createDraftInput(normalizedWorkflowId, input),
+        },
+      })
+
+      if (!nextState) return previous
+
+      return {
+        ...previous,
+        state: nextState,
+      }
+    })
+  }, [])
+
+  const saveApiKey = useCallback((apiKey: string) => {
+    setStorage((previous) => {
+      if (!previous.enabled) return previous
+
+      const normalizedApiKey = apiKey.trim()
+      if (!normalizedApiKey) return previous
+
+      const nextState = saveState({
+        ...previous.state,
+        apiKey: normalizedApiKey,
+      })
+
+      if (!nextState) return previous
+
+      return {
+        ...previous,
+        state: nextState,
+      }
+    })
+  }, [])
+
+  const clearApiKey = useCallback(() => {
+    setStorage((previous) => {
+      if (!previous.enabled || !previous.state.apiKey) return previous
+
+      const { apiKey: _removed, ...rest } = previous.state
+      const nextState = saveState(rest)
+      if (!nextState) return previous
+
+      return {
+        ...previous,
+        state: nextState,
+      }
+    })
+  }, [])
+
   return {
     enabled,
     enable,
     disableAndWipe,
     lastWorkflowId,
+    persistedApiKey,
     setLastWorkflowId,
     savedParams,
     getParamSet,
     saveParamSet,
+    getDraftInput,
+    saveDraftInput,
+    saveApiKey,
+    clearApiKey,
   }
 }

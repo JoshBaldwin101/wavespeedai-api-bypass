@@ -3,6 +3,7 @@ import type { SeedanceAspectRatio, SeedanceVideoEditInput } from '../../lib/type
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
 import { Button } from '../ui/Button'
 import { Field } from '../ui/Field'
@@ -15,6 +16,7 @@ interface SeedanceVideoEditFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceVideoEditInput) => Promise<void>
 }
@@ -27,6 +29,7 @@ export const SeedanceVideoEditForm = ({
   isSubmitting,
   submitLabel = 'Generate video',
   initialValues,
+  onValuesChange,
   workflowCapabilities,
   onSubmit,
 }: SeedanceVideoEditFormProps) => {
@@ -128,6 +131,35 @@ export const SeedanceVideoEditForm = ({
     referenceAudioUrls,
     aspectRatio,
   ])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      resolution,
+      enable_web_search: enableWebSearch,
+      generate_audio: generateAudio,
+    }
+
+    if (videoUrls[0]) payload.video = videoUrls[0]
+    if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
+    if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (typeof durationValue === 'number') payload.duration = durationValue
+
+    return payload
+  }, [
+    prompt,
+    videoUrls,
+    resolution,
+    enableWebSearch,
+    generateAudio,
+    referenceImageUrls,
+    referenceAudioUrls,
+    aspectRatio,
+    durationValue,
+  ])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

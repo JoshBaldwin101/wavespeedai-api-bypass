@@ -3,6 +3,7 @@ import type { SeedanceAspectRatio, SeedanceImageToVideoInput } from '../../lib/t
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
+import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
 import { MediaUpload } from '../MediaUpload'
 import { Button } from '../ui/Button'
@@ -15,6 +16,7 @@ interface SeedanceImageToVideoFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   workflowCapabilities?: WorkflowCapabilities
   onSubmit: (input: SeedanceImageToVideoInput) => Promise<void>
 }
@@ -27,6 +29,7 @@ export const SeedanceImageToVideoForm = ({
   isSubmitting,
   submitLabel = 'Generate video',
   initialValues,
+  onValuesChange,
   workflowCapabilities,
   onSubmit,
 }: SeedanceImageToVideoFormProps) => {
@@ -136,6 +139,35 @@ export const SeedanceImageToVideoForm = ({
     lastImageUrls,
     aspectRatio,
   ])
+
+  const draftInput = useMemo<Record<string, unknown>>(() => {
+    const payload: Record<string, unknown> = {
+      prompt,
+      resolution,
+      enable_web_search: enableWebSearch,
+      generate_audio: generateAudio,
+    }
+
+    if (imageUrls[0]) payload.image = imageUrls[0]
+    if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
+    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (typeof durationValue === 'number') payload.duration = durationValue
+    if (typeof seedValue === 'number') payload.seed = seedValue
+
+    return payload
+  }, [
+    prompt,
+    imageUrls,
+    lastImageUrls,
+    resolution,
+    enableWebSearch,
+    generateAudio,
+    aspectRatio,
+    durationValue,
+    seedValue,
+  ])
+
+  usePersistedFormDraft(onValuesChange, draftInput)
 
   const { livePricing, isPricingLoading } = useLivePricing({
     apiKey,

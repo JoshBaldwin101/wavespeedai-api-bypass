@@ -17,6 +17,7 @@ export interface WorkflowFormProps {
   isSubmitting: boolean
   submitLabel?: string
   initialValues?: Record<string, unknown>
+  onValuesChange?: (input: Record<string, unknown>) => void
   onSubmit: (input: unknown) => Promise<void>
   workflowCapabilities?: WorkflowCapabilities
   nanoBananaConfig?: NanoBananaConfig

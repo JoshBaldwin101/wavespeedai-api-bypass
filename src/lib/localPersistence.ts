@@ -11,8 +11,17 @@ export interface SavedParamSet {
   expiresAt: number
 }
 
+export interface DraftInput {
+  workflowId: string
+  input: Record<string, unknown>
+  updatedAt: number
+  expiresAt: number
+}
+
 export interface PersistedState {
   lastWorkflowId?: string
+  apiKey?: string
+  draftInputs: Record<string, DraftInput>
   savedParams: Record<string, SavedParamSet>
 }
 
@@ -20,8 +29,38 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
 const emptyState = (): PersistedState => ({
+  draftInputs: {},
   savedParams: {},
 })
+
+const sanitizeDraftInput = (workflowId: string, value: unknown, now: number): DraftInput | null => {
+  if (!isRecord(value)) return null
+
+  const normalizedWorkflowId =
+    typeof value.workflowId === 'string' && value.workflowId.trim() ? value.workflowId.trim() : workflowId
+  const input = isRecord(value.input) ? value.input : {}
+  const updatedAt =
+    typeof value.updatedAt === 'number' && Number.isFinite(value.updatedAt) ? value.updatedAt : now
+  const expiresAt =
+    typeof value.expiresAt === 'number' && Number.isFinite(value.expiresAt) ? value.expiresAt : updatedAt + TTL_MS
+
+  if (!normalizedWorkflowId || expiresAt <= now) return null
+
+  return {
+    workflowId: normalizedWorkflowId,
+    input,
+    updatedAt,
+    expiresAt,
+  }
+}
+
+const pruneDraftInputs = (
+  draftInputs: Record<string, DraftInput>,
+  now: number,
+): Record<string, DraftInput> => {
+  const validEntries = Object.entries(draftInputs).filter(([, item]) => item.expiresAt > now)
+  return Object.fromEntries(validEntries)
+}
 
 const sanitizeSavedParamSet = (
   predictionId: string,
@@ -72,10 +111,24 @@ const sanitizeState = (value: unknown, now: number): PersistedState => {
     normalizedSavedParams[predictionId] = normalizedItem
   }
 
+  const rawDraftInputs = isRecord(value.draftInputs) ? value.draftInputs : {}
+  const normalizedDraftInputs: Record<string, DraftInput> = {}
+
+  for (const [rawWorkflowId, item] of Object.entries(rawDraftInputs)) {
+    const workflowId = rawWorkflowId.trim()
+    if (!workflowId) continue
+    const normalizedItem = sanitizeDraftInput(workflowId, item, now)
+    if (!normalizedItem) continue
+    normalizedDraftInputs[workflowId] = normalizedItem
+  }
+
   const lastWorkflowId = typeof value.lastWorkflowId === 'string' ? value.lastWorkflowId.trim() : undefined
+  const apiKey = typeof value.apiKey === 'string' && value.apiKey.trim() ? value.apiKey.trim() : undefined
 
   return {
     ...(lastWorkflowId ? { lastWorkflowId } : {}),
+    ...(apiKey ? { apiKey } : {}),
+    draftInputs: pruneDraftInputs(normalizedDraftInputs, now),
     savedParams: pruneSavedParams(normalizedSavedParams, now),
   }
 }
@@ -136,5 +189,15 @@ export const createSavedParamSet = (
     input,
     savedAt,
     expiresAt: savedAt + TTL_MS,
+  }
+}
+
+export const createDraftInput = (workflowId: string, input: Record<string, unknown>): DraftInput => {
+  const updatedAt = Date.now()
+  return {
+    workflowId,
+    input,
+    updatedAt,
+    expiresAt: updatedAt + TTL_MS,
   }
 }
