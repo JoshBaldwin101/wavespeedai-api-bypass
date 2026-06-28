@@ -48,7 +48,6 @@ export const useLocalPersistence = () => {
   const savedParams = storage.state.savedParams
   const draftInputs = storage.state.draftInputs
   const lastWorkflowId = storage.state.lastWorkflowId
-  const persistedApiKey = storage.state.apiKey
 
   const enable = useCallback(() => {
     setStorage((previous) => {
@@ -157,55 +156,16 @@ export const useLocalPersistence = () => {
     })
   }, [])
 
-  const saveApiKey = useCallback((apiKey: string) => {
-    setStorage((previous) => {
-      if (!previous.enabled) return previous
-
-      const normalizedApiKey = apiKey.trim()
-      if (!normalizedApiKey) return previous
-
-      const nextState = saveState({
-        ...previous.state,
-        apiKey: normalizedApiKey,
-      })
-
-      if (!nextState) return previous
-
-      return {
-        ...previous,
-        state: nextState,
-      }
-    })
-  }, [])
-
-  const clearApiKey = useCallback(() => {
-    setStorage((previous) => {
-      if (!previous.enabled || !previous.state.apiKey) return previous
-
-      const { apiKey: _removed, ...rest } = previous.state
-      const nextState = saveState(rest)
-      if (!nextState) return previous
-
-      return {
-        ...previous,
-        state: nextState,
-      }
-    })
-  }, [])
-
   return {
     enabled,
     enable,
     disableAndWipe,
     lastWorkflowId,
-    persistedApiKey,
     setLastWorkflowId,
     savedParams,
     getParamSet,
     saveParamSet,
     getDraftInput,
     saveDraftInput,
-    saveApiKey,
-    clearApiKey,
   }
 }

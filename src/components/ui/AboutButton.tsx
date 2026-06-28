@@ -85,8 +85,8 @@ export const AboutButton = ({ className = '' }: { className?: string }) => {
                 What is an API key? Is this safe?
               </h2>
               <p>
-                An API key is your unique identifier for accessing the WaveSpeed API. It is not a password, and it is not stored in this tool. It is stored in your browser's local storage and automatically deleted when
-                you close the browser. Do <b>NOT</b> share your API key with anyone. An API, or Application Programming Interface, is in this case a means to access the normal website functionality but through code. This tool utilizes that API for you.
+                An API key is your unique identifier for accessing the WaveSpeed API. It is not a password, and it is not stored in this tool. It is kept in memory only for your current session and is never written to
+                browser storage. Do <b>NOT</b> share your API key with anyone. An API, or Application Programming Interface, is in this case a means to access the normal website functionality but through code. This tool utilizes that API for you.
               </p>
               <p>
                 Regarding safety, generally yes this tool is safe to use. I have no idea the policies of WaveSpeed, but I have no reason to believe they would ban you for using this tool. Usage is of course at your own risk.

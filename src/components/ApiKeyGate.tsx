@@ -51,8 +51,8 @@ export const ApiKeyGate = () => {
           <AboutButton />
         </div>
         <p className="mt-2 text-sm text-slate-300">
-          Paste your WaveSpeed API key to begin. Keys are only stored in this browser if you enable{' '}
-          <strong className="font-semibold text-slate-100">Save settings on this device</strong> after signing in.
+          Paste your WaveSpeed API key to begin. Your key is kept only for this session and is never saved to browser
+          storage.
         </p>
 
         <label className="mt-6 block text-sm font-medium text-slate-200" htmlFor="api-key-input">

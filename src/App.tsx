@@ -129,8 +129,6 @@ const AppContent = () => {
     saveParamSet,
     getDraftInput,
     saveDraftInput,
-    saveApiKey,
-    clearApiKey,
   } = useLocalPersistence()
   const balanceRefreshInFlightRef = useRef(false)
   const balanceRefreshQueuedRef = useRef(false)
@@ -214,11 +212,6 @@ const AppContent = () => {
     if (!isPersistenceEnabled) return
     setLastWorkflowId(selectedWorkflowId)
   }, [isPersistenceEnabled, selectedWorkflowId, setLastWorkflowId])
-
-  useEffect(() => {
-    if (!isPersistenceEnabled || !isValidated || !apiKey) return
-    saveApiKey(apiKey)
-  }, [apiKey, isPersistenceEnabled, isValidated, saveApiKey])
 
   useEffect(
     () => () => {
@@ -526,7 +519,7 @@ const AppContent = () => {
                   label="Save settings on this device"
                   description={
                     isPersistenceEnabled
-                      ? 'Enabled. Your in-progress inputs, API key, and submitted settings are stored locally for up to 7 days.'
+                      ? 'Enabled. Your in-progress inputs and submitted settings are stored locally for up to 7 days.'
                       : 'Disabled. Nothing from this session is stored in this browser.'
                   }
                 />
@@ -643,9 +636,8 @@ const AppContent = () => {
         description={
           <div className="space-y-3">
             <p>
-              By enabling this, the app stores your API key, in-progress form inputs (including prompts and media URLs),
-              and submitted generation settings in your browser so you can pick up where you left off after refreshing or
-              closing the tab.
+              By enabling this, the app stores in-progress form inputs (including prompts and media URLs) and submitted
+              generation settings in your browser so you can pick up where you left off after refreshing or closing the tab.
             </p>
             <p>
               This data stays on this device and expires after 7 days. Anyone with access to this browser profile may be able to
@@ -662,7 +654,6 @@ const AppContent = () => {
           setShowEnablePersistenceConfirm(false)
           enablePersistence()
           setLastWorkflowId(selectedWorkflowId)
-          if (apiKey) saveApiKey(apiKey)
           if (latestDraftRef.current) {
             saveDraftInput(selectedWorkflowId, latestDraftRef.current)
           }
@@ -692,7 +683,7 @@ const AppContent = () => {
       <ConfirmDialog
         open={showChangeKeyConfirm}
         title="Change API key?"
-        description="This will clear your saved API key and everything you've entered so far, including your prompt and uploaded files. You'll need to enter a new key to continue."
+        description="This will clear your current API key and everything you've entered so far, including your prompt and uploaded files. You'll need to enter a new key to continue."
         confirmLabel="Change key"
         onCancel={() => setShowChangeKeyConfirm(false)}
         onConfirm={() => {
@@ -700,7 +691,6 @@ const AppContent = () => {
           jobs.reset()
           setSubmitError(null)
           resetPriceConfirmState()
-          clearApiKey()
           reset()
         }}
       />

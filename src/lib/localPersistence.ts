@@ -20,7 +20,6 @@ export interface DraftInput {
 
 export interface PersistedState {
   lastWorkflowId?: string
-  apiKey?: string
   draftInputs: Record<string, DraftInput>
   savedParams: Record<string, SavedParamSet>
 }
@@ -123,11 +122,9 @@ const sanitizeState = (value: unknown, now: number): PersistedState => {
   }
 
   const lastWorkflowId = typeof value.lastWorkflowId === 'string' ? value.lastWorkflowId.trim() : undefined
-  const apiKey = typeof value.apiKey === 'string' && value.apiKey.trim() ? value.apiKey.trim() : undefined
 
   return {
     ...(lastWorkflowId ? { lastWorkflowId } : {}),
-    ...(apiKey ? { apiKey } : {}),
     draftInputs: pruneDraftInputs(normalizedDraftInputs, now),
     savedParams: pruneSavedParams(normalizedSavedParams, now),
   }
