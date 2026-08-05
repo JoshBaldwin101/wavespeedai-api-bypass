@@ -11,8 +11,11 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - `activeWorkflow.model` for jobs filtering (`useJobs`)
 - Workflow forms live by model family:
   - Seedance forms in `src/components/seedance/`
+  - SeedVR2 forms in `src/components/seedvr2/`
+  - MiniMax H3 forms in `src/components/minimaxH3/`
   - GPT Image forms in `src/components/gptImage/`
   - Nano Banana forms in `src/components/nanoBanana/`
+  - Scail forms in `src/components/scail/`
 - Shared per-workflow Nano Banana field behavior lives in `src/components/nanoBananaConfig.ts` and is passed through `activeWorkflow.nanoBananaConfig`.
 - Form pricing previews share `src/hooks/useLivePricing.ts`.
 - Job output rendering in `src/components/JobsPanel.tsx` is media-kind aware through `src/lib/outputMedia.ts`.
@@ -20,17 +23,17 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 ## How to add a new workflow
 
 1. Add or update request input types in `src/lib/types.ts`.
-2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/gptImage/`, or `src/components/nanoBanana/`):
-   - Keep payload assembly explicit.
-   - Validate required fields and any model-specific ranges/options.
-   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
-   - Enforce documented WaveSpeed attachment-count limits in both UI and submit-time validation.
-   - Reuse `MediaUpload`, `useLivePricing`, and shared advanced-fields components where possible.
+2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, or `src/components/scail/`):
+  - Keep payload assembly explicit.
+  - Validate required fields and any model-specific ranges/options.
+  - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
+  - Enforce documented WaveSpeed attachment-count limits in both UI and submit-time validation.
+  - Reuse `MediaUpload`, `useLivePricing`, and shared advanced-fields components where possible.
 3. Register the workflow in `src/lib/workflows.ts`:
-   - Set `id`, `label`, `submitLabel`, and `model`.
-   - Assign the form component.
-   - Use `capabilities` only for workflows that rely on it (Seedance currently does; GPT Image does not).
-   - Use `nanoBananaConfig` for Nano Banana endpoints so form field support/options stay registry-driven.
+  - Set `id`, `label`, `submitLabel`, and `model`.
+  - Assign the form component.
+  - Use `capabilities` only for workflows that rely on it (Seedance currently does; GPT Image / MiniMax H3 / SeedVR2 do not).
+  - Use `nanoBananaConfig` for Nano Banana endpoints so form field support/options stay registry-driven.
 4. Confirm app wiring:
    - `src/App.tsx` should auto-pick registry changes.
    - If the form uses registry-scoped options (for example Nano Banana), ensure the registry-specific prop (for example `nanoBananaConfig`) is passed through.
@@ -49,10 +52,21 @@ When adding or updating a workflow with media arrays, check the official WaveSpe
 Current documented limits used in this app:
 
 - Single-value attachment fields (`image`, `last_image`, `video`) accept 1 file/URL.
-- Seedance reference images are capped at 4 files.
-- Seedance `reference_videos[]` and `reference_audios[]` docs currently specify total duration limits (15 seconds), not an item-count cap, so do not invent a count limit unless WaveSpeed documents one.
+- Seedance 2.0 / 2.0-fast shared limits currently use 9 reference images / 9 videos / 9 audios (see `existing-endpoint-schema-discrepancies.md` for official vs app differences).
+- Seedance 2.0 Mini text-to-video / video-edit reference caps are 9 images / 3 videos / 3 audios.
+- MiniMax H3 reference-to-video caps are 9 images / 3 videos / 3 audios; at least one reference input is required; reference videos are only supported at `480p`.
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
+
+Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
+
+## WorkflowCapabilities notes (Seedance family)
+
+Optional fields on `WorkflowCapabilities` (defaults preserve existing 2.0 / 2.0-fast behavior):
+
+- `defaultResolution` — preferred default when draft/initial resolution is missing or not in `resolutionOptions` (falls back to `resolutionOptions[0]`).
+- `supportsWebSearch` — defaults to `true`. When `false`, the web-search toggle is hidden and `enable_web_search` is omitted from the payload.
+- `referenceLimits` — overrides Seedance attachment caps for `reference_images` / `reference_videos` / `reference_audios` when present.
 
 ## Numeric field validation
 
@@ -141,6 +155,101 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
 ### `seedance-2.0-fast/video-extend`
 
 - Required/optional fields follow `seedance-2.0/video-extend`.
+
+### `seedance-2.0-mini/image-to-video`
+
+- Required: `image`, `prompt`
+- Optional: `last_image`, `aspect_ratio`, `resolution`, `duration`, `enable_web_search`, `generate_audio`
+- Duration: 4-15 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+
+### `seedance-2.0-mini/image-to-video-spicy`
+
+- Required: `image`
+- Optional: `prompt`, `last_image`, `aspect_ratio`, `resolution`, `duration`, `generate_audio`, `seed`
+- Duration: 4-15 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: Prompt is optional. No `enable_web_search` in the official schema.
+
+### `seedance-2.0-mini/image-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.0-mini/image-to-video`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.0-mini/text-to-video`
+
+- Required: `prompt`
+- Optional: `reference_images[]` (max 9), `reference_videos[]` (max 3), `reference_audios[]` (max 3), `aspect_ratio`, `resolution`, `duration`, `enable_web_search`, `generate_audio`
+- Duration: 4-15 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+
+### `seedance-2.0-mini/text-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.0-mini/text-to-video`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.0-mini/video-edit`
+
+- Required: `prompt`, `video`
+- Optional: `reference_images[]` (max 9), `reference_audios[]` (max 3), `aspect_ratio`, `resolution`, `duration`, `enable_web_search`, `generate_audio`
+- Duration: 4-15 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+
+### `seedance-2.0-mini/video-edit-turbo`
+
+- Required/optional fields follow `seedance-2.0-mini/video-edit`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.0-mini/video-extend`
+
+- Required: `prompt`, `video`
+- Optional: `last_image`, `resolution`, `duration`, `enable_web_search`, `generate_audio`
+- Duration: 4-15 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: No `aspect_ratio` in the schema.
+
+### `wavespeed-ai/seedvr2/video`
+
+- Required: `video`
+- Optional: `target_resolution`
+- Options: `target_resolution`: `720p`, `1080p` (default), `2k`, `4k`
+- Notes: Video upscaler. No prompt field. Use `submitLabel: Generate video`.
+
+### `wavespeed-ai/scail-2`
+
+- Required: `image`, `video`
+- Optional: `prompt`, `mode`, `resolution`, `seed`
+- Options:
+  - `mode`: `animate`, `replace`
+  - `resolution`: `480p`, `720p`
+- Notes: Character animation / replace workflow. Use `submitLabel: Generate video`.
+
+### `wavespeed-ai/minimax-h3/text-to-video`
+
+- Required: `prompt`
+- Optional: `aspect_ratio`, `resolution`, `duration`, `seed`
+- Options:
+  - `aspect_ratio`: `16:9` (default), `9:16`, `1:1`, `4:3`, `3:4`, `21:9`, `9:21`
+  - `resolution`: `480p` (default), `768p`
+  - `duration`: integer 5-15 (default 5)
+  - `seed`: integer, `-1` means random
+- Notes: Native stereo audio is always generated with the video.
+
+### `wavespeed-ai/minimax-h3/reference-to-video`
+
+- Required: `prompt`, plus at least one of `reference_images[]` / `reference_videos[]` / `reference_audios[]`
+- Optional: `aspect_ratio`, `resolution`, `duration`, `seed`
+- Attachment caps: 9 images / 3 videos / 3 audios
+- Notes: Reference videos are only supported at `480p`. Same aspect/resolution/duration/seed options as text-to-video.
+
+### `wavespeed-ai/minimax-h3/image-to-video`
+
+- Required: `prompt`, `image`
+- Optional: `last_image`, `resolution`, `duration`, `seed`
+- Options:
+  - `resolution`: `480p` (default), `768p`
+  - `duration`: integer 5-15 (default 5)
+- Notes: No `aspect_ratio` — output canvas follows the first-frame image.
 
 ### `openai/gpt-image-2/edit`
 

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceVideoExtendInput } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceResolution, SeedanceVideoExtendInput } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
@@ -23,6 +23,17 @@ interface SeedanceVideoExtendFormProps {
 
 type AspectRatioOption = SeedanceAspectRatio | 'auto'
 
+const resolveResolution = (
+  nextResolution: unknown,
+  resolutionOptions: SeedanceResolution[],
+  defaultResolution?: SeedanceResolution,
+): SeedanceResolution => {
+  if (typeof nextResolution === 'string' && resolutionOptions.includes(nextResolution as SeedanceResolution)) {
+    return nextResolution as SeedanceResolution
+  }
+  return defaultResolution ?? resolutionOptions[0] ?? '720p'
+}
+
 export const SeedanceVideoExtendForm = ({
   apiKey,
   pricingModelId,
@@ -38,7 +49,9 @@ export const SeedanceVideoExtendForm = ({
     durationMax = 15,
     promptRequired = true,
     resolutionOptions = ['480p', '720p', '1080p'],
+    defaultResolution,
     supportsAspectRatio = false,
+    supportsWebSearch = true,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoExtend
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
@@ -49,13 +62,9 @@ export const SeedanceVideoExtendForm = ({
     typeof initialValues?.last_image === 'string' ? [initialValues.last_image] : [],
   )
   const [aspectRatio, setAspectRatio] = useState<AspectRatioOption>('auto')
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(() => {
-    const nextResolution = initialValues?.resolution
-    if (nextResolution === '480p' || nextResolution === '720p' || nextResolution === '1080p') {
-      return nextResolution
-    }
-    return resolutionOptions[0] ?? '720p'
-  })
+  const [resolution, setResolution] = useState<SeedanceResolution>(() =>
+    resolveResolution(initialValues?.resolution, resolutionOptions, defaultResolution),
+  )
   const [duration, setDuration] = useState(() =>
     typeof initialValues?.duration === 'number' ? String(initialValues.duration) : '',
   )
@@ -86,10 +95,10 @@ export const SeedanceVideoExtendForm = ({
     const payload: SeedanceVideoExtendInput = {
       video: videoUrls[0],
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
@@ -102,6 +111,7 @@ export const SeedanceVideoExtendForm = ({
     durationError,
     durationValue,
     resolution,
+    supportsWebSearch,
     enableWebSearch,
     generateAudio,
     lastImageUrls,
@@ -111,16 +121,16 @@ export const SeedanceVideoExtendForm = ({
     const payload: Record<string, unknown> = {
       prompt,
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (videoUrls[0]) payload.video = videoUrls[0]
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     return payload
-  }, [prompt, videoUrls, lastImageUrls, resolution, enableWebSearch, generateAudio, durationValue])
+  }, [prompt, videoUrls, lastImageUrls, resolution, supportsWebSearch, enableWebSearch, generateAudio, durationValue])
 
   usePersistedFormDraft(onValuesChange, draftInput)
 
@@ -164,10 +174,10 @@ export const SeedanceVideoExtendForm = ({
     const payload: SeedanceVideoExtendInput = {
       video: videoUrls[0],
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
@@ -225,6 +235,7 @@ export const SeedanceVideoExtendForm = ({
         durationError={durationError}
         durationMin={durationMin}
         durationMax={durationMax}
+        showWebSearch={supportsWebSearch}
         enableWebSearch={enableWebSearch}
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}

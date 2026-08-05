@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceVideoEditInput } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceResolution, SeedanceVideoEditInput } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
@@ -23,6 +23,17 @@ interface SeedanceVideoEditFormProps {
 
 type AspectRatioOption = SeedanceAspectRatio | 'auto'
 
+const resolveResolution = (
+  nextResolution: unknown,
+  resolutionOptions: SeedanceResolution[],
+  defaultResolution?: SeedanceResolution,
+): SeedanceResolution => {
+  if (typeof nextResolution === 'string' && resolutionOptions.includes(nextResolution as SeedanceResolution)) {
+    return nextResolution as SeedanceResolution
+  }
+  return defaultResolution ?? resolutionOptions[0] ?? '720p'
+}
+
 export const SeedanceVideoEditForm = ({
   apiKey,
   pricingModelId,
@@ -38,9 +49,14 @@ export const SeedanceVideoEditForm = ({
     durationMax = 15,
     promptRequired = true,
     resolutionOptions = ['480p', '720p', '1080p'],
+    defaultResolution,
     supportsAspectRatio = true,
+    supportsWebSearch = true,
+    referenceLimits,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
+  const maxReferenceImages = referenceLimits?.referenceImages ?? limits.referenceImages
+  const maxReferenceAudios = referenceLimits?.referenceAudios ?? limits.referenceAudios
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
   const [videoUrls, setVideoUrls] = useState<string[]>(() =>
     typeof initialValues?.video === 'string' ? [initialValues.video] : [],
@@ -69,13 +85,9 @@ export const SeedanceVideoEditForm = ({
     }
     return 'auto'
   })
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(() => {
-    const nextResolution = initialValues?.resolution
-    if (nextResolution === '480p' || nextResolution === '720p' || nextResolution === '1080p') {
-      return nextResolution
-    }
-    return resolutionOptions[0] ?? '720p'
-  })
+  const [resolution, setResolution] = useState<SeedanceResolution>(() =>
+    resolveResolution(initialValues?.resolution, resolutionOptions, defaultResolution),
+  )
   const [duration, setDuration] = useState(() =>
     typeof initialValues?.duration === 'number' ? String(initialValues.duration) : '',
   )
@@ -101,16 +113,16 @@ export const SeedanceVideoEditForm = ({
     const trimmedPrompt = prompt.trim()
     if ((promptRequired && !trimmedPrompt) || !videoUrls[0]) return null
     if (durationError) return null
-    if (referenceImageUrls.length > limits.referenceImages) return null
+    if (referenceImageUrls.length > maxReferenceImages) return null
 
     const payload: SeedanceVideoEditInput = {
       prompt: trimmedPrompt,
       resolution,
       video: videoUrls[0],
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -123,8 +135,9 @@ export const SeedanceVideoEditForm = ({
     videoUrls,
     durationError,
     durationValue,
-    limits.referenceImages,
+    maxReferenceImages,
     resolution,
+    supportsWebSearch,
     enableWebSearch,
     generateAudio,
     referenceImageUrls,
@@ -136,10 +149,10 @@ export const SeedanceVideoEditForm = ({
     const payload: Record<string, unknown> = {
       prompt,
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (videoUrls[0]) payload.video = videoUrls[0]
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
@@ -151,6 +164,7 @@ export const SeedanceVideoEditForm = ({
     prompt,
     videoUrls,
     resolution,
+    supportsWebSearch,
     enableWebSearch,
     generateAudio,
     referenceImageUrls,
@@ -198,7 +212,7 @@ export const SeedanceVideoEditForm = ({
       return
     }
 
-    const attachmentError = validateAttachmentLimit('Reference images', referenceImageUrls, limits.referenceImages)
+    const attachmentError = validateAttachmentLimit('Reference images', referenceImageUrls, maxReferenceImages)
     if (attachmentError) {
       setError(attachmentError)
       return
@@ -208,10 +222,10 @@ export const SeedanceVideoEditForm = ({
       prompt: trimmedPrompt,
       resolution,
       video: videoUrls[0],
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -255,7 +269,7 @@ export const SeedanceVideoEditForm = ({
         value={referenceImageUrls}
         onChange={setReferenceImageUrls}
         multiple
-        maxItems={limits.referenceImages}
+        maxItems={maxReferenceImages}
       />
 
       <MediaUpload
@@ -265,7 +279,7 @@ export const SeedanceVideoEditForm = ({
         value={referenceAudioUrls}
         onChange={setReferenceAudioUrls}
         multiple
-        maxItems={limits.referenceAudios}
+        maxItems={maxReferenceAudios}
         hint="Optional."
       />
 
@@ -281,6 +295,7 @@ export const SeedanceVideoEditForm = ({
         durationError={durationError}
         durationMin={durationMin}
         durationMax={durationMax}
+        showWebSearch={supportsWebSearch}
         enableWebSearch={enableWebSearch}
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}

@@ -19,6 +19,7 @@ interface SeedanceAdvancedFieldsProps {
   durationError?: ReactNode
   durationMin?: number
   durationMax?: number
+  showWebSearch?: boolean
   enableWebSearch: boolean
   onEnableWebSearchChange: (value: boolean) => void
   generateAudio: boolean
@@ -37,6 +38,7 @@ export const SeedanceAdvancedFields = ({
   durationError,
   durationMin = 4,
   durationMax = 15,
+  showWebSearch = true,
   enableWebSearch,
   onEnableWebSearchChange,
   generateAudio,
@@ -95,14 +97,16 @@ export const SeedanceAdvancedFields = ({
         </Field>
       </div>
 
-      <div className="grid gap-2 sm:gap-3 md:grid-cols-2">
-        <Toggle
-          id="seedance-web-search"
-          checked={enableWebSearch}
-          onChange={onEnableWebSearchChange}
-          label="Enable web search"
-          description="Include real-time web context in the generation call."
-        />
+      <div className={`grid gap-2 sm:gap-3 ${showWebSearch ? 'md:grid-cols-2' : ''}`}>
+        {showWebSearch ? (
+          <Toggle
+            id="seedance-web-search"
+            checked={enableWebSearch}
+            onChange={onEnableWebSearchChange}
+            label="Enable web search"
+            description="Include real-time web context in the generation call."
+          />
+        ) : null}
         <Toggle
           id="seedance-generate-audio"
           checked={generateAudio}

@@ -1,7 +1,10 @@
 export type PredictionStatus = 'created' | 'queued' | 'pending' | 'processing' | 'completed' | 'failed'
 
 export type SeedanceAspectRatio = '16:9' | '9:16' | '4:3' | '3:4' | '1:1' | '21:9'
-export type SeedanceResolution = '480p' | '720p' | '1080p'
+export type SeedanceResolution = '480p' | '720p' | '1080p' | '4k'
+export type SeedVr2Resolution = '720p' | '1080p' | '2k' | '4k'
+export type MinimaxH3AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '3:4' | '21:9' | '9:21'
+export type MinimaxH3Resolution = '480p' | '768p'
 export type GptImageAspectRatio =
   | '1:1'
   | '1:2'
@@ -112,6 +115,34 @@ export interface Scail2Input {
   mode?: Scail2Mode
   resolution?: Scail2Resolution
   seed?: number
+}
+
+export interface SeedVr2VideoInput {
+  video: string
+  target_resolution?: SeedVr2Resolution
+}
+
+export interface MinimaxH3CommonInput {
+  prompt: string
+  resolution?: MinimaxH3Resolution
+  duration?: number
+  seed?: number
+}
+
+export interface MinimaxH3TextToVideoInput extends MinimaxH3CommonInput {
+  aspect_ratio?: MinimaxH3AspectRatio
+}
+
+export interface MinimaxH3ImageToVideoInput extends MinimaxH3CommonInput {
+  image: string
+  last_image?: string
+}
+
+export interface MinimaxH3ReferenceToVideoInput extends MinimaxH3CommonInput {
+  reference_images?: string[]
+  reference_videos?: string[]
+  reference_audios?: string[]
+  aspect_ratio?: MinimaxH3AspectRatio
 }
 
 export interface UploadedMedia {

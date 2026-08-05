@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceImageToVideoInput } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceImageToVideoInput, SeedanceResolution } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
@@ -23,6 +23,17 @@ interface SeedanceImageToVideoFormProps {
 
 type AspectRatioOption = SeedanceAspectRatio | 'auto'
 
+const resolveResolution = (
+  nextResolution: unknown,
+  resolutionOptions: SeedanceResolution[],
+  defaultResolution?: SeedanceResolution,
+): SeedanceResolution => {
+  if (typeof nextResolution === 'string' && resolutionOptions.includes(nextResolution as SeedanceResolution)) {
+    return nextResolution as SeedanceResolution
+  }
+  return defaultResolution ?? resolutionOptions[0] ?? '720p'
+}
+
 export const SeedanceImageToVideoForm = ({
   apiKey,
   pricingModelId,
@@ -39,8 +50,10 @@ export const SeedanceImageToVideoForm = ({
     durationMax = 15,
     promptRequired = true,
     resolutionOptions = ['480p', '720p', '1080p'],
+    defaultResolution,
     supportsSeed = false,
     supportsAspectRatio = true,
+    supportsWebSearch = true,
   } = workflowCapabilities ?? {}
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
   const [imageUrls, setImageUrls] = useState<string[]>(() =>
@@ -63,13 +76,9 @@ export const SeedanceImageToVideoForm = ({
     }
     return 'auto'
   })
-  const [resolution, setResolution] = useState<'480p' | '720p' | '1080p'>(() => {
-    const nextResolution = initialValues?.resolution
-    if (nextResolution === '480p' || nextResolution === '720p' || nextResolution === '1080p') {
-      return nextResolution
-    }
-    return resolutionOptions[0] ?? '720p'
-  })
+  const [resolution, setResolution] = useState<SeedanceResolution>(() =>
+    resolveResolution(initialValues?.resolution, resolutionOptions, defaultResolution),
+  )
   const [duration, setDuration] = useState(() =>
     typeof initialValues?.duration === 'number' ? String(initialValues.duration) : '',
   )
@@ -114,10 +123,10 @@ export const SeedanceImageToVideoForm = ({
     const payload: SeedanceImageToVideoInput = {
       image: imageUrls[0],
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -134,6 +143,7 @@ export const SeedanceImageToVideoForm = ({
     seedError,
     seedValue,
     resolution,
+    supportsWebSearch,
     enableWebSearch,
     generateAudio,
     lastImageUrls,
@@ -144,10 +154,10 @@ export const SeedanceImageToVideoForm = ({
     const payload: Record<string, unknown> = {
       prompt,
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (imageUrls[0]) payload.image = imageUrls[0]
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -160,6 +170,7 @@ export const SeedanceImageToVideoForm = ({
     imageUrls,
     lastImageUrls,
     resolution,
+    supportsWebSearch,
     enableWebSearch,
     generateAudio,
     aspectRatio,
@@ -214,10 +225,10 @@ export const SeedanceImageToVideoForm = ({
     const payload: SeedanceImageToVideoInput = {
       image: imageUrls[0],
       resolution,
-      enable_web_search: enableWebSearch,
       generate_audio: generateAudio,
     }
 
+    if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -299,6 +310,7 @@ export const SeedanceImageToVideoForm = ({
         durationError={durationError}
         durationMin={durationMin}
         durationMax={durationMax}
+        showWebSearch={supportsWebSearch}
         enableWebSearch={enableWebSearch}
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}
