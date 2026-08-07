@@ -126,7 +126,7 @@ export const SeedanceTextToVideoForm = ({
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     return payload as Record<string, unknown>
@@ -143,6 +143,7 @@ export const SeedanceTextToVideoForm = ({
     referenceImageUrls,
     referenceVideoUrls,
     referenceAudioUrls,
+    supportsAspectRatio,
     aspectRatio,
   ])
 
@@ -157,7 +158,7 @@ export const SeedanceTextToVideoForm = ({
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     return payload
@@ -170,6 +171,7 @@ export const SeedanceTextToVideoForm = ({
     referenceImageUrls,
     referenceVideoUrls,
     referenceAudioUrls,
+    supportsAspectRatio,
     aspectRatio,
     durationValue,
   ])
@@ -224,7 +226,7 @@ export const SeedanceTextToVideoForm = ({
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     await onSubmit(payload)

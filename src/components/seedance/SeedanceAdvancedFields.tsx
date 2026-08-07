@@ -14,6 +14,7 @@ interface SeedanceAdvancedFieldsProps {
   resolution: SeedanceResolution
   onResolutionChange: (value: SeedanceResolution) => void
   resolutionOptions?: SeedanceResolution[]
+  showDuration?: boolean
   duration: string
   onDurationChange: (value: string) => void
   durationError?: ReactNode
@@ -33,6 +34,7 @@ export const SeedanceAdvancedFields = ({
   resolution,
   onResolutionChange,
   resolutionOptions = ['480p', '720p', '1080p'],
+  showDuration = true,
   duration,
   onDurationChange,
   durationError,
@@ -44,9 +46,17 @@ export const SeedanceAdvancedFields = ({
   generateAudio,
   onGenerateAudioChange,
 }: SeedanceAdvancedFieldsProps) => {
+  const gridClassName = showAspectRatio
+    ? showDuration
+      ? 'grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-3'
+      : 'grid gap-3 sm:gap-4 grid-cols-2'
+    : showDuration
+      ? 'grid gap-3 sm:gap-4 grid-cols-2'
+      : 'grid gap-3 sm:gap-4 grid-cols-1'
+
   return (
     <>
-      <div className={`grid gap-3 sm:gap-4 ${showAspectRatio ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2'}`}>
+      <div className={gridClassName}>
         {showAspectRatio ? (
           <Field label="Aspect ratio" htmlFor="seedance-aspect-ratio" hint="Leave as Adapt to input to let WaveSpeed decide.">
             <select
@@ -79,22 +89,24 @@ export const SeedanceAdvancedFields = ({
           </select>
         </Field>
 
-        <Field
-          className={showAspectRatio ? 'col-span-2 md:col-span-1' : 'col-span-2 md:col-span-1'}
-          label="Duration (seconds)"
-          htmlFor="seedance-duration"
-          error={durationError}
-          hint={`Optional. Allowed range: ${durationMin}-${durationMax}.`}
-        >
-          <input
-            id="seedance-duration"
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
-            inputMode="numeric"
-            placeholder="Auto"
-            value={duration}
-            onChange={(event) => onDurationChange(event.target.value)}
-          />
-        </Field>
+        {showDuration ? (
+          <Field
+            className={showAspectRatio ? 'col-span-2 md:col-span-1' : 'col-span-2 md:col-span-1'}
+            label="Duration (seconds)"
+            htmlFor="seedance-duration"
+            error={durationError}
+            hint={`Optional. Allowed range: ${durationMin}-${durationMax}.`}
+          >
+            <input
+              id="seedance-duration"
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
+              inputMode="numeric"
+              placeholder="Auto"
+              value={duration}
+              onChange={(event) => onDurationChange(event.target.value)}
+            />
+          </Field>
+        ) : null}
       </div>
 
       <div className={`grid gap-2 sm:gap-3 ${showWebSearch ? 'md:grid-cols-2' : ''}`}>

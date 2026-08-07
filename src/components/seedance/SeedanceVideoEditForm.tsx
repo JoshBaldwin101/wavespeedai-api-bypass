@@ -52,6 +52,7 @@ export const SeedanceVideoEditForm = ({
     defaultResolution,
     supportsAspectRatio = true,
     supportsWebSearch = true,
+    supportsDuration = true,
     referenceLimits,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
@@ -97,22 +98,25 @@ export const SeedanceVideoEditForm = ({
   )
   const [error, setError] = useState<string | null>(null)
 
-  const { value: durationValue, error: durationError } = useMemo(
-    () => evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax }),
-    [duration, durationMin, durationMax],
-  )
+  const { value: durationValue, error: durationError } = useMemo(() => {
+    if (!supportsDuration) {
+      return { value: undefined, error: null }
+    }
+
+    return evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax })
+  }, [duration, durationMin, durationMax, supportsDuration])
 
   const isFormValid = useMemo(() => {
     if (promptRequired && !prompt.trim()) return false
     if (!videoUrls[0]) return false
-    if (durationError) return false
+    if (supportsDuration && durationError) return false
     return true
-  }, [promptRequired, prompt, videoUrls, durationError])
+  }, [promptRequired, prompt, videoUrls, supportsDuration, durationError])
 
   const pricingInput = useMemo<Record<string, unknown> | null>(() => {
     const trimmedPrompt = prompt.trim()
     if ((promptRequired && !trimmedPrompt) || !videoUrls[0]) return null
-    if (durationError) return null
+    if (supportsDuration && durationError) return null
     if (referenceImageUrls.length > maxReferenceImages) return null
 
     const payload: SeedanceVideoEditInput = {
@@ -125,14 +129,15 @@ export const SeedanceVideoEditForm = ({
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
-    if (typeof durationValue === 'number') payload.duration = durationValue
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsDuration && typeof durationValue === 'number') payload.duration = durationValue
 
     return payload as Record<string, unknown>
   }, [
     prompt,
     promptRequired,
     videoUrls,
+    supportsDuration,
     durationError,
     durationValue,
     maxReferenceImages,
@@ -142,6 +147,7 @@ export const SeedanceVideoEditForm = ({
     generateAudio,
     referenceImageUrls,
     referenceAudioUrls,
+    supportsAspectRatio,
     aspectRatio,
   ])
 
@@ -156,8 +162,8 @@ export const SeedanceVideoEditForm = ({
     if (videoUrls[0]) payload.video = videoUrls[0]
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
-    if (typeof durationValue === 'number') payload.duration = durationValue
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsDuration && typeof durationValue === 'number') payload.duration = durationValue
 
     return payload
   }, [
@@ -169,7 +175,9 @@ export const SeedanceVideoEditForm = ({
     generateAudio,
     referenceImageUrls,
     referenceAudioUrls,
+    supportsAspectRatio,
     aspectRatio,
+    supportsDuration,
     durationValue,
   ])
 
@@ -207,7 +215,7 @@ export const SeedanceVideoEditForm = ({
       return
     }
 
-    if (durationError) {
+    if (supportsDuration && durationError) {
       setError(durationError)
       return
     }
@@ -228,8 +236,8 @@ export const SeedanceVideoEditForm = ({
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
-    if (typeof durationValue === 'number') payload.duration = durationValue
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsDuration && typeof durationValue === 'number') payload.duration = durationValue
 
     await onSubmit(payload)
   }
@@ -290,6 +298,7 @@ export const SeedanceVideoEditForm = ({
         resolution={resolution}
         onResolutionChange={setResolution}
         resolutionOptions={resolutionOptions}
+        showDuration={supportsDuration}
         duration={duration}
         onDurationChange={setDuration}
         durationError={durationError}

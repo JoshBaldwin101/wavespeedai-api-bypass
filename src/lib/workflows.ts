@@ -28,6 +28,7 @@ export interface WorkflowFormProps {
 }
 
 export type WorkflowGroupId =
+  | 'seedance-2.5'
   | 'seedance-2.0-fast'
   | 'seedance-2.0'
   | 'seedance-2.0-mini'
@@ -51,6 +52,10 @@ export interface WorkflowCapabilities {
   resolutionOptions: SeedanceResolution[]
   defaultResolution?: SeedanceResolution
   supportsWebSearch?: boolean
+  /** Defaults to true. When false, duration UI and payload fields are omitted. */
+  supportsDuration?: boolean
+  /** Defaults to true. When false, last-frame image UI and payload fields are omitted. */
+  supportsLastImage?: boolean
   referenceLimits?: {
     referenceImages?: number
     referenceVideos?: number
@@ -70,6 +75,7 @@ export interface WorkflowDefinition {
 }
 
 export const workflowGroups: WorkflowGroupDefinition[] = [
+  { id: 'seedance-2.5', label: 'seedance-2.5' },
   { id: 'seedance-2.0', label: 'seedance-2.0' },
   { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
   { id: 'seedance-2.0-mini', label: 'seedance-2.0-mini' },
@@ -84,8 +90,15 @@ const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
 const turboResolutions: SeedanceResolution[] = ['720p', '1080p']
 const miniResolutions: SeedanceResolution[] = ['480p', '720p', '1080p', '4k']
 const miniTurboResolutions: SeedanceResolution[] = ['720p', '1080p']
+const seedance25Resolutions: SeedanceResolution[] = ['480p', '720p', '1080p', '4k']
 
 const miniReferenceLimits = {
+  referenceImages: 9,
+  referenceVideos: 3,
+  referenceAudios: 3,
+} as const
+
+const seedance25ReferenceLimits = {
   referenceImages: 9,
   referenceVideos: 3,
   referenceAudios: 3,
@@ -208,7 +221,151 @@ const miniVideoExtendCapabilities: WorkflowCapabilities = {
   defaultResolution: '720p',
 }
 
+const seedance25ImageToVideoCapabilities: WorkflowCapabilities = {
+  promptRequired: true,
+  supportsAspectRatio: false,
+  supportsSeed: false,
+  durationMin: 4,
+  durationMax: 30,
+  resolutionOptions: seedance25Resolutions,
+  defaultResolution: '720p',
+  supportsWebSearch: false,
+}
+
+const seedance25ImageToVideoTurboCapabilities: WorkflowCapabilities = {
+  ...seedance25ImageToVideoCapabilities,
+  resolutionOptions: turboResolutions,
+}
+
+const seedance25ImageToVideoSpicyCapabilities: WorkflowCapabilities = {
+  ...seedance25ImageToVideoCapabilities,
+  promptRequired: false,
+  supportsSeed: true,
+}
+
+const seedance25TextToVideoCapabilities: WorkflowCapabilities = {
+  promptRequired: true,
+  supportsAspectRatio: true,
+  supportsSeed: false,
+  durationMin: 4,
+  durationMax: 30,
+  resolutionOptions: seedance25Resolutions,
+  defaultResolution: '720p',
+  supportsWebSearch: false,
+  referenceLimits: seedance25ReferenceLimits,
+}
+
+const seedance25TextToVideoTurboCapabilities: WorkflowCapabilities = {
+  ...seedance25TextToVideoCapabilities,
+  resolutionOptions: turboResolutions,
+}
+
+const seedance25VideoEditCapabilities: WorkflowCapabilities = {
+  promptRequired: true,
+  supportsAspectRatio: false,
+  supportsSeed: false,
+  durationMin: 4,
+  durationMax: 30,
+  resolutionOptions: seedance25Resolutions,
+  defaultResolution: '720p',
+  supportsWebSearch: false,
+  supportsDuration: false,
+  referenceLimits: {
+    referenceImages: 9,
+    referenceAudios: 3,
+  },
+}
+
+const seedance25VideoEditTurboCapabilities: WorkflowCapabilities = {
+  ...seedance25VideoEditCapabilities,
+  resolutionOptions: turboResolutions,
+}
+
+const seedance25VideoExtendCapabilities: WorkflowCapabilities = {
+  promptRequired: true,
+  supportsAspectRatio: false,
+  supportsSeed: false,
+  durationMin: 4,
+  durationMax: 30,
+  resolutionOptions: seedance25Resolutions,
+  defaultResolution: '720p',
+  supportsWebSearch: false,
+  supportsLastImage: false,
+}
+
 export const workflows: WorkflowDefinition[] = [
+  {
+    id: 'seedance-2.5/image-to-video',
+    label: 'seedance-2.5/image-to-video',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/image-to-video',
+    capabilities: seedance25ImageToVideoCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5/image-to-video-spicy',
+    label: 'seedance-2.5/image-to-video-spicy',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/image-to-video-spicy',
+    capabilities: seedance25ImageToVideoSpicyCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5/image-to-video-turbo',
+    label: 'seedance-2.5/image-to-video-turbo',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/image-to-video-turbo',
+    capabilities: seedance25ImageToVideoTurboCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5/text-to-video',
+    label: 'seedance-2.5/text-to-video',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/text-to-video',
+    capabilities: seedance25TextToVideoCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5/text-to-video-turbo',
+    label: 'seedance-2.5/text-to-video-turbo',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/text-to-video-turbo',
+    capabilities: seedance25TextToVideoTurboCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5/video-edit',
+    label: 'seedance-2.5/video-edit',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/video-edit',
+    capabilities: seedance25VideoEditCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.5/video-edit-turbo',
+    label: 'seedance-2.5/video-edit-turbo',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/video-edit-turbo',
+    capabilities: seedance25VideoEditTurboCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.5/video-extend',
+    label: 'seedance-2.5/video-extend',
+    group: 'seedance-2.5',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5/video-extend',
+    capabilities: seedance25VideoExtendCapabilities,
+    form: SeedanceVideoExtendForm,
+  },
   {
     id: 'seedance-2.0/image-to-video',
     label: 'seedance-2.0/image-to-video',

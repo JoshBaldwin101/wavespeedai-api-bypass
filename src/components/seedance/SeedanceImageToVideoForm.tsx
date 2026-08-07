@@ -129,7 +129,7 @@ export const SeedanceImageToVideoForm = ({
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
     if (typeof seedValue === 'number') payload.seed = seedValue
 
@@ -147,6 +147,7 @@ export const SeedanceImageToVideoForm = ({
     enableWebSearch,
     generateAudio,
     lastImageUrls,
+    supportsAspectRatio,
     aspectRatio,
   ])
 
@@ -160,7 +161,7 @@ export const SeedanceImageToVideoForm = ({
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (imageUrls[0]) payload.image = imageUrls[0]
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
     if (typeof seedValue === 'number') payload.seed = seedValue
 
@@ -173,6 +174,7 @@ export const SeedanceImageToVideoForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsAspectRatio,
     aspectRatio,
     durationValue,
     seedValue,
@@ -231,7 +233,7 @@ export const SeedanceImageToVideoForm = ({
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
-    if (aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
+    if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
     if (typeof durationValue === 'number') payload.duration = durationValue
     if (typeof seedValue === 'number') payload.seed = seedValue
 

@@ -54,6 +54,7 @@ Current documented limits used in this app:
 - Single-value attachment fields (`image`, `last_image`, `video`) accept 1 file/URL.
 - Seedance 2.0 / 2.0-fast shared limits currently use 9 reference images / 9 videos / 9 audios (see `existing-endpoint-schema-discrepancies.md` for official vs app differences).
 - Seedance 2.0 Mini text-to-video / video-edit reference caps are 9 images / 3 videos / 3 audios.
+- Seedance 2.5 text-to-video / video-edit reference caps in this app are 9 images / 3 videos / 3 audios (official docs only document a 30s total-duration cap).
 - MiniMax H3 reference-to-video caps are 9 images / 3 videos / 3 audios; at least one reference input is required; reference videos are only supported at `480p`.
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
@@ -66,6 +67,8 @@ Optional fields on `WorkflowCapabilities` (defaults preserve existing 2.0 / 2.0-
 
 - `defaultResolution` — preferred default when draft/initial resolution is missing or not in `resolutionOptions` (falls back to `resolutionOptions[0]`).
 - `supportsWebSearch` — defaults to `true`. When `false`, the web-search toggle is hidden and `enable_web_search` is omitted from the payload.
+- `supportsDuration` — defaults to `true`. When `false`, the duration field is hidden and `duration` is omitted from the payload (used by Seedance 2.5 video-edit).
+- `supportsLastImage` — defaults to `true`. When `false`, the last-frame image upload is hidden and `last_image` is omitted from the payload (used by Seedance 2.5 video-extend).
 - `referenceLimits` — overrides Seedance attachment caps for `reference_images` / `reference_videos` / `reference_audios` when present.
 
 ## Numeric field validation
@@ -78,6 +81,61 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
 - Use `value` when building payloads only when it is a number.
 
 ## Current workflow schema notes (dropdown order)
+
+### `seedance-2.5/image-to-video`
+
+- Required: `image`, `prompt`
+- Optional: `last_image`, `resolution`, `duration`, `generate_audio`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: No `aspect_ratio` and no `enable_web_search` in the official schema.
+
+### `seedance-2.5/image-to-video-spicy`
+
+- Required: `image`
+- Optional: `prompt`, `last_image`, `resolution`, `duration`, `generate_audio`, `seed`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: Prompt is optional. No `aspect_ratio` and no `enable_web_search`.
+
+### `seedance-2.5/image-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.5/image-to-video`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5/text-to-video`
+
+- Required: `prompt`
+- Optional: `reference_images[]`, `reference_videos[]`, `reference_audios[]`, `aspect_ratio`, `resolution`, `duration`, `generate_audio`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Aspect ratio: `16:9` (default), `9:16`, `4:3`, `3:4`, `1:1`, `21:9`
+- Notes: No `enable_web_search`. App enforces reference caps of 9 images / 3 videos / 3 audios (docs only state a 30s total-duration cap).
+
+### `seedance-2.5/text-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.5/text-to-video`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5/video-edit`
+
+- Required: `prompt`, `video`
+- Optional: `reference_images[]`, `reference_audios[]`, `resolution`, `generate_audio`
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: No `aspect_ratio`, no `duration`, and no `enable_web_search`. App enforces reference caps of 9 images / 3 audios.
+
+### `seedance-2.5/video-edit-turbo`
+
+- Required/optional fields follow `seedance-2.5/video-edit`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5/video-extend`
+
+- Required: `prompt`, `video`
+- Optional: `resolution`, `duration`, `generate_audio`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: No `aspect_ratio`, no `last_image`, and no `enable_web_search`.
 
 ### `seedance-2.0/image-to-video`
 

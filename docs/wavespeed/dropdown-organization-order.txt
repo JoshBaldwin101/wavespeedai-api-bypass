@@ -1,3 +1,16 @@
+seedance-2.5/image-to-video
+seedance-2.5/image-to-video-spicy
+seedance-2.5/image-to-video-turbo
+
+seedance-2.5/text-to-video
+seedance-2.5/text-to-video-turbo
+
+seedance-2.5/video-edit
+seedance-2.5/video-edit-turbo
+seedance-2.5/video-extend
+
+---
+
 seedance-2.0/image-to-video
 seedance-2.0/image-to-video-spicy
 seedance-2.0/image-to-video-turbo
@@ -24,14 +37,34 @@ seedance-2.0-fast/video-extend
 
 ---
 
-wavespeed-ai/scail-2 
+seedance-2.0-mini/image-to-video
+seedance-2.0-mini/image-to-video-spicy
+seedance-2.0-mini/image-to-video-turbo
+
+seedance-2.0-mini/text-to-video
+seedance-2.0-mini/text-to-video-turbo
+
+seedance-2.0-mini/video-edit
+seedance-2.0-mini/video-edit-turbo
+seedance-2.0-mini/video-extend
+
+---
+
+wavespeed-ai/seedvr2/video
+wavespeed-ai/scail-2
+
+---
+
+wavespeed-ai/minimax-h3/text-to-video
+wavespeed-ai/minimax-h3/reference-to-video
+wavespeed-ai/minimax-h3/image-to-video
 
 ---
 
 openai/gpt-image-2/edit
 openai/gpt-image-2/text-to-image
 
---- 
+---
 
 google/nano-banana-pro/edit-ultra
 google/nano-banana-pro/edit-multi

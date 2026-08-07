@@ -34,6 +34,12 @@ Mini `video-extend` in this app now includes `4k`.
 
 Mini workflows override these via `WorkflowCapabilities.referenceLimits` to `9 / 3 / 3`. Legacy 2.0 / 2.0-fast entries still use the shared 9/9/9 constants.
 
+## Seedance 2.5 reference attachment caps
+
+Official Seedance 2.5 text-to-video / video-edit docs do **not** publish per-array item counts. They only state that reference videos/audios must not exceed 30 seconds total length.
+
+This app therefore applies the same `9 / 3 / 3` (images / videos / audios) caps used by Seedance 2.0 Mini via `WorkflowCapabilities.referenceLimits`. Revisit if WaveSpeed publishes explicit item limits later.
+
 ## Related
 
 - Workflow registry: `src/lib/workflows.ts`

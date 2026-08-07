@@ -52,6 +52,7 @@ export const SeedanceVideoExtendForm = ({
     defaultResolution,
     supportsAspectRatio = false,
     supportsWebSearch = true,
+    supportsLastImage = true,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoExtend
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
@@ -100,7 +101,7 @@ export const SeedanceVideoExtendForm = ({
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
-    if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
+    if (supportsLastImage && lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     return payload as Record<string, unknown>
@@ -114,6 +115,7 @@ export const SeedanceVideoExtendForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsLastImage,
     lastImageUrls,
   ])
 
@@ -126,11 +128,21 @@ export const SeedanceVideoExtendForm = ({
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (videoUrls[0]) payload.video = videoUrls[0]
-    if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
+    if (supportsLastImage && lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     return payload
-  }, [prompt, videoUrls, lastImageUrls, resolution, supportsWebSearch, enableWebSearch, generateAudio, durationValue])
+  }, [
+    prompt,
+    videoUrls,
+    supportsLastImage,
+    lastImageUrls,
+    resolution,
+    supportsWebSearch,
+    enableWebSearch,
+    generateAudio,
+    durationValue,
+  ])
 
   usePersistedFormDraft(onValuesChange, draftInput)
 
@@ -179,7 +191,7 @@ export const SeedanceVideoExtendForm = ({
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
     if (trimmedPrompt) payload.prompt = trimmedPrompt
-    if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
+    if (supportsLastImage && lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (typeof durationValue === 'number') payload.duration = durationValue
 
     await onSubmit(payload)
@@ -213,15 +225,17 @@ export const SeedanceVideoExtendForm = ({
         hint="Single video. The extension starts from its last frame."
       />
 
-      <MediaUpload
-        apiKey={apiKey}
-        kind="image"
-        label="Target last frame image"
-        value={lastImageUrls}
-        onChange={setLastImageUrls}
-        maxItems={limits.lastImage}
-        hint="Optional target final frame for the generated extension."
-      />
+      {supportsLastImage ? (
+        <MediaUpload
+          apiKey={apiKey}
+          kind="image"
+          label="Target last frame image"
+          value={lastImageUrls}
+          onChange={setLastImageUrls}
+          maxItems={limits.lastImage}
+          hint="Optional target final frame for the generated extension."
+        />
+      ) : null}
 
       <SeedanceAdvancedFields
         showAspectRatio={supportsAspectRatio}
