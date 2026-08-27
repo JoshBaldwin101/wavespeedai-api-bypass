@@ -41,6 +41,25 @@ export type NanoBananaAspectRatio =
   | '8:1'
 export type NanoBananaResolution = '0.5k' | '1k' | '2k' | '4k' | '8k'
 export type NanoBananaOutputFormat = 'png' | 'jpeg' | 'webp'
+export type SeedreamAspectRatio =
+  | '1:1'
+  | '1:2'
+  | '2:1'
+  | '1:3'
+  | '3:1'
+  | '2:3'
+  | '3:2'
+  | '3:4'
+  | '4:3'
+  | '4:5'
+  | '5:4'
+  | '9:16'
+  | '16:9'
+  | '9:21'
+  | '21:9'
+export type SeedreamResolution = '1k' | '1.5k' | '2k'
+export type SeedreamOutputFormat = 'jpeg' | 'png'
+export type SeedreamPromptOptimizationMode = 'standard' | 'fast'
 export type Scail2Mode = 'animate' | 'replace'
 export type Scail2Resolution = '480p' | '720p'
 
@@ -107,6 +126,15 @@ export interface NanoBananaEditInput extends NanoBananaCommonInput {
 }
 
 export type NanoBananaTextToImageInput = NanoBananaCommonInput
+
+export interface SeedreamEditInput {
+  prompt: string
+  images: string[]
+  aspect_ratio?: SeedreamAspectRatio
+  resolution?: SeedreamResolution
+  output_format?: SeedreamOutputFormat
+  prompt_optimization_mode?: SeedreamPromptOptimizationMode
+}
 
 export interface Scail2Input {
   image: string

@@ -15,6 +15,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - MiniMax H3 forms in `src/components/minimaxH3/`
   - GPT Image forms in `src/components/gptImage/`
   - Nano Banana forms in `src/components/nanoBanana/`
+  - Seedream forms in `src/components/seedream/`
   - Scail forms in `src/components/scail/`
 - Shared per-workflow Nano Banana field behavior lives in `src/components/nanoBananaConfig.ts` and is passed through `activeWorkflow.nanoBananaConfig`.
 - Form pricing previews share `src/hooks/useLivePricing.ts`.
@@ -23,7 +24,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 ## How to add a new workflow
 
 1. Add or update request input types in `src/lib/types.ts`.
-2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, or `src/components/scail/`):
+2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, or `src/components/scail/`):
   - Keep payload assembly explicit.
   - Validate required fields and any model-specific ranges/options.
   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
@@ -32,7 +33,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 3. Register the workflow in `src/lib/workflows.ts`:
   - Set `id`, `label`, `submitLabel`, and `model`.
   - Assign the form component.
-  - Use `capabilities` only for workflows that rely on it (Seedance currently does; GPT Image / MiniMax H3 / SeedVR2 do not).
+  - Use `capabilities` only for workflows that rely on it (Seedance currently does; GPT Image / MiniMax H3 / SeedVR2 / Seedream do not).
   - Use `nanoBananaConfig` for Nano Banana endpoints so form field support/options stay registry-driven.
 4. Confirm app wiring:
    - `src/App.tsx` should auto-pick registry changes.
@@ -58,6 +59,7 @@ Current documented limits used in this app:
 - MiniMax H3 reference-to-video caps are 9 images / 3 videos / 3 audios; at least one reference input is required; reference videos are only supported at `480p`.
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
+- Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 
 Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
 
@@ -410,6 +412,17 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `resolution`: `2k`, `4k`
   - `output_format`: `png`, `jpeg`
 - Notes: Fast edit variant. Supports `enable_web_search`, but not `enable_image_search`. Input image list is capped at 14 in this app.
+
+### `bytedance/seedream-v5.0-pro/edit`
+
+- Required: `prompt`, `images[]`
+- Optional: `aspect_ratio`, `resolution`, `output_format`, `prompt_optimization_mode`
+- Options:
+  - `aspect_ratio`: `1:1`, `1:2`, `2:1`, `1:3`, `3:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `9:21`, `21:9`
+  - `resolution`: `1k` (default), `1.5k`, `2k`
+  - `output_format`: `jpeg` (default), `png`
+  - `prompt_optimization_mode`: `standard` (default), `fast`
+- Notes: Image edit workflow with up to 10 reference images. Leave `aspect_ratio` empty to auto-derive from the first input image. Use `submitLabel: Generate image`. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported (this app polls asynchronously and renders output URLs).
 
 ## Source of truth reminder
 

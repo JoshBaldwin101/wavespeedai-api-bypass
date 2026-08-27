@@ -22,6 +22,7 @@ export const inferOutputMediaKind = (url: string, model?: string): OutputMediaKi
   const normalizedModel = model?.toLowerCase() ?? ''
   if (normalizedModel.includes('gpt-image')) return 'image'
   if (normalizedModel.includes('nano-banana')) return 'image'
+  if (normalizedModel.includes('seedream')) return 'image'
   if (normalizedModel.includes('audio')) return 'audio'
   return 'video'
 }
