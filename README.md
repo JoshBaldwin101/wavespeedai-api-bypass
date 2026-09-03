@@ -59,8 +59,8 @@ WaveSpeed's website playground keeps a content safety checker locked on. Their A
 
 | Family | Workflows |
 | --- | --- |
-| **Seedance 2.5** | Image-to-video, spicy, turbo · text-to-video, turbo · video edit, turbo · video extend |
-| **Seedance 2.0 / Fast / Mini** | The same eight-task set per family, with different duration and resolution limits |
+| **Seedance 2.5** | Image-to-video, turbo · text-to-video, turbo · video edit, turbo · video extend |
+| **Seedance 2.0 / Fast / Mini** | The same task set per family, with different duration and resolution limits |
 | **MiniMax Hailuo 3** | Text-to-video · image-to-video · reference-to-video |
 | **GPT Image 2** | Text-to-image · edit |
 | **Nano Banana Pro** | Text-to-image · edit · edit ultra · edit multi |
