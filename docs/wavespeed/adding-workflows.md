@@ -42,6 +42,37 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
    - `npm run build`
    - `npm run lint`
    - UI sanity check: form renders, pricing preview updates, submit flow opens confirm dialog, and outputs render with the correct media element.
+6. Update `README.md` if the public workflow list or count changed. See **README updates when a workflow is added or changed** below.
+
+## README updates when a workflow is added or changed
+
+`README.md` is the public project page. People reading it will not open this `docs/` folder. Do not mention `docs/` in the README.
+
+Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not copy a stale count from the current README.
+
+### Always check these spots
+
+| README location | What to update |
+| --- | --- |
+| Centered subtitle under the title | The workflow count (`48 workflows` today). |
+| **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
+| **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
+| **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
+
+### Touch only if the change is actually about them
+
+- **How it fits together** (diagram and the short registry / cost / jobs / key paragraphs): only if the user-visible flow changes, for example a new confirm step, jobs no longer polling, or workflows no longer living in one registry. Keep this section at the "how it comes together" level. Do not add implementation trivia (`AbortController`, `localStorage` keys, debounce, Bearer headers, file paths).
+- Safety-checker paragraph: only if WaveSpeed's playground-vs-API story changes.
+- Privacy, hosting, GoatCounter badge, run locally, and stack: leave them unless the change is about those things.
+
+### How big the README edit should be
+
+- **Close variant in an existing family** (another Seedance turbo, another Nano Banana edit mode): bump the count. If that family's table cell lists variants by name, add the new one. Seedance 2.0 / Fast / Mini is written as "the same eight-task set per family"; if a family no longer has eight tasks, rewrite that cell instead of leaving the old number.
+- **New family**: add it to the **What it does** family list and add a **Supported workflows** row.
+- **Removed or renamed workflow**: recount, then fix the table and any family list that still names it.
+- **Form-only change** (validation, attachment caps, extra field on an existing workflow): no README change unless the public description of that workflow becomes wrong (for example SeedVR2 is no longer "video upscale").
+
+Keep README tone matching the rest of that file: no em dashes, no agent-docs language, enough for a reader to see key -> registry -> form -> WaveSpeed -> jobs.
 
 ## Attachment limit reminder
 
