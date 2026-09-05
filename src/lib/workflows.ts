@@ -13,6 +13,7 @@ import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVi
 import { SeedanceVideoEditForm } from '../components/seedance/SeedanceVideoEditForm'
 import { SeedanceVideoExtendForm } from '../components/seedance/SeedanceVideoExtendForm'
 import { SeedreamEditForm } from '../components/seedream/SeedreamEditForm'
+import { SeedreamLiteEditSequentialForm } from '../components/seedream/SeedreamLiteEditSequentialForm'
 import { SeedVr2VideoForm } from '../components/seedvr2/SeedVr2VideoForm'
 import type { SeedanceResolution } from './types'
 
@@ -39,6 +40,7 @@ export type WorkflowGroupId =
   | 'nano-banana-pro'
   | 'nano-banana-2'
   | 'seedream-v5-pro'
+  | 'seedream-v5-lite'
 
 export interface WorkflowGroupDefinition {
   id: WorkflowGroupId
@@ -87,6 +89,7 @@ export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'nano-banana-pro', label: 'google/nano-banana-pro' },
   { id: 'nano-banana-2', label: 'google/nano-banana-2' },
   { id: 'seedream-v5-pro', label: 'bytedance/seedream-v5.0-pro' },
+  { id: 'seedream-v5-lite', label: 'bytedance/seedream-v5.0-lite' },
 ]
 
 const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
@@ -720,6 +723,14 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate image',
     model: 'bytedance/seedream-v5.0-pro/edit',
     form: SeedreamEditForm,
+  },
+  {
+    id: 'bytedance/seedream-v5.0-lite/edit-sequential',
+    label: 'bytedance/seedream-v5.0-lite/edit-sequential',
+    group: 'seedream-v5-lite',
+    submitLabel: 'Generate images',
+    model: 'bytedance/seedream-v5.0-lite/edit-sequential',
+    form: SeedreamLiteEditSequentialForm,
   },
 ]
 

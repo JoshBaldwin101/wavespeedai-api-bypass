@@ -53,6 +53,57 @@ const formatRelativeDate = (iso: string | undefined, now: number): string => {
   return `${Math.floor(seconds / 86400)}d ago`
 }
 
+const OutputMedia = ({ url, model, compact }: { url: string; model?: string; compact?: boolean }) => {
+  const mediaKind = inferOutputMediaKind(url, model)
+
+  if (mediaKind === 'image') {
+    return (
+      <img
+        className={compact ? 'aspect-square w-full rounded bg-black object-contain' : 'w-full rounded bg-black object-contain'}
+        src={url}
+        alt="Generated output"
+      />
+    )
+  }
+
+  if (mediaKind === 'audio') {
+    return <audio className="w-full" controls preload="metadata" src={url} />
+  }
+
+  return <video className="aspect-video w-full rounded bg-black" controls src={url} preload="metadata" />
+}
+
+const JobOutputs = ({ outputs, model }: { outputs: string[]; model?: string }) => {
+  if (outputs.length === 0) return null
+
+  const allImages = outputs.every((url) => inferOutputMediaKind(url, model) === 'image')
+  const useGrid = outputs.length > 1 && allImages
+
+  return (
+    <div className="space-y-3">
+      {outputs.length > 1 ? (
+        <p className="text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Outputs ({outputs.length})</p>
+      ) : null}
+      <div className={useGrid ? 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
+        {outputs.map((outputUrl, index) => (
+          <div key={`${index}:${outputUrl}`} className="space-y-2">
+            {useGrid ? <p className="text-xs text-slate-400">Image {index + 1}</p> : null}
+            <OutputMedia url={outputUrl} model={model} compact={useGrid} />
+            <a
+              className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+              href={outputUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open / download output
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export const JobsPanel = ({
   jobsById,
   recentIds,
@@ -153,32 +204,7 @@ export const JobsPanel = ({
                 <p className="rounded-lg border border-rose-900/40 bg-rose-950/40 p-3 text-sm text-rose-200">{selectedJob.error}</p>
               ) : null}
 
-              {selectedJob?.outputs?.length ? (
-                <div className="space-y-3">
-                  {selectedJob.outputs.map((outputUrl) => {
-                    const mediaKind = inferOutputMediaKind(outputUrl, selectedJob.model)
-                    return (
-                      <div key={outputUrl} className="space-y-2">
-                        {mediaKind === 'image' ? (
-                          <img className="w-full rounded bg-black object-contain" src={outputUrl} alt="Generated output" />
-                        ) : mediaKind === 'audio' ? (
-                          <audio className="w-full" controls preload="metadata" src={outputUrl} />
-                        ) : (
-                          <video className="aspect-video w-full rounded bg-black" controls src={outputUrl} preload="metadata" />
-                        )}
-                        <a
-                          className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
-                          href={outputUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open / download output
-                        </a>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : null}
+              {selectedJob.outputs?.length ? <JobOutputs outputs={selectedJob.outputs} model={selectedJob.model} /> : null}
 
               {selectedSavedParams ? (
                 <div className="space-y-2">

@@ -54,7 +54,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`48 workflows` today). |
+| Centered subtitle under the title | The workflow count (`49 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -91,6 +91,7 @@ Current documented limits used in this app:
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
+- Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
 
 Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
 
@@ -454,6 +455,17 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `output_format`: `jpeg` (default), `png`
   - `prompt_optimization_mode`: `standard` (default), `fast`
 - Notes: Image edit workflow with up to 10 reference images. Leave `aspect_ratio` empty to auto-derive from the first input image. Use `submitLabel: Generate image`. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported (this app polls asynchronously and renders output URLs).
+
+### `bytedance/seedream-v5.0-lite/edit-sequential`
+
+- Required: `prompt`, `images[]`
+- Optional in the official schema, but always sent by this app: `size`, `max_images`
+- Optional: `output_format`
+- Options:
+  - `size`: `"WIDTH*HEIGHT"` string, each side `512`-`8192` (always sent; defaulted from the first input image's aspect at a ~2048x2048 pixel budget)
+  - `max_images`: integer range `1-15` (always sent; default `1` in this app)
+  - `output_format`: `jpeg` (default), `png`
+- Notes: Sequential image-edit workflow with up to 10 reference images and up to 15 outputs. `size` is absent from the official `edit-sequential` request table, but sibling Seedream v4 / v4.5 tables document it as a `"WIDTH*HEIGHT"` string bounded 512-8192, and WaveSpeed samples send that format. Omitting `size` yields a square output because the model does not infer size from the input image. `max_images` is always sent because the official API table defaults to `1` and the playground table to `2`. WaveSpeed bills `$0.035 x max_images` even if fewer images return. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported. Use `submitLabel: Generate images`.
 
 ## Source of truth reminder
 

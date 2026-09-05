@@ -75,3 +75,11 @@ google/nano-banana-2/text-to-image
 google/nano-banana-2/text-to-image-fast
 google/nano-banana-2/edit
 google/nano-banana-2/edit-fast
+
+---
+
+bytedance/seedream-v5.0-pro/edit
+
+---
+
+bytedance/seedream-v5.0-lite/edit-sequential

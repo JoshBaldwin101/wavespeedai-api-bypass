@@ -136,6 +136,14 @@ export interface SeedreamEditInput {
   prompt_optimization_mode?: SeedreamPromptOptimizationMode
 }
 
+export interface SeedreamLiteEditSequentialInput {
+  prompt: string
+  images: string[]
+  size: string
+  max_images: number
+  output_format?: SeedreamOutputFormat
+}
+
 export interface Scail2Input {
   image: string
   video: string
