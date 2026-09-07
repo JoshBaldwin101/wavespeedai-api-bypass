@@ -467,8 +467,30 @@ const AppContent = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">Balance</p>
-                    <p className="mt-1 text-2xl font-semibold tracking-tight text-slate-50 sm:mt-2 sm:text-3xl">
-                      {isBalanceLoading && !balanceData ? 'Checking...' : balanceDisplay}
+                    <p className="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-50 sm:mt-2 sm:text-3xl">
+                      <span>{isBalanceLoading && !balanceData ? 'Checking...' : balanceDisplay}</span>
+                      <a
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sky-400 transition hover:bg-sky-400/10 hover:text-sky-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 sm:h-8 sm:w-8"
+                        href={TOP_UP_URL}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="Top up WaveSpeed wallet"
+                        title="Top up WaveSpeed wallet"
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className="h-5 w-5 sm:h-6 sm:w-6"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.75}
+                          viewBox="0 0 24 24"
+                        >
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M12 8v8M8 12h8" />
+                        </svg>
+                      </a>
                     </p>
                   </div>
                   <Button
