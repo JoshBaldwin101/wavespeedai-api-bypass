@@ -56,10 +56,13 @@ export const KlingElementsForm = ({
   const nameError = lengthError('Name', trimmedName, KLING_NAME_MAX)
   const descriptionError = lengthError('Description', trimmedDescription, KLING_DESCRIPTION_MAX)
   const imageError = validateAttachmentLimit('Front image', imageUrls, MAX_FRONT_IMAGES)
-  const referenceError = validateAttachmentLimit('Reference images', referenceUrls, KLING_ELEMENT_REFERENCE_IMAGE_LIMIT)
+  const referenceError =
+    referenceUrls.length === 0
+      ? 'Add at least one other reference image.'
+      : validateAttachmentLimit('Reference images', referenceUrls, KLING_ELEMENT_REFERENCE_IMAGE_LIMIT)
 
   const payload = useMemo<KlingElementsInput | null>(() => {
-    if (!trimmedName || !trimmedDescription || !imageUrls[0]) return null
+    if (!trimmedName || !trimmedDescription || !imageUrls[0] || referenceUrls.length === 0) return null
     if (nameError || descriptionError || imageError || referenceError) return null
 
     const next: KlingElementsInput = {
@@ -124,6 +127,10 @@ export const KlingElementsForm = ({
       setError('Please provide a front reference image.')
       return
     }
+    if (referenceUrls.length === 0) {
+      setError('Please provide at least one other reference image.')
+      return
+    }
     if (imageError || referenceError) {
       setError(imageError ?? referenceError)
       return
@@ -185,12 +192,13 @@ export const KlingElementsForm = ({
       <MediaUpload
         apiKey={apiKey}
         kind="image"
-        label="Other reference images"
+        label="Other reference images (element_refer_list)"
+        required
         value={referenceUrls}
         onChange={setReferenceUrls}
         multiple
         maxItems={KLING_ELEMENT_REFERENCE_IMAGE_LIMIT}
-        hint="Optional. Extra angles of the same element. Sent as an empty list when omitted."
+        hint="Required. 1 to 3 extra angles of the same element. The API rejects an empty list."
       />
 
       <Field label="Voice ID" htmlFor="kling-elements-voice" hint="Optional. Binds this element to a voice from the tone library.">

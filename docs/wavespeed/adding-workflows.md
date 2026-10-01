@@ -95,7 +95,7 @@ Current documented limits used in this app:
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 - Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
-- Kling Elements `element_refer_list` is capped at 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
+- Kling Elements `element_refer_list` requires 1 to 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
 
 Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
 
@@ -515,7 +515,7 @@ These rules apply to every Kling V3 Turbo and Kling 3.0 text-to-video and image-
 
 ### `kwaivgi/kling-elements`
 
-- Required: `name` (max 20), `description` (max 100), `image`, `element_refer_list` (0-3 image URLs; always sent, `[]` when empty)
+- Required: `name` (max 20), `description` (max 100), `image`, `element_refer_list` (1-3 image URLs; the live API rejects an empty list)
 - Optional: `voice_id`
 - Notes: Creates a reusable element and returns an element ID, not a media file. The jobs panel renders that result as copyable text. `tag_list` is in the llms reference but missing from the official API table, so this app does not send it. Use `submitLabel: Create element`.
 
