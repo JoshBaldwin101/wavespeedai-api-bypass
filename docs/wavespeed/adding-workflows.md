@@ -17,14 +17,16 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - Nano Banana forms in `src/components/nanoBanana/`
   - Seedream forms in `src/components/seedream/`
   - Scail forms in `src/components/scail/`
+  - Kling forms in `src/components/kling/`
 - Shared per-workflow Nano Banana field behavior lives in `src/components/nanoBananaConfig.ts` and is passed through `activeWorkflow.nanoBananaConfig`.
+- Shared per-workflow Kling text-to-video and image-to-video field behavior lives in `src/components/klingConfig.ts` and is passed through `activeWorkflow.klingConfig`.
 - Form pricing previews share `src/hooks/useLivePricing.ts`.
 - Job output rendering in `src/components/JobsPanel.tsx` is media-kind aware through `src/lib/outputMedia.ts`.
 
 ## How to add a new workflow
 
 1. Add or update request input types in `src/lib/types.ts`.
-2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, or `src/components/scail/`):
+2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, `src/components/scail/`, or `src/components/kling/`):
   - Keep payload assembly explicit.
   - Validate required fields and any model-specific ranges/options.
   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
@@ -35,9 +37,10 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - Assign the form component.
   - Use `capabilities` only for workflows that rely on it (Seedance currently does; GPT Image / MiniMax H3 / SeedVR2 / Seedream do not).
   - Use `nanoBananaConfig` for Nano Banana endpoints so form field support/options stay registry-driven.
+  - Use `klingConfig` for Kling text-to-video and image-to-video endpoints so negative prompt, sound, shot type, end image, and element ID support stay registry-driven. Motion control and Kling Elements do not use it.
 4. Confirm app wiring:
    - `src/App.tsx` should auto-pick registry changes.
-   - If the form uses registry-scoped options (for example Nano Banana), ensure the registry-specific prop (for example `nanoBananaConfig`) is passed through.
+   - If the form uses registry-scoped options (for example Nano Banana or Kling), ensure the registry-specific prop (`nanoBananaConfig` or `klingConfig`) is passed through.
 5. Verify:
    - `npm run build`
    - `npm run lint`
@@ -54,7 +57,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`49 workflows` today). |
+| Centered subtitle under the title | The workflow count (`62 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -92,6 +95,7 @@ Current documented limits used in this app:
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 - Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
+- Kling Elements `element_refer_list` is capped at 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
 
 Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
 
@@ -466,6 +470,54 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `max_images`: integer range `1-15` (always sent; default `1` in this app)
   - `output_format`: `jpeg` (default), `png`
 - Notes: Sequential image-edit workflow with up to 10 reference images and up to 15 outputs. `size` is absent from the official `edit-sequential` request table, but sibling Seedream v4 / v4.5 tables document it as a `"WIDTH*HEIGHT"` string bounded 512-8192, and WaveSpeed samples send that format. Omitting `size` yields a square output because the model does not infer size from the input image. `max_images` is always sent because the official API table defaults to `1` and the playground table to `2`. WaveSpeed bills `$0.035 x max_images` even if fewer images return. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported. Use `submitLabel: Generate images`.
+
+### Kling text-to-video and image-to-video (shared)
+
+These rules apply to every Kling V3 Turbo and Kling 3.0 text-to-video and image-to-video workflow below.
+
+- `duration`: integer 3-15, default 5. Always sent.
+- `cfg_scale`: number 0-1, default 0.5. Always sent.
+- `prompt` and `multi_prompt` are mutually exclusive. The form uses a Single prompt / Multi-shot toggle.
+- `multi_prompt`: 1-6 shots of `{ prompt, duration }`. Each shot needs a prompt and an integer duration of at least 1. Shot durations must add up to `duration`.
+- `shot_type: intelligence` (Kling 3.0 only) forces single-prompt mode, hides the shot editor, and requires a non-empty `prompt`. Intelligence mode ignores `multi_prompt`.
+- `end_image` (Kling 3.0 image-to-video only) is hidden in multi-shot mode. Submit stays blocked while an end image is still chosen, and the form offers a control to remove it. It is never sent together with `multi_prompt`.
+
+### `kwaivgi/kling-v3-turbo-pro/text-to-video` and `kwaivgi/kling-v3-turbo-std/text-to-video`
+
+- Required: either `prompt` or a valid `multi_prompt`
+- Optional: `aspect_ratio`, `duration`, `cfg_scale`
+- Aspect ratio: `16:9` (default), `9:16`, `1:1`
+- Notes: No negative prompt, sound, shot type, end image, or element list. Use `submitLabel: Generate video`.
+
+### `kwaivgi/kling-v3-turbo-pro/image-to-video` and `kwaivgi/kling-v3-turbo-std/image-to-video`
+
+- Required: `image`
+- Optional: `prompt` or `multi_prompt`, `duration`, `cfg_scale`
+- Notes: Prompt is optional when a single prompt is used. No aspect ratio. Documented image limit is 50MB; this app's uploader still caps local image files at 20MB, so larger files must be pasted as URLs.
+
+### `kwaivgi/kling-v3.0-pro/text-to-video`, `kwaivgi/kling-v3.0-std/text-to-video`, and `kwaivgi/kling-v3.0-4k/text-to-video`
+
+- Required/optional fields follow the turbo text-to-video schema, plus:
+  - Optional: `negative_prompt`, `sound` (default off; multiplies price by 1.5), `shot_type` (`customize` default, `intelligence`)
+- Notes: No `element_list` on text-to-video.
+
+### `kwaivgi/kling-v3.0-pro/image-to-video`, `kwaivgi/kling-v3.0-std/image-to-video`, and `kwaivgi/kling-v3.0-4k/image-to-video`
+
+- Required: `image`
+- Optional: `prompt` or `multi_prompt`, `negative_prompt`, `end_image`, `duration`, `cfg_scale`, `sound`, `shot_type`, `element_list` (max 3)
+- Notes: No aspect ratio. Prompt is optional except in `intelligence` mode. Official request table says either prompt or multi_prompt must be provided, but the required-parameters example and notes only require `image`. This app follows the example. `element_list` items are `{ element_id }`. Documented image limit is 10MB.
+
+### `kwaivgi/kling-v3.0-pro/motion-control` and `kwaivgi/kling-v3.0-std/motion-control`
+
+- Required: `image`, `video`
+- Optional: `element_list` (max 3), `character_orientation` (`video` default, or `image`), `prompt`, `negative_prompt`, `keep_original_sound` (default true)
+- Notes: No duration field. Output length follows the driving video. `video` orientation allows up to 30 seconds before trimming; `image` orientation allows up to 10 seconds. The summary table calls `character_orientation` required, but the parameter table marks it optional with a default, and this app treats it as optional. Use `submitLabel: Generate video`.
+
+### `kwaivgi/kling-elements`
+
+- Required: `name` (max 20), `description` (max 100), `image`, `element_refer_list` (0-3 image URLs; always sent, `[]` when empty)
+- Optional: `voice_id`
+- Notes: Creates a reusable element and returns an element ID, not a media file. The jobs panel renders that result as copyable text. `tag_list` is in the llms reference but missing from the official API table, so this app does not send it. Use `submitLabel: Create element`.
 
 ## Source of truth reminder
 

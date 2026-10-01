@@ -561,6 +561,7 @@ const AppContent = () => {
             onValuesChange={handleFormValuesChange}
             workflowCapabilities={activeWorkflow.capabilities}
             nanoBananaConfig={activeWorkflow.nanoBananaConfig}
+            klingConfig={activeWorkflow.klingConfig}
             onSubmit={prepareRun}
           />
           {submitError ? <p className="mt-3 text-sm text-rose-300">{submitError}</p> : null}

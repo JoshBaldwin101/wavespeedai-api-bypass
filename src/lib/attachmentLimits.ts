@@ -1,3 +1,7 @@
+export const KLING_ELEMENT_REFERENCE_IMAGE_LIMIT = 3
+export const KLING_ELEMENT_LIST_LIMIT = 3
+export const KLING_MULTI_PROMPT_SHOT_LIMIT = 6
+
 const formatAttachmentCount = (maxItems: number): string => {
   if (maxItems === 1) return '1 file'
   return `${maxItems} files`

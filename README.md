@@ -10,7 +10,7 @@
 <h1 align="center">WaveSpeedAI API Tool</h1>
 
 <p align="center">
-  A browser UI for <a href="https://wavespeed.ai">WaveSpeed</a>'s generation API. 49 workflows, live pricing, and job tracking. No backend of its own.
+  A browser UI for <a href="https://wavespeed.ai">WaveSpeed</a>'s generation API. 62 workflows, live pricing, and job tracking. No backend of its own.
 </p>
 
 <p align="center">
@@ -24,8 +24,8 @@ You paste a WaveSpeed key, pick a workflow, and run a generation. Cost is estima
 
 ## What it does
 
-- **49 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, GPT Image 2, Nano Banana Pro & 2, Seedream v5 Pro, Seedream v5 Lite, SeedVR2, and Scail 2
-- Text-to-video, image-to-video, reference-to-video, video edit / extend / upscale, motion transfer, text-to-image, and image edit
+- **62 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, Kling 3.0 / 3.0 Turbo / Elements, GPT Image 2, Nano Banana Pro & 2, Seedream v5 Pro, Seedream v5 Lite, SeedVR2, and Scail 2
+- Text-to-video, image-to-video, multi-shot storyboards, reference-to-video, video edit / extend / upscale, motion transfer, reusable character elements, text-to-image, and image edit
 - Live cost on the submit button, then a confirm step that checks your wallet
 - Upload images, video, or audio, or paste URLs
 - Job history for 7 days, with output preview and (if you turn it on) reload of a previous run's settings
@@ -62,6 +62,7 @@ WaveSpeed's website playground keeps a content safety checker locked on. Their A
 | **Seedance 2.5** | Image-to-video, turbo · text-to-video, turbo · video edit, turbo · video extend |
 | **Seedance 2.0 / Fast / Mini** | The same task set per family, with different duration and resolution limits |
 | **MiniMax Hailuo 3** | Text-to-video · image-to-video · reference-to-video |
+| **Kling 3.0 / 3.0 Turbo / Elements** | Text-to-video and image-to-video (4K, Pro, Standard, Turbo Pro, Turbo Standard), Pro and Standard motion control, and reusable character elements |
 | **GPT Image 2** | Text-to-image · edit |
 | **Nano Banana Pro** | Text-to-image · edit · edit ultra · edit multi |
 | **Nano Banana 2** | Text-to-image · fast · edit · edit fast |

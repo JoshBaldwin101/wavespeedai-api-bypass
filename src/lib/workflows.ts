@@ -1,5 +1,16 @@
 import type { ComponentType } from 'react'
 import { GptImageEditForm } from '../components/gptImage/GptImageEditForm'
+import { KlingElementsForm } from '../components/kling/KlingElementsForm'
+import { KlingImageToVideoForm } from '../components/kling/KlingImageToVideoForm'
+import { KlingMotionControlForm } from '../components/kling/KlingMotionControlForm'
+import { KlingTextToVideoForm } from '../components/kling/KlingTextToVideoForm'
+import {
+  kling30ImageConfig,
+  kling30TextConfig,
+  klingTurboImageConfig,
+  klingTurboTextConfig,
+  type KlingConfig,
+} from '../components/klingConfig'
 import { GptImageTextToImageForm } from '../components/gptImage/GptImageTextToImageForm'
 import { MinimaxH3ImageToVideoForm } from '../components/minimaxH3/MinimaxH3ImageToVideoForm'
 import { MinimaxH3ReferenceToVideoForm } from '../components/minimaxH3/MinimaxH3ReferenceToVideoForm'
@@ -27,6 +38,7 @@ export interface WorkflowFormProps {
   onSubmit: (input: unknown) => Promise<void>
   workflowCapabilities?: WorkflowCapabilities
   nanoBananaConfig?: NanoBananaConfig
+  klingConfig?: KlingConfig
 }
 
 export type WorkflowGroupId =
@@ -36,6 +48,12 @@ export type WorkflowGroupId =
   | 'seedance-2.0-mini'
   | 'wavespeed-ai'
   | 'minimax-h3'
+  | 'kling-v3.0-4k'
+  | 'kling-v3.0-pro'
+  | 'kling-v3.0-std'
+  | 'kling-v3-turbo-pro'
+  | 'kling-v3-turbo-std'
+  | 'kling-elements'
   | 'gpt-image-2'
   | 'nano-banana-pro'
   | 'nano-banana-2'
@@ -75,6 +93,7 @@ export interface WorkflowDefinition {
   model: string
   capabilities?: WorkflowCapabilities
   nanoBananaConfig?: NanoBananaConfig
+  klingConfig?: KlingConfig
   form: ComponentType<WorkflowFormProps>
 }
 
@@ -85,6 +104,12 @@ export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'seedance-2.0-mini', label: 'seedance-2.0-mini' },
   { id: 'wavespeed-ai', label: 'wavespeed-ai' },
   { id: 'minimax-h3', label: 'wavespeed-ai/minimax-h3' },
+  { id: 'kling-v3.0-4k', label: 'kwaivgi/kling-v3.0-4k' },
+  { id: 'kling-v3.0-pro', label: 'kwaivgi/kling-v3.0-pro' },
+  { id: 'kling-v3.0-std', label: 'kwaivgi/kling-v3.0-std' },
+  { id: 'kling-v3-turbo-pro', label: 'kwaivgi/kling-v3-turbo-pro' },
+  { id: 'kling-v3-turbo-std', label: 'kwaivgi/kling-v3-turbo-std' },
+  { id: 'kling-elements', label: 'kwaivgi/kling-elements' },
   { id: 'gpt-image-2', label: 'openai/gpt-image-2' },
   { id: 'nano-banana-pro', label: 'google/nano-banana-pro' },
   { id: 'nano-banana-2', label: 'google/nano-banana-2' },
@@ -627,6 +652,120 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate video',
     model: 'wavespeed-ai/minimax-h3/image-to-video',
     form: MinimaxH3ImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-4k/image-to-video',
+    label: 'kwaivgi/kling-v3.0-4k/image-to-video',
+    group: 'kling-v3.0-4k',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-4k/image-to-video',
+    klingConfig: kling30ImageConfig,
+    form: KlingImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-4k/text-to-video',
+    label: 'kwaivgi/kling-v3.0-4k/text-to-video',
+    group: 'kling-v3.0-4k',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-4k/text-to-video',
+    klingConfig: kling30TextConfig,
+    form: KlingTextToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-pro/image-to-video',
+    label: 'kwaivgi/kling-v3.0-pro/image-to-video',
+    group: 'kling-v3.0-pro',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-pro/image-to-video',
+    klingConfig: kling30ImageConfig,
+    form: KlingImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-pro/text-to-video',
+    label: 'kwaivgi/kling-v3.0-pro/text-to-video',
+    group: 'kling-v3.0-pro',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-pro/text-to-video',
+    klingConfig: kling30TextConfig,
+    form: KlingTextToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-pro/motion-control',
+    label: 'kwaivgi/kling-v3.0-pro/motion-control',
+    group: 'kling-v3.0-pro',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-pro/motion-control',
+    form: KlingMotionControlForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-std/image-to-video',
+    label: 'kwaivgi/kling-v3.0-std/image-to-video',
+    group: 'kling-v3.0-std',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-std/image-to-video',
+    klingConfig: kling30ImageConfig,
+    form: KlingImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-std/text-to-video',
+    label: 'kwaivgi/kling-v3.0-std/text-to-video',
+    group: 'kling-v3.0-std',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-std/text-to-video',
+    klingConfig: kling30TextConfig,
+    form: KlingTextToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3.0-std/motion-control',
+    label: 'kwaivgi/kling-v3.0-std/motion-control',
+    group: 'kling-v3.0-std',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3.0-std/motion-control',
+    form: KlingMotionControlForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3-turbo-pro/image-to-video',
+    label: 'kwaivgi/kling-v3-turbo-pro/image-to-video',
+    group: 'kling-v3-turbo-pro',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3-turbo-pro/image-to-video',
+    klingConfig: klingTurboImageConfig,
+    form: KlingImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3-turbo-pro/text-to-video',
+    label: 'kwaivgi/kling-v3-turbo-pro/text-to-video',
+    group: 'kling-v3-turbo-pro',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3-turbo-pro/text-to-video',
+    klingConfig: klingTurboTextConfig,
+    form: KlingTextToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3-turbo-std/image-to-video',
+    label: 'kwaivgi/kling-v3-turbo-std/image-to-video',
+    group: 'kling-v3-turbo-std',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3-turbo-std/image-to-video',
+    klingConfig: klingTurboImageConfig,
+    form: KlingImageToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-v3-turbo-std/text-to-video',
+    label: 'kwaivgi/kling-v3-turbo-std/text-to-video',
+    group: 'kling-v3-turbo-std',
+    submitLabel: 'Generate video',
+    model: 'kwaivgi/kling-v3-turbo-std/text-to-video',
+    klingConfig: klingTurboTextConfig,
+    form: KlingTextToVideoForm,
+  },
+  {
+    id: 'kwaivgi/kling-elements',
+    label: 'kwaivgi/kling-elements',
+    group: 'kling-elements',
+    submitLabel: 'Create element',
+    model: 'kwaivgi/kling-elements',
+    form: KlingElementsForm,
   },
   {
     id: 'openai/gpt-image-2/edit',

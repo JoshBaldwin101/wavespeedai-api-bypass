@@ -61,6 +61,37 @@ wavespeed-ai/minimax-h3/image-to-video
 
 ---
 
+kwaivgi/kling-v3.0-4k/image-to-video
+kwaivgi/kling-v3.0-4k/text-to-video
+
+---
+
+kwaivgi/kling-v3.0-pro/image-to-video
+kwaivgi/kling-v3.0-pro/text-to-video
+kwaivgi/kling-v3.0-pro/motion-control
+
+---
+
+kwaivgi/kling-v3.0-std/image-to-video
+kwaivgi/kling-v3.0-std/text-to-video
+kwaivgi/kling-v3.0-std/motion-control
+
+---
+
+kwaivgi/kling-v3-turbo-pro/image-to-video
+kwaivgi/kling-v3-turbo-pro/text-to-video
+
+---
+
+kwaivgi/kling-v3-turbo-std/image-to-video
+kwaivgi/kling-v3-turbo-std/text-to-video
+
+---
+
+kwaivgi/kling-elements
+
+---
+
 openai/gpt-image-2/edit
 openai/gpt-image-2/text-to-image
 

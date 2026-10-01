@@ -40,6 +40,21 @@ Official Seedance 2.5 text-to-video / video-edit docs do **not** publish per-arr
 
 This app therefore applies the same `9 / 3 / 3` (images / videos / audios) caps used by Seedance 2.0 Mini via `WorkflowCapabilities.referenceLimits`. Revisit if WaveSpeed publishes explicit item limits later.
 
+## Kling 3.0 / V3 Turbo / Elements
+
+No WaveSpeed API key was available in the environment that added these workflows, so `element_list` and the Kling Elements result were not confirmed with a live call. The shapes below follow WaveSpeed's written instructions. Re-check with one Kling Elements job (about $0.01) and one short Kling 3.0 Std image-to-video job if a submission is rejected.
+
+| Field / behavior | Official docs | App today |
+| --- | --- | --- |
+| Kling 3.0 image-to-video `prompt` | Request table says either `prompt` or `multi_prompt` must be provided. Notes and the required-parameters example require only `image`. | Prompt is optional. `image` is the only required field, except `shot_type: intelligence`, which requires a prompt. |
+| `element_list` item shape | Undocumented. Prose says to put the element ID in `element_list`. | Sent as `{ element_id: string }`, max 3. Numeric IDs from a reloaded job are coerced to strings. |
+| Kling Elements `outputs` | Documented only as string or object. Prose says the result includes an element ID. | Non-URL outputs render as copyable text. An `element_id` string or number on the output object (or a plain string from `kwaivgi/kling-elements`) is shown as Element ID. |
+| `tag_list` | Present in the llms reference, absent from the official API parameter table, shape undocumented. | Not sent. |
+| Motion-control `character_orientation` | Summary calls it required. Parameter table marks it optional, default `video`. | Optional, default `video`, always sent. |
+| Pro motion-control description | The model page title says Pro, but the opening sentence says "Kling 3.0 Standard Motion Control". | Treated as the Pro endpoint `kwaivgi/kling-v3.0-pro/motion-control`. |
+| Turbo image upload size | Turbo image-to-video docs allow up to 50MB. | Hint text says 50MB. The shared uploader still rejects local image files over 20MB. Paste a URL for a larger file. |
+| `end_image` with `multi_prompt` | "multi_shot is not supported with end image." | Multi-shot mode hides the upload and blocks submit until the end image is removed. Switching back to a single prompt restores it if it was not removed. |
+
 ## Related
 
 - Workflow registry: `src/lib/workflows.ts`

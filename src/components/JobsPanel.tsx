@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { SavedParamSet } from '../lib/localPersistence'
-import type { PredictionResult } from '../lib/types'
+import type { PredictionOutput, PredictionResult } from '../lib/types'
 import { inferOutputMediaKind } from '../lib/outputMedia'
 import { Button } from './ui/Button'
 import { Spinner } from './ui/Spinner'
@@ -53,6 +53,37 @@ const formatRelativeDate = (iso: string | undefined, now: number): string => {
   return `${Math.floor(seconds / 86400)}d ago`
 }
 
+const isHttpUrl = (value: string): boolean => /^https?:\/\//i.test(value.trim())
+
+const outputToText = (output: PredictionOutput): string => (typeof output === 'string' ? output : JSON.stringify(output, null, 2))
+
+const readIdValue = (value: unknown): string | null => {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return null
+}
+
+const readElementId = (output: PredictionOutput): string | null => {
+  if (typeof output !== 'object' || output === null) return null
+  const direct = readIdValue(output.element_id)
+  if (direct) return direct
+  const nested = output.data
+  if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+    const nestedId = readIdValue((nested as Record<string, unknown>).element_id)
+    if (nestedId) return nestedId
+  }
+  return null
+}
+
+const prominentElementId = (output: PredictionOutput, model?: string): string | null => {
+  const fromObject = readElementId(output)
+  if (fromObject) return fromObject
+  if (model?.includes('kling-elements') && typeof output === 'string' && !isHttpUrl(output) && output.trim()) {
+    return output.trim()
+  }
+  return null
+}
+
 const OutputMedia = ({ url, model, compact }: { url: string; model?: string; compact?: boolean }) => {
   const mediaKind = inferOutputMediaKind(url, model)
 
@@ -73,10 +104,55 @@ const OutputMedia = ({ url, model, compact }: { url: string; model?: string; com
   return <video className="aspect-video w-full rounded bg-black" controls src={url} preload="metadata" />
 }
 
-const JobOutputs = ({ outputs, model }: { outputs: string[]; model?: string }) => {
+const CopyTextButton = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <Button
+      className="px-2.5 py-1.5 text-xs"
+      variant="secondary"
+      onClick={() => {
+        void navigator.clipboard.writeText(text).then(
+          () => {
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1500)
+          },
+          () => undefined,
+        )
+      }}
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </Button>
+  )
+}
+
+const TextOutput = ({ output, model }: { output: PredictionOutput; model?: string }) => {
+  const text = outputToText(output)
+  const elementId = prominentElementId(output, model)
+
+  return (
+    <div className="space-y-2">
+      {elementId ? (
+        <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-950 p-3">
+          <p className="text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Element ID</p>
+          <p className="break-all font-mono text-sm text-slate-100">{elementId}</p>
+          <CopyTextButton text={elementId} />
+        </div>
+      ) : null}
+      <pre className="max-h-80 overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-3 font-mono text-xs break-all whitespace-pre-wrap text-slate-200">
+        {text}
+      </pre>
+      {elementId === text ? null : <CopyTextButton text={text} />}
+    </div>
+  )
+}
+
+const JobOutputs = ({ outputs, model }: { outputs: PredictionOutput[]; model?: string }) => {
   if (outputs.length === 0) return null
 
-  const allImages = outputs.every((url) => inferOutputMediaKind(url, model) === 'image')
+  const allImages = outputs.every(
+    (output) => typeof output === 'string' && isHttpUrl(output) && inferOutputMediaKind(output, model) === 'image',
+  )
   const useGrid = outputs.length > 1 && allImages
 
   return (
@@ -85,20 +161,25 @@ const JobOutputs = ({ outputs, model }: { outputs: string[]; model?: string }) =
         <p className="text-xs font-semibold tracking-[0.15em] text-slate-400 uppercase">Outputs ({outputs.length})</p>
       ) : null}
       <div className={useGrid ? 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
-        {outputs.map((outputUrl, index) => (
-          <div key={`${index}:${outputUrl}`} className="space-y-2">
-            {useGrid ? <p className="text-xs text-slate-400">Image {index + 1}</p> : null}
-            <OutputMedia url={outputUrl} model={model} compact={useGrid} />
-            <a
-              className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
-              href={outputUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open / download output
-            </a>
-          </div>
-        ))}
+        {outputs.map((output, index) => {
+          const url = typeof output === 'string' && isHttpUrl(output) ? output : null
+          return (
+            <div key={`${index}:${url ?? 'text'}`} className="space-y-2">
+              {useGrid ? <p className="text-xs text-slate-400">Image {index + 1}</p> : null}
+              {url ? <OutputMedia url={url} model={model} compact={useGrid} /> : <TextOutput output={output} model={model} />}
+              {url ? (
+                <a
+                  className="inline-flex text-sm text-sky-300 underline decoration-sky-500/40 underline-offset-2 hover:text-sky-200"
+                  href={url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open / download output
+                </a>
+              ) : null}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

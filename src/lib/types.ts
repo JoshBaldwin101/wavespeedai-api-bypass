@@ -62,6 +62,10 @@ export type SeedreamOutputFormat = 'jpeg' | 'png'
 export type SeedreamPromptOptimizationMode = 'standard' | 'fast'
 export type Scail2Mode = 'animate' | 'replace'
 export type Scail2Resolution = '480p' | '720p'
+export type KlingAspectRatio = '16:9' | '9:16' | '1:1'
+export type KlingShotType = 'customize' | 'intelligence'
+export type KlingCharacterOrientation = 'image' | 'video'
+export type KlingPromptMode = 'single' | 'multi'
 
 export interface SeedanceCommonInput {
   prompt?: string
@@ -181,6 +185,57 @@ export interface MinimaxH3ReferenceToVideoInput extends MinimaxH3CommonInput {
   aspect_ratio?: MinimaxH3AspectRatio
 }
 
+export interface KlingMultiPromptShot {
+  prompt: string
+  duration: number
+}
+
+export interface KlingElementRef {
+  element_id: string
+}
+
+export interface KlingTextToVideoInput {
+  prompt?: string
+  multi_prompt?: KlingMultiPromptShot[]
+  aspect_ratio?: KlingAspectRatio
+  duration?: number
+  cfg_scale?: number
+  negative_prompt?: string
+  sound?: boolean
+  shot_type?: KlingShotType
+}
+
+export interface KlingImageToVideoInput {
+  image: string
+  prompt?: string
+  multi_prompt?: KlingMultiPromptShot[]
+  duration?: number
+  cfg_scale?: number
+  negative_prompt?: string
+  end_image?: string
+  sound?: boolean
+  shot_type?: KlingShotType
+  element_list?: KlingElementRef[]
+}
+
+export interface KlingMotionControlInput {
+  image: string
+  video: string
+  element_list?: KlingElementRef[]
+  character_orientation?: KlingCharacterOrientation
+  prompt?: string
+  negative_prompt?: string
+  keep_original_sound?: boolean
+}
+
+export interface KlingElementsInput {
+  name: string
+  description: string
+  image: string
+  element_refer_list: string[]
+  voice_id?: string
+}
+
 export interface UploadedMedia {
   type: 'image' | 'video' | 'audio' | string
   download_url: string
@@ -192,12 +247,14 @@ export interface PredictionUrls {
   get?: string
 }
 
+export type PredictionOutput = string | Record<string, unknown>
+
 export interface PredictionResult {
   id: string
   status: PredictionStatus
   model?: string
   input?: Record<string, unknown>
-  outputs?: string[]
+  outputs?: PredictionOutput[]
   urls?: PredictionUrls
   created_at?: string
   error?: string | null
@@ -209,7 +266,7 @@ export interface PredictionListItem {
   id: string
   status: PredictionStatus
   model?: string
-  outputs?: string[]
+  outputs?: PredictionOutput[]
   urls?: PredictionUrls
   created_at?: string
   error?: string | null
