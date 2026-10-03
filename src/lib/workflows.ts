@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { CinematicVideoGeneratorForm } from '../components/cinematic/CinematicVideoGeneratorForm'
 import { GptImageEditForm } from '../components/gptImage/GptImageEditForm'
 import { KlingElementsForm } from '../components/kling/KlingElementsForm'
 import { KlingImageToVideoForm } from '../components/kling/KlingImageToVideoForm'
@@ -628,6 +629,14 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate video',
     model: 'wavespeed-ai/scail-2',
     form: Scail2Form,
+  },
+  {
+    id: 'wavespeed-ai/cinematic-video-generator',
+    label: 'wavespeed-ai/cinematic-video-generator',
+    group: 'wavespeed-ai',
+    submitLabel: 'Generate video',
+    model: 'wavespeed-ai/cinematic-video-generator',
+    form: CinematicVideoGeneratorForm,
   },
   {
     id: 'wavespeed-ai/minimax-h3/text-to-video',

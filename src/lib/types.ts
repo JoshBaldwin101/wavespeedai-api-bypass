@@ -62,6 +62,8 @@ export type SeedreamOutputFormat = 'jpeg' | 'png'
 export type SeedreamPromptOptimizationMode = 'standard' | 'fast'
 export type Scail2Mode = 'animate' | 'replace'
 export type Scail2Resolution = '480p' | '720p'
+export type CinematicAspectRatio = '16:9' | '9:16' | '4:3' | '3:4'
+export type CinematicDuration = 5 | 10 | 15
 export type KlingAspectRatio = '16:9' | '9:16' | '1:1'
 export type KlingShotType = 'customize' | 'intelligence'
 export type KlingCharacterOrientation = 'image' | 'video'
@@ -155,6 +157,13 @@ export interface Scail2Input {
   mode?: Scail2Mode
   resolution?: Scail2Resolution
   seed?: number
+}
+
+export interface CinematicVideoGeneratorInput {
+  prompt: string
+  images?: string[]
+  aspect_ratio?: CinematicAspectRatio
+  duration?: CinematicDuration
 }
 
 export interface SeedVr2VideoInput {

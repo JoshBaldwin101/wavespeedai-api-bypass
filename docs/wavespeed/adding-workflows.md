@@ -17,6 +17,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - Nano Banana forms in `src/components/nanoBanana/`
   - Seedream forms in `src/components/seedream/`
   - Scail forms in `src/components/scail/`
+  - Cinematic forms in `src/components/cinematic/`
   - Kling forms in `src/components/kling/`
 - Shared per-workflow Nano Banana field behavior lives in `src/components/nanoBananaConfig.ts` and is passed through `activeWorkflow.nanoBananaConfig`.
 - Shared per-workflow Kling text-to-video and image-to-video field behavior lives in `src/components/klingConfig.ts` and is passed through `activeWorkflow.klingConfig`.
@@ -26,7 +27,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 ## How to add a new workflow
 
 1. Add or update request input types in `src/lib/types.ts`.
-2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, `src/components/scail/`, or `src/components/kling/`):
+2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, `src/components/scail/`, `src/components/cinematic/`, or `src/components/kling/`):
   - Keep payload assembly explicit.
   - Validate required fields and any model-specific ranges/options.
   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
@@ -57,7 +58,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`62 workflows` today). |
+| Centered subtitle under the title | The workflow count (`63 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -96,6 +97,7 @@ Current documented limits used in this app:
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 - Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
 - Kling Elements `element_refer_list` requires 1 to 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
+- Cinematic Video Generator `images[]` is capped at 4 per official docs.
 
 Generic attachment helpers live in `src/lib/attachmentLimits.ts`. Seedance-specific constants stay in `src/lib/seedanceAttachmentLimits.ts`.
 
@@ -310,6 +312,14 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
 - Optional: `target_resolution`
 - Options: `target_resolution`: `720p`, `1080p` (default), `2k`, `4k`
 - Notes: Video upscaler. No prompt field. Use `submitLabel: Generate video`.
+
+### `wavespeed-ai/cinematic-video-generator`
+
+- Required: `prompt`
+- Optional: `images[]` (max 4), `aspect_ratio`, `duration`
+- Aspect ratio: `16:9` (default), `9:16`, `4:3`, `3:4`
+- Duration: `5` (default), `10`, `15`
+- Notes: Text-to-video with optional reference images. Duration is a fixed set of options, not a free integer range. Use `submitLabel: Generate video`.
 
 ### `wavespeed-ai/scail-2`
 
