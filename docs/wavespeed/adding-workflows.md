@@ -59,7 +59,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`64 workflows` today). |
+| Centered subtitle under the title | The workflow count (`66 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -460,6 +460,26 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `resolution`: `2k`, `4k`
   - `output_format`: `png`, `jpeg`
 - Notes: Fast edit variant. Supports `enable_web_search`, but not `enable_image_search`. Input image list is capped at 14 in this app.
+
+### `google/nano-banana-2.1/text-to-image`
+
+- Required: `prompt`
+- Optional: `aspect_ratio`, `resolution`, `enable_web_search`, `enable_image_search`, `output_format`
+- Options:
+  - `aspect_ratio`: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:4`, `4:1`, `1:8`, `8:1`
+  - `resolution`: `1k` (default), `2k`, `4k`
+  - `output_format`: `png` (default), `jpeg`
+- Notes: Supports both web and image search enrichment toggles. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported (this app polls asynchronously and renders output URLs). Use `submitLabel: Generate image`.
+
+### `google/nano-banana-2.1/edit`
+
+- Required: `prompt`, `images[]`
+- Optional: `aspect_ratio`, `resolution`, `enable_web_search`, `enable_image_search`, `output_format`
+- Options:
+  - `aspect_ratio`: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:4`, `4:1`, `1:8`, `8:1`
+  - `resolution`: `1k` (default), `2k`, `4k`
+  - `output_format`: `png` (default), `jpeg`
+- Notes: Input image list is capped at 14 in this app. Supports both web and image search enrichment toggles. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported (this app polls asynchronously and renders output URLs). Use `submitLabel: Generate image`.
 
 ### `bytedance/seedream-v5.0-pro/edit`
 

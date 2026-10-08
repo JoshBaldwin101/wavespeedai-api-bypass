@@ -12,6 +12,8 @@ This note consolidates the current Nano Banana endpoint schemas used by the app.
 6. `google/nano-banana-2/text-to-image-fast`
 7. `google/nano-banana-2/edit`
 8. `google/nano-banana-2/edit-fast`
+9. `google/nano-banana-2.1/text-to-image`
+10. `google/nano-banana-2.1/edit`
 
 ## Shared notes
 
@@ -88,4 +90,22 @@ This note consolidates the current Nano Banana endpoint schemas used by the app.
 - Optional: `aspect_ratio`, `resolution`, `enable_web_search`, `output_format`
 - `aspect_ratio` options: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:4`, `4:1`, `1:8`, `8:1`
 - `resolution` options: `2k`, `4k` (default `2k` in app)
+- `output_format` options: `png`, `jpeg`
+
+## `google/nano-banana-2.1/*` models
+
+### `google/nano-banana-2.1/text-to-image`
+
+- Required: `prompt`
+- Optional: `aspect_ratio`, `resolution`, `enable_web_search`, `enable_image_search`, `output_format`
+- `aspect_ratio` options: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:4`, `4:1`, `1:8`, `8:1`
+- `resolution` options: `1k`, `2k`, `4k` (default `1k` in app)
+- `output_format` options: `png`, `jpeg`
+
+### `google/nano-banana-2.1/edit`
+
+- Required: `prompt`, `images[]`
+- Optional: `aspect_ratio`, `resolution`, `enable_web_search`, `enable_image_search`, `output_format`
+- `aspect_ratio` options: `1:1`, `3:2`, `2:3`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `21:9`, `1:4`, `4:1`, `1:8`, `8:1`
+- `resolution` options: `1k`, `2k`, `4k` (default `1k` in app)
 - `output_format` options: `png`, `jpeg`

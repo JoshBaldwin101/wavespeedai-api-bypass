@@ -59,6 +59,7 @@ export type WorkflowGroupId =
   | 'gpt-image-2'
   | 'nano-banana-pro'
   | 'nano-banana-2'
+  | 'nano-banana-2.1'
   | 'seedream-v5-pro'
   | 'seedream-v5-lite'
   | 'qwen-image-2.1'
@@ -116,6 +117,7 @@ export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'gpt-image-2', label: 'openai/gpt-image-2' },
   { id: 'nano-banana-pro', label: 'google/nano-banana-pro' },
   { id: 'nano-banana-2', label: 'google/nano-banana-2' },
+  { id: 'nano-banana-2.1', label: 'google/nano-banana-2.1' },
   { id: 'seedream-v5-pro', label: 'bytedance/seedream-v5.0-pro' },
   { id: 'seedream-v5-lite', label: 'bytedance/seedream-v5.0-lite' },
   { id: 'qwen-image-2.1', label: 'wavespeed-ai/qwen-image-2.1' },
@@ -865,6 +867,24 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate image',
     model: 'google/nano-banana-2/edit-fast',
     nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2/edit-fast'],
+    form: NanoBananaEditForm,
+  },
+  {
+    id: 'google/nano-banana-2.1/text-to-image',
+    label: 'google/nano-banana-2.1/text-to-image',
+    group: 'nano-banana-2.1',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2.1/text-to-image',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2.1/text-to-image'],
+    form: NanoBananaTextToImageForm,
+  },
+  {
+    id: 'google/nano-banana-2.1/edit',
+    label: 'google/nano-banana-2.1/edit',
+    group: 'nano-banana-2.1',
+    submitLabel: 'Generate image',
+    model: 'google/nano-banana-2.1/edit',
+    nanoBananaConfig: nanoBananaConfigs['google/nano-banana-2.1/edit'],
     form: NanoBananaEditForm,
   },
   {
