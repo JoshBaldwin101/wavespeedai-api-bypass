@@ -16,6 +16,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
   - GPT Image forms in `src/components/gptImage/`
   - Nano Banana forms in `src/components/nanoBanana/`
   - Seedream forms in `src/components/seedream/`
+  - Qwen Image forms in `src/components/qwenImage/`
   - Scail forms in `src/components/scail/`
   - Cinematic forms in `src/components/cinematic/`
   - Kling forms in `src/components/kling/`
@@ -27,7 +28,7 @@ This project now uses a registry-first workflow architecture so new WaveSpeed wo
 ## How to add a new workflow
 
 1. Add or update request input types in `src/lib/types.ts`.
-2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, `src/components/scail/`, `src/components/cinematic/`, or `src/components/kling/`):
+2. Create a workflow form in the proper folder (`src/components/seedance/`, `src/components/seedvr2/`, `src/components/minimaxH3/`, `src/components/gptImage/`, `src/components/nanoBanana/`, `src/components/seedream/`, `src/components/qwenImage/`, `src/components/scail/`, `src/components/cinematic/`, or `src/components/kling/`):
   - Keep payload assembly explicit.
   - Validate required fields and any model-specific ranges/options.
   - Validate integer range fields with `evaluateIntegerField` from `src/lib/numericField.ts`, and pass the returned `error` into `Field error={...}` for inline feedback.
@@ -58,7 +59,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`63 workflows` today). |
+| Centered subtitle under the title | The workflow count (`64 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -96,6 +97,7 @@ Current documented limits used in this app:
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 - Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
+- Qwen Image 2.1 edit `images[]` is capped at 10 per official docs.
 - Kling Elements `element_refer_list` requires 1 to 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
 - Cinematic Video Generator `images[]` is capped at 4 per official docs.
 
@@ -480,6 +482,17 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `max_images`: integer range `1-15` (always sent; default `1` in this app)
   - `output_format`: `jpeg` (default), `png`
 - Notes: Sequential image-edit workflow with up to 10 reference images and up to 15 outputs. `size` is absent from the official `edit-sequential` request table, but sibling Seedream v4 / v4.5 tables document it as a `"WIDTH*HEIGHT"` string bounded 512-8192, and WaveSpeed samples send that format. Omitting `size` yields a square output because the model does not infer size from the input image. `max_images` is always sent because the official API table defaults to `1` and the playground table to `2`. WaveSpeed bills `$0.035 x max_images` even if fewer images return. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported. Use `submitLabel: Generate images`.
+
+### `wavespeed-ai/qwen-image-2.1/edit`
+
+- Required: `prompt`, `images[]` (1 to 10)
+- Optional: `aspect_ratio`, `resolution`, `output_format`, `seed`
+- Options:
+  - `aspect_ratio`: `1:1`, `1:2`, `2:1`, `1:3`, `3:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `9:21`, `21:9`
+  - `resolution`: `1k` (default), `1.5k`, `2k`
+  - `output_format`: `jpeg` (default), `png`, `webp`
+  - `seed`: integer, `-1` means random
+- Notes: Image edit workflow with up to 10 reference images. Leave `aspect_ratio` empty to use the first reference image. Prompts can refer to inputs as `<Picture 1>` through `<Picture 10>`. Use `submitLabel: Generate image`. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported (this app polls asynchronously and renders output URLs).
 
 ### Kling text-to-video and image-to-video (shared)
 

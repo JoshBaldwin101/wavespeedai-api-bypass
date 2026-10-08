@@ -114,3 +114,7 @@ bytedance/seedream-v5.0-pro/edit
 ---
 
 bytedance/seedream-v5.0-lite/edit-sequential
+
+---
+
+wavespeed-ai/qwen-image-2.1/edit

@@ -10,7 +10,7 @@
 <h1 align="center">WaveSpeedAI API Tool</h1>
 
 <p align="center">
-  A browser UI for <a href="https://wavespeed.ai">WaveSpeed</a>'s generation API. 63 workflows, live pricing, and job tracking. No backend of its own.
+  A browser UI for <a href="https://wavespeed.ai">WaveSpeed</a>'s generation API. 64 workflows, live pricing, and job tracking. No backend of its own.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ You paste a WaveSpeed key, pick a workflow, and run a generation. Cost is estima
 
 ## What it does
 
-- **63 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, Kling 3.0 / 3.0 Turbo / Elements, GPT Image 2, Nano Banana Pro & 2, Seedream v5 Pro, Seedream v5 Lite, SeedVR2, Scail 2, and Cinematic Video Generator
+- **64 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, Kling 3.0 / 3.0 Turbo / Elements, GPT Image 2, Nano Banana Pro & 2, Seedream v5 Pro, Seedream v5 Lite, Qwen Image 2.1, SeedVR2, Scail 2, and Cinematic Video Generator
 - Text-to-video, image-to-video, multi-shot storyboards, reference-to-video, video edit / extend / upscale, motion transfer, reusable character elements, text-to-image, and image edit
 - Live cost on the submit button, then a confirm step that checks your wallet
 - Upload images, video, or audio, or paste URLs
@@ -68,6 +68,7 @@ WaveSpeed's website playground keeps a content safety checker locked on. Their A
 | **Nano Banana 2** | Text-to-image · fast · edit · edit fast |
 | **Seedream v5 Pro** | Image edit |
 | **Seedream v5 Lite** | Sequential image edit |
+| **Qwen Image 2.1** | Image edit |
 | **SeedVR2** | Video upscale (up to 4K) |
 | **Scail 2** | Image + driving video to motion transfer |
 | **Cinematic Video Generator** | Text-to-video with up to 4 optional reference images |

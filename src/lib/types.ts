@@ -60,6 +60,24 @@ export type SeedreamAspectRatio =
 export type SeedreamResolution = '1k' | '1.5k' | '2k'
 export type SeedreamOutputFormat = 'jpeg' | 'png'
 export type SeedreamPromptOptimizationMode = 'standard' | 'fast'
+export type QwenImageAspectRatio =
+  | '1:1'
+  | '1:2'
+  | '2:1'
+  | '1:3'
+  | '3:1'
+  | '2:3'
+  | '3:2'
+  | '3:4'
+  | '4:3'
+  | '4:5'
+  | '5:4'
+  | '9:16'
+  | '16:9'
+  | '9:21'
+  | '21:9'
+export type QwenImageResolution = '1k' | '1.5k' | '2k'
+export type QwenImageOutputFormat = 'jpeg' | 'png' | 'webp'
 export type Scail2Mode = 'animate' | 'replace'
 export type Scail2Resolution = '480p' | '720p'
 export type CinematicAspectRatio = '16:9' | '9:16' | '4:3' | '3:4'
@@ -148,6 +166,15 @@ export interface SeedreamLiteEditSequentialInput {
   size: string
   max_images: number
   output_format?: SeedreamOutputFormat
+}
+
+export interface QwenImageEditInput {
+  prompt: string
+  images: string[]
+  aspect_ratio?: QwenImageAspectRatio
+  resolution?: QwenImageResolution
+  output_format?: QwenImageOutputFormat
+  seed?: number
 }
 
 export interface Scail2Input {

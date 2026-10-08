@@ -19,6 +19,7 @@ import { MinimaxH3TextToVideoForm } from '../components/minimaxH3/MinimaxH3TextT
 import { NanoBananaEditForm } from '../components/nanoBanana/NanoBananaEditForm'
 import { NanoBananaTextToImageForm } from '../components/nanoBanana/NanoBananaTextToImageForm'
 import { nanoBananaConfigs, type NanoBananaConfig } from '../components/nanoBananaConfig'
+import { QwenImageEditForm } from '../components/qwenImage/QwenImageEditForm'
 import { Scail2Form } from '../components/scail/Scail2Form'
 import { SeedanceImageToVideoForm } from '../components/seedance/SeedanceImageToVideoForm'
 import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVideoForm'
@@ -60,6 +61,7 @@ export type WorkflowGroupId =
   | 'nano-banana-2'
   | 'seedream-v5-pro'
   | 'seedream-v5-lite'
+  | 'qwen-image-2.1'
 
 export interface WorkflowGroupDefinition {
   id: WorkflowGroupId
@@ -116,6 +118,7 @@ export const workflowGroups: WorkflowGroupDefinition[] = [
   { id: 'nano-banana-2', label: 'google/nano-banana-2' },
   { id: 'seedream-v5-pro', label: 'bytedance/seedream-v5.0-pro' },
   { id: 'seedream-v5-lite', label: 'bytedance/seedream-v5.0-lite' },
+  { id: 'qwen-image-2.1', label: 'wavespeed-ai/qwen-image-2.1' },
 ]
 
 const standardResolutions: SeedanceResolution[] = ['480p', '720p', '1080p']
@@ -879,6 +882,14 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate images',
     model: 'bytedance/seedream-v5.0-lite/edit-sequential',
     form: SeedreamLiteEditSequentialForm,
+  },
+  {
+    id: 'wavespeed-ai/qwen-image-2.1/edit',
+    label: 'wavespeed-ai/qwen-image-2.1/edit',
+    group: 'qwen-image-2.1',
+    submitLabel: 'Generate image',
+    model: 'wavespeed-ai/qwen-image-2.1/edit',
+    form: QwenImageEditForm,
   },
 ]
 
