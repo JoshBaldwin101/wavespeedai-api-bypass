@@ -78,8 +78,6 @@ export type QwenImageAspectRatio =
   | '21:9'
 export type QwenImageResolution = '1k' | '1.5k' | '2k'
 export type QwenImageOutputFormat = 'jpeg' | 'png' | 'webp'
-export type Scail2Mode = 'animate' | 'replace'
-export type Scail2Resolution = '480p' | '720p'
 export type CinematicAspectRatio = '16:9' | '9:16' | '4:3' | '3:4'
 export type CinematicDuration = 5 | 10 | 15
 export type KlingAspectRatio = '16:9' | '9:16' | '1:1'
@@ -174,15 +172,6 @@ export interface QwenImageEditInput {
   aspect_ratio?: QwenImageAspectRatio
   resolution?: QwenImageResolution
   output_format?: QwenImageOutputFormat
-  seed?: number
-}
-
-export interface Scail2Input {
-  image: string
-  video: string
-  prompt?: string
-  mode?: Scail2Mode
-  resolution?: Scail2Resolution
   seed?: number
 }
 

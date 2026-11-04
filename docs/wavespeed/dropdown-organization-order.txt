@@ -51,7 +51,6 @@ seedance-2.0-mini/video-extend
 ---
 
 wavespeed-ai/seedvr2/video
-wavespeed-ai/scail-2
 
 ---
 

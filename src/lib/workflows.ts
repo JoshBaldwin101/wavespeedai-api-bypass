@@ -20,7 +20,6 @@ import { NanoBananaEditForm } from '../components/nanoBanana/NanoBananaEditForm'
 import { NanoBananaTextToImageForm } from '../components/nanoBanana/NanoBananaTextToImageForm'
 import { nanoBananaConfigs, type NanoBananaConfig } from '../components/nanoBananaConfig'
 import { QwenImageEditForm } from '../components/qwenImage/QwenImageEditForm'
-import { Scail2Form } from '../components/scail/Scail2Form'
 import { SeedanceImageToVideoForm } from '../components/seedance/SeedanceImageToVideoForm'
 import { SeedanceTextToVideoForm } from '../components/seedance/SeedanceTextToVideoForm'
 import { SeedanceVideoEditForm } from '../components/seedance/SeedanceVideoEditForm'
@@ -626,14 +625,6 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate video',
     model: 'wavespeed-ai/seedvr2/video',
     form: SeedVr2VideoForm,
-  },
-  {
-    id: 'wavespeed-ai/scail-2',
-    label: 'wavespeed-ai/scail-2',
-    group: 'wavespeed-ai',
-    submitLabel: 'Generate video',
-    model: 'wavespeed-ai/scail-2',
-    form: Scail2Form,
   },
   {
     id: 'wavespeed-ai/cinematic-video-generator',

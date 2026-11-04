@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiKeyGate } from './components/ApiKeyGate'
 import { JobsPanel } from './components/JobsPanel'
+import { WorkflowSelect } from './components/WorkflowSelect'
 import { AboutButton } from './components/ui/AboutButton'
 import { Button } from './components/ui/Button'
 import { ConfirmDialog } from './components/ui/ConfirmDialog'
@@ -431,14 +432,13 @@ const AppContent = () => {
           </div>
 
           <div className="grid gap-3 p-3 sm:gap-4 sm:p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
-            <label className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
               <span className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">Workflow</span>
               <span className="mt-2 hidden text-sm text-slate-300 sm:block">Select the model endpoint this run should use.</span>
-              <select
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm font-medium text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:mt-4 sm:px-4 sm:py-3"
+              <WorkflowSelect
+                groups={groupedWorkflows}
                 value={activeWorkflow.id}
-                onChange={(event) => {
-                  const nextWorkflowId = event.target.value
+                onChange={(nextWorkflowId) => {
                   setSelectedWorkflowId(nextWorkflowId)
                   const draft = isPersistenceEnabled ? getDraftInput(nextWorkflowId) : undefined
                   setPendingInitialValues(draft?.input ?? null)
@@ -449,18 +449,8 @@ const AppContent = () => {
                     jobs.reset()
                   }
                 }}
-              >
-                {groupedWorkflows.map((group) => (
-                  <optgroup key={group.id} label={group.label}>
-                    {group.workflows.map((workflow) => (
-                      <option key={workflow.id} value={workflow.id}>
-                        {workflow.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </label>
+              />
+            </div>
 
             <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-1">
               <section className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 sm:rounded-2xl sm:p-4">
