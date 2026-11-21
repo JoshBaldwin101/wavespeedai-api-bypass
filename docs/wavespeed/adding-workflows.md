@@ -59,7 +59,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`66 workflows` today). |
+| Centered subtitle under the title | The workflow count (`76 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -91,7 +91,8 @@ Current documented limits used in this app:
 - Single-value attachment fields (`image`, `last_image`, `video`) accept 1 file/URL.
 - Seedance 2.0 / 2.0-fast shared limits currently use 9 reference images / 9 videos / 9 audios (see `existing-endpoint-schema-discrepancies.md` for official vs app differences).
 - Seedance 2.0 Mini text-to-video / video-edit reference caps are 9 images / 3 videos / 3 audios.
-- Seedance 2.5 text-to-video / video-edit reference caps in this app are 9 images / 3 videos / 3 audios (official docs only document a 30s total-duration cap).
+- Seedance 2.5 text-to-video reference caps in this app are 9 images / 3 videos / 3 audios. Video-edit uses 9 images / 3 audios. Official docs only document a 30s total-duration cap.
+- Seedance 2.5 Flash text-to-video and reference-to-video use the same 9 images / 3 videos / 3 audios caps. Flash video-edit uses 9 images / 3 audios. Official Flash docs only document a 30s total-duration cap.
 - MiniMax H3 reference-to-video caps are 9 images / 3 videos / 3 audios; at least one reference input is required; reference videos are only supported at `480p`.
 - GPT Image 2 `images[]` requires one or more images, but current docs do not define a hard max item count.
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
@@ -112,6 +113,9 @@ Optional fields on `WorkflowCapabilities` (defaults preserve existing 2.0 / 2.0-
 - `supportsDuration` — defaults to `true`. When `false`, the duration field is hidden and `duration` is omitted from the payload (used by Seedance 2.5 video-edit).
 - `supportsLastImage` — defaults to `true`. When `false`, the last-frame image upload is hidden and `last_image` is omitted from the payload (used by Seedance 2.5 video-extend).
 - `referenceLimits` — overrides Seedance attachment caps for `reference_images` / `reference_videos` / `reference_audios` when present.
+- `supportsOutputFormat` — defaults to `false`. When `true`, the output container select is shown and `output_format` is always sent (`mp4` default, `mov`). `mov` is forced back to `mp4` at `1080p` and `4k`.
+- `promptHint` — optional prompt-field hint. The text-to-video form reads it. Seedance 2.5 Flash reference-to-video uses it for `@Image 1` / `@Video 1` / `@Audio 1` citation guidance.
+- `sourceVideoHint` — optional input-video hint for video-edit. When omitted, the form keeps the 2.0 / Fast / Mini wording. Seedance 2.5 and 2.5 Flash set the 30-second trim and 4-second pad wording.
 
 ## Numeric field validation
 
@@ -123,6 +127,79 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
 - Use `value` when building payloads only when it is a number.
 
 ## Current workflow schema notes (dropdown order)
+
+### `seedance-2.5-flash/image-to-video`
+
+- Required: `image`, `prompt`
+- Optional: `last_image`, `resolution`, `duration`, `generate_audio`, `output_format`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Output format: `mp4` (default), `mov`. `mov` is not available at `1080p` or `4k`.
+- Notes: No `aspect_ratio` and no `enable_web_search`.
+
+### `seedance-2.5-flash/image-to-video-spicy`
+
+- Required: `image`
+- Optional: `prompt`, `last_image`, `resolution`, `duration`, `generate_audio`, `seed`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default) only
+- Notes: Prompt is optional. No `aspect_ratio`, no `enable_web_search`, and no `output_format`.
+
+### `seedance-2.5-flash/image-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.5-flash/image-to-video`, except there is no `output_format`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5-flash/reference-to-video`
+
+- Required: `prompt`
+- Optional: `reference_images[]`, `reference_videos[]`, `reference_audios[]`, `aspect_ratio`, `resolution`, `duration`, `generate_audio`, `output_format`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Aspect ratio: `16:9` (default), `9:16`, `4:3`, `3:4`, `1:1`, `21:9`
+- Output format: `mp4` (default), `mov`. `mov` is not available at `1080p` or `4k`.
+- Notes: Same payload as text-to-video. References are optional; with none, the request runs as text-to-video. The prompt hint tells users to cite uploads as `@Image 1`, `@Video 1`, and `@Audio 1`. No `enable_web_search`. App enforces reference caps of 9 images / 3 videos / 3 audios (docs only state a 30s total-duration cap).
+
+### `seedance-2.5-flash/reference-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.5-flash/reference-to-video`, except there is no `output_format`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5-flash/text-to-video`
+
+- Required: `prompt`
+- Optional: `reference_images[]`, `reference_videos[]`, `reference_audios[]`, `aspect_ratio`, `resolution`, `duration`, `generate_audio`, `output_format`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Aspect ratio: `16:9` (default), `9:16`, `4:3`, `3:4`, `1:1`, `21:9`
+- Output format: `mp4` (default), `mov`. `mov` is not available at `1080p` or `4k`.
+- Notes: No `enable_web_search`. App enforces reference caps of 9 images / 3 videos / 3 audios (docs only state a 30s total-duration cap).
+
+### `seedance-2.5-flash/text-to-video-turbo`
+
+- Required/optional fields follow `seedance-2.5-flash/text-to-video`, except there is no `output_format`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5-flash/video-edit`
+
+- Required: `prompt`, `video`
+- Optional: `reference_images[]`, `reference_audios[]`, `resolution`, `generate_audio`, `output_format`
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Output format: `mp4` (default), `mov`. `mov` is not available at `1080p` or `4k`.
+- Notes: No `aspect_ratio`, no `duration`, and no `enable_web_search`. Videos longer than 30s are trimmed to 30s; videos shorter than 4s are padded to 4s. App enforces reference caps of 9 images / 3 audios.
+
+### `seedance-2.5-flash/video-edit-turbo`
+
+- Required/optional fields follow `seedance-2.5-flash/video-edit`, except there is no `output_format`.
+- Resolution: `720p` (default), `1080p` only.
+
+### `seedance-2.5-flash/video-extend`
+
+- Required: `prompt`, `video`
+- Optional: `resolution`, `duration`, `generate_audio`
+- Duration: 4-30 seconds
+- Resolution: `480p`, `720p` (default), `1080p`, `4k`
+- Notes: No `aspect_ratio`, no `last_image`, no `enable_web_search`, and no `output_format`.
 
 ### `seedance-2.5/image-to-video`
 

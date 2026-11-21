@@ -2,6 +2,7 @@ export type PredictionStatus = 'created' | 'queued' | 'pending' | 'processing' |
 
 export type SeedanceAspectRatio = '16:9' | '9:16' | '4:3' | '3:4' | '1:1' | '21:9'
 export type SeedanceResolution = '480p' | '720p' | '1080p' | '4k'
+export type SeedanceOutputFormat = 'mp4' | 'mov'
 export type SeedVr2Resolution = '720p' | '1080p' | '2k' | '4k'
 export type MinimaxH3AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '3:4' | '21:9' | '9:21'
 export type MinimaxH3Resolution = '480p' | '768p'
@@ -92,6 +93,7 @@ export interface SeedanceCommonInput {
   duration?: number
   enable_web_search?: boolean
   generate_audio?: boolean
+  output_format?: SeedanceOutputFormat
 }
 
 export interface SeedanceVideoEditInput extends SeedanceCommonInput {

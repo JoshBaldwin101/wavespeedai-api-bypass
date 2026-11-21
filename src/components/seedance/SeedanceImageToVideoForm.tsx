@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceImageToVideoInput, SeedanceResolution } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceImageToVideoInput, SeedanceOutputFormat, SeedanceResolution } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS } from '../../lib/seedanceAttachmentLimits'
+import {
+  resolveSeedanceOutputFormat,
+  seedanceMovAvailable,
+  seedanceOutputFormatForResolution,
+} from '../../lib/seedanceOutputFormat'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
 import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
@@ -54,6 +59,7 @@ export const SeedanceImageToVideoForm = ({
     supportsSeed = false,
     supportsAspectRatio = true,
     supportsWebSearch = true,
+    supportsOutputFormat = false,
   } = workflowCapabilities ?? {}
   const [prompt, setPrompt] = useState(() => (typeof initialValues?.prompt === 'string' ? initialValues.prompt : ''))
   const [imageUrls, setImageUrls] = useState<string[]>(() =>
@@ -87,7 +93,11 @@ export const SeedanceImageToVideoForm = ({
   const [generateAudio, setGenerateAudio] = useState(() =>
     typeof initialValues?.generate_audio === 'boolean' ? initialValues.generate_audio : true,
   )
+  const [outputFormat, setOutputFormat] = useState<SeedanceOutputFormat>(() =>
+    resolveSeedanceOutputFormat(initialValues?.output_format),
+  )
   const [error, setError] = useState<string | null>(null)
+  const effectiveOutputFormat = seedanceOutputFormatForResolution(outputFormat, resolution)
 
   const { value: durationValue, error: durationError } = useMemo(
     () => evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax }),
@@ -127,6 +137,7 @@ export const SeedanceImageToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -146,6 +157,8 @@ export const SeedanceImageToVideoForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     lastImageUrls,
     supportsAspectRatio,
     aspectRatio,
@@ -159,6 +172,7 @@ export const SeedanceImageToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (imageUrls[0]) payload.image = imageUrls[0]
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -174,6 +188,8 @@ export const SeedanceImageToVideoForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     supportsAspectRatio,
     aspectRatio,
     durationValue,
@@ -231,6 +247,7 @@ export const SeedanceImageToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (trimmedPrompt) payload.prompt = trimmedPrompt
     if (lastImageUrls[0]) payload.last_image = lastImageUrls[0]
     if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -317,6 +334,10 @@ export const SeedanceImageToVideoForm = ({
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}
         onGenerateAudioChange={setGenerateAudio}
+        showOutputFormat={supportsOutputFormat}
+        outputFormat={effectiveOutputFormat}
+        onOutputFormatChange={setOutputFormat}
+        movAvailable={seedanceMovAvailable(resolution)}
       />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}

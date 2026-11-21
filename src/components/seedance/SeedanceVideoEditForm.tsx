@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceResolution, SeedanceVideoEditInput } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceOutputFormat, SeedanceResolution, SeedanceVideoEditInput } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
+import {
+  resolveSeedanceOutputFormat,
+  seedanceMovAvailable,
+  seedanceOutputFormatForResolution,
+} from '../../lib/seedanceOutputFormat'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
 import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
@@ -53,6 +58,8 @@ export const SeedanceVideoEditForm = ({
     supportsAspectRatio = true,
     supportsWebSearch = true,
     supportsDuration = true,
+    supportsOutputFormat = false,
+    sourceVideoHint,
     referenceLimits,
   } = workflowCapabilities ?? {}
   const limits = SEEDANCE_ATTACHMENT_LIMITS.videoEdit
@@ -96,7 +103,11 @@ export const SeedanceVideoEditForm = ({
   const [generateAudio, setGenerateAudio] = useState(() =>
     typeof initialValues?.generate_audio === 'boolean' ? initialValues.generate_audio : true,
   )
+  const [outputFormat, setOutputFormat] = useState<SeedanceOutputFormat>(() =>
+    resolveSeedanceOutputFormat(initialValues?.output_format),
+  )
   const [error, setError] = useState<string | null>(null)
+  const effectiveOutputFormat = seedanceOutputFormatForResolution(outputFormat, resolution)
 
   const { value: durationValue, error: durationError } = useMemo(() => {
     if (!supportsDuration) {
@@ -127,6 +138,7 @@ export const SeedanceVideoEditForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -145,6 +157,8 @@ export const SeedanceVideoEditForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     referenceImageUrls,
     referenceAudioUrls,
     supportsAspectRatio,
@@ -159,6 +173,7 @@ export const SeedanceVideoEditForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (videoUrls[0]) payload.video = videoUrls[0]
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
@@ -173,6 +188,8 @@ export const SeedanceVideoEditForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     referenceImageUrls,
     referenceAudioUrls,
     supportsAspectRatio,
@@ -234,6 +251,7 @@ export const SeedanceVideoEditForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
     if (supportsAspectRatio && aspectRatio !== 'auto') payload.aspect_ratio = aspectRatio
@@ -267,7 +285,10 @@ export const SeedanceVideoEditForm = ({
         value={videoUrls}
         onChange={setVideoUrls}
         maxItems={limits.video}
-        hint="Single file. WaveSpeed trims source videos longer than 15 seconds, and turbo variants can pad very short inputs."
+        hint={
+          sourceVideoHint ??
+          'Single file. WaveSpeed trims source videos longer than 15 seconds, and turbo variants can pad very short inputs.'
+        }
       />
 
       <MediaUpload
@@ -309,6 +330,10 @@ export const SeedanceVideoEditForm = ({
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}
         onGenerateAudioChange={setGenerateAudio}
+        showOutputFormat={supportsOutputFormat}
+        outputFormat={effectiveOutputFormat}
+        onOutputFormatChange={setOutputFormat}
+        movAvailable={seedanceMovAvailable(resolution)}
       />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}

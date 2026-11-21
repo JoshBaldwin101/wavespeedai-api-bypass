@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
-import type { SeedanceAspectRatio, SeedanceResolution, SeedanceTextToVideoInput } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceOutputFormat, SeedanceResolution, SeedanceTextToVideoInput } from '../../lib/types'
 import { evaluateIntegerField } from '../../lib/numericField'
 import { SEEDANCE_ATTACHMENT_LIMITS, validateAttachmentLimit } from '../../lib/seedanceAttachmentLimits'
+import {
+  resolveSeedanceOutputFormat,
+  seedanceMovAvailable,
+  seedanceOutputFormatForResolution,
+} from '../../lib/seedanceOutputFormat'
 import { buildSubmitLabel, useLivePricing } from '../../hooks/useLivePricing'
 import { usePersistedFormDraft } from '../../hooks/usePersistedFormDraft'
 import type { WorkflowCapabilities } from '../../lib/workflows'
@@ -52,6 +57,8 @@ export const SeedanceTextToVideoForm = ({
     defaultResolution,
     supportsAspectRatio = true,
     supportsWebSearch = true,
+    supportsOutputFormat = false,
+    promptHint,
     referenceLimits,
   } = workflowCapabilities ?? {}
   const maxReferenceImages = referenceLimits?.referenceImages ?? SEEDANCE_ATTACHMENT_LIMITS.textToVideo.referenceImages
@@ -97,7 +104,11 @@ export const SeedanceTextToVideoForm = ({
   const [generateAudio, setGenerateAudio] = useState(() =>
     typeof initialValues?.generate_audio === 'boolean' ? initialValues.generate_audio : true,
   )
+  const [outputFormat, setOutputFormat] = useState<SeedanceOutputFormat>(() =>
+    resolveSeedanceOutputFormat(initialValues?.output_format),
+  )
   const [error, setError] = useState<string | null>(null)
+  const effectiveOutputFormat = seedanceOutputFormatForResolution(outputFormat, resolution)
 
   const { value: durationValue, error: durationError } = useMemo(
     () => evaluateIntegerField(duration, { label: 'Duration', min: durationMin, max: durationMax }),
@@ -123,6 +134,7 @@ export const SeedanceTextToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
@@ -140,6 +152,8 @@ export const SeedanceTextToVideoForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     referenceImageUrls,
     referenceVideoUrls,
     referenceAudioUrls,
@@ -155,6 +169,7 @@ export const SeedanceTextToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
@@ -168,6 +183,8 @@ export const SeedanceTextToVideoForm = ({
     supportsWebSearch,
     enableWebSearch,
     generateAudio,
+    supportsOutputFormat,
+    effectiveOutputFormat,
     referenceImageUrls,
     referenceVideoUrls,
     referenceAudioUrls,
@@ -223,6 +240,7 @@ export const SeedanceTextToVideoForm = ({
     }
 
     if (supportsWebSearch) payload.enable_web_search = enableWebSearch
+    if (supportsOutputFormat) payload.output_format = effectiveOutputFormat
     if (referenceImageUrls.length > 0) payload.reference_images = referenceImageUrls
     if (referenceVideoUrls.length > 0) payload.reference_videos = referenceVideoUrls
     if (referenceAudioUrls.length > 0) payload.reference_audios = referenceAudioUrls
@@ -234,7 +252,7 @@ export const SeedanceTextToVideoForm = ({
 
   return (
     <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
-      <Field label="Prompt" htmlFor="seedance-prompt" required={promptRequired}>
+      <Field label="Prompt" htmlFor="seedance-prompt" required={promptRequired} hint={promptHint}>
         <textarea
           id="seedance-prompt"
           className="min-h-32 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500 sm:min-h-44"
@@ -293,6 +311,10 @@ export const SeedanceTextToVideoForm = ({
         onEnableWebSearchChange={setEnableWebSearch}
         generateAudio={generateAudio}
         onGenerateAudioChange={setGenerateAudio}
+        showOutputFormat={supportsOutputFormat}
+        outputFormat={effectiveOutputFormat}
+        onOutputFormatChange={setOutputFormat}
+        movAvailable={seedanceMovAvailable(resolution)}
       />
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}

@@ -44,6 +44,7 @@ export interface WorkflowFormProps {
 }
 
 export type WorkflowGroupId =
+  | 'seedance-2.5-flash'
   | 'seedance-2.5'
   | 'seedance-2.0-fast'
   | 'seedance-2.0'
@@ -83,6 +84,12 @@ export interface WorkflowCapabilities {
   supportsDuration?: boolean
   /** Defaults to true. When false, last-frame image UI and payload fields are omitted. */
   supportsLastImage?: boolean
+  /** Defaults to false. When true, output_format is shown and always sent. mov is forced to mp4 at 1080p and 4k. */
+  supportsOutputFormat?: boolean
+  /** Optional prompt-field hint. Read by the text-to-video form. */
+  promptHint?: string
+  /** Optional input-video hint for video-edit. When omitted, the form keeps the 2.0 wording. */
+  sourceVideoHint?: string
   referenceLimits?: {
     referenceImages?: number
     referenceVideos?: number
@@ -103,6 +110,7 @@ export interface WorkflowDefinition {
 }
 
 export const workflowGroups: WorkflowGroupDefinition[] = [
+  { id: 'seedance-2.5-flash', label: 'seedance-2.5-flash' },
   { id: 'seedance-2.5', label: 'seedance-2.5' },
   { id: 'seedance-2.0', label: 'seedance-2.0' },
   { id: 'seedance-2.0-fast', label: 'seedance-2.0-fast' },
@@ -299,6 +307,9 @@ const seedance25TextToVideoTurboCapabilities: WorkflowCapabilities = {
   resolutionOptions: turboResolutions,
 }
 
+const seedance25SourceVideoHint =
+  'Single file. Videos longer than 30 seconds are trimmed to 30 seconds. Videos shorter than 4 seconds are padded to 4 seconds.'
+
 const seedance25VideoEditCapabilities: WorkflowCapabilities = {
   promptRequired: true,
   supportsAspectRatio: false,
@@ -309,6 +320,7 @@ const seedance25VideoEditCapabilities: WorkflowCapabilities = {
   defaultResolution: '720p',
   supportsWebSearch: false,
   supportsDuration: false,
+  sourceVideoHint: seedance25SourceVideoHint,
   referenceLimits: {
     referenceImages: 9,
     referenceAudios: 3,
@@ -332,7 +344,135 @@ const seedance25VideoExtendCapabilities: WorkflowCapabilities = {
   supportsLastImage: false,
 }
 
+const seedance25FlashSpicyResolutions: SeedanceResolution[] = ['480p', '720p']
+
+const seedance25FlashReferencePromptHint =
+  'Refer to uploads as @Image 1, @Video 1, and @Audio 1, in upload order. With no references, this runs as text-to-video.'
+
+const seedance25FlashImageToVideoCapabilities: WorkflowCapabilities = {
+  ...seedance25ImageToVideoCapabilities,
+  supportsOutputFormat: true,
+}
+
+const seedance25FlashImageToVideoSpicyCapabilities: WorkflowCapabilities = {
+  ...seedance25ImageToVideoCapabilities,
+  promptRequired: false,
+  supportsSeed: true,
+  resolutionOptions: seedance25FlashSpicyResolutions,
+}
+
+const seedance25FlashReferenceToVideoCapabilities: WorkflowCapabilities = {
+  ...seedance25TextToVideoCapabilities,
+  supportsOutputFormat: true,
+  promptHint: seedance25FlashReferencePromptHint,
+}
+
+const seedance25FlashReferenceToVideoTurboCapabilities: WorkflowCapabilities = {
+  ...seedance25TextToVideoTurboCapabilities,
+  promptHint: seedance25FlashReferencePromptHint,
+}
+
+const seedance25FlashTextToVideoCapabilities: WorkflowCapabilities = {
+  ...seedance25TextToVideoCapabilities,
+  supportsOutputFormat: true,
+}
+
+const seedance25FlashVideoEditCapabilities: WorkflowCapabilities = {
+  ...seedance25VideoEditCapabilities,
+  supportsOutputFormat: true,
+}
+
 export const workflows: WorkflowDefinition[] = [
+  {
+    id: 'seedance-2.5-flash/image-to-video',
+    label: 'seedance-2.5-flash/image-to-video',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/image-to-video',
+    capabilities: seedance25FlashImageToVideoCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/image-to-video-spicy',
+    label: 'seedance-2.5-flash/image-to-video-spicy',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/image-to-video-spicy',
+    capabilities: seedance25FlashImageToVideoSpicyCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/image-to-video-turbo',
+    label: 'seedance-2.5-flash/image-to-video-turbo',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/image-to-video-turbo',
+    capabilities: seedance25ImageToVideoTurboCapabilities,
+    form: SeedanceImageToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/reference-to-video',
+    label: 'seedance-2.5-flash/reference-to-video',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/reference-to-video',
+    capabilities: seedance25FlashReferenceToVideoCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/reference-to-video-turbo',
+    label: 'seedance-2.5-flash/reference-to-video-turbo',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/reference-to-video-turbo',
+    capabilities: seedance25FlashReferenceToVideoTurboCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/text-to-video',
+    label: 'seedance-2.5-flash/text-to-video',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/text-to-video',
+    capabilities: seedance25FlashTextToVideoCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/text-to-video-turbo',
+    label: 'seedance-2.5-flash/text-to-video-turbo',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/text-to-video-turbo',
+    capabilities: seedance25TextToVideoTurboCapabilities,
+    form: SeedanceTextToVideoForm,
+  },
+  {
+    id: 'seedance-2.5-flash/video-edit',
+    label: 'seedance-2.5-flash/video-edit',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/video-edit',
+    capabilities: seedance25FlashVideoEditCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.5-flash/video-edit-turbo',
+    label: 'seedance-2.5-flash/video-edit-turbo',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/video-edit-turbo',
+    capabilities: seedance25VideoEditTurboCapabilities,
+    form: SeedanceVideoEditForm,
+  },
+  {
+    id: 'seedance-2.5-flash/video-extend',
+    label: 'seedance-2.5-flash/video-extend',
+    group: 'seedance-2.5-flash',
+    submitLabel: 'Generate video',
+    model: 'bytedance/seedance-2.5-flash/video-extend',
+    capabilities: seedance25VideoExtendCapabilities,
+    form: SeedanceVideoExtendForm,
+  },
   {
     id: 'seedance-2.5/image-to-video',
     label: 'seedance-2.5/image-to-video',

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { SeedanceAspectRatio, SeedanceResolution } from '../../lib/types'
+import type { SeedanceAspectRatio, SeedanceOutputFormat, SeedanceResolution } from '../../lib/types'
 import { Field } from '../ui/Field'
 import { Toggle } from '../ui/Toggle'
 
@@ -25,6 +25,10 @@ interface SeedanceAdvancedFieldsProps {
   onEnableWebSearchChange: (value: boolean) => void
   generateAudio: boolean
   onGenerateAudioChange: (value: boolean) => void
+  showOutputFormat?: boolean
+  outputFormat?: SeedanceOutputFormat
+  onOutputFormatChange?: (value: SeedanceOutputFormat) => void
+  movAvailable?: boolean
 }
 
 export const SeedanceAdvancedFields = ({
@@ -45,6 +49,10 @@ export const SeedanceAdvancedFields = ({
   onEnableWebSearchChange,
   generateAudio,
   onGenerateAudioChange,
+  showOutputFormat = false,
+  outputFormat = 'mp4',
+  onOutputFormatChange,
+  movAvailable = true,
 }: SeedanceAdvancedFieldsProps) => {
   const gridClassName = showAspectRatio
     ? showDuration
@@ -108,6 +116,26 @@ export const SeedanceAdvancedFields = ({
           </Field>
         ) : null}
       </div>
+
+      {showOutputFormat ? (
+        <Field
+          label="Output format"
+          htmlFor="seedance-output-format"
+          hint="mov is a QuickTime file with H.264 4:4:4 video and uncompressed audio. Some browsers and players cannot play it. Unavailable at 1080p and 4k."
+        >
+          <select
+            id="seedance-output-format"
+            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:ring-2 focus:ring-sky-500"
+            value={outputFormat}
+            onChange={(event) => onOutputFormatChange?.(event.target.value as SeedanceOutputFormat)}
+          >
+            <option value="mp4">mp4</option>
+            <option value="mov" disabled={!movAvailable}>
+              mov
+            </option>
+          </select>
+        </Field>
+      ) : null}
 
       <div className={`grid gap-2 sm:gap-3 ${showWebSearch ? 'md:grid-cols-2' : ''}`}>
         {showWebSearch ? (
