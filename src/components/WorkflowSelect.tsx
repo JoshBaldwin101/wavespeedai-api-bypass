@@ -251,7 +251,7 @@ export const WorkflowSelect = ({ groups, value, onChange }: WorkflowSelectProps)
                 id={listboxId}
                 role="listbox"
                 aria-label="Workflows"
-                className="min-h-0 max-h-72 overflow-y-auto overscroll-contain py-1"
+                className="min-h-0 max-h-[28rem] overflow-y-auto overscroll-contain py-1"
               >
                 {filteredGroups.length === 0 ? (
                   <p className="px-3 py-3 text-sm text-slate-400">No workflows match “{query.trim()}”.</p>
