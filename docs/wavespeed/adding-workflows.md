@@ -503,6 +503,17 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `output_format`: `jpeg` (default), `png`
 - Notes: Sequential image-edit workflow with up to 10 reference images and up to 15 outputs. `size` is absent from the official `edit-sequential` request table, but sibling Seedream v4 / v4.5 tables document it as a `"WIDTH*HEIGHT"` string bounded 512-8192, and WaveSpeed samples send that format. Omitting `size` yields a square output because the model does not infer size from the input image. `max_images` is always sent because the official API table defaults to `1` and the playground table to `2`. WaveSpeed bills `$0.035 x max_images` even if fewer images return. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported. Use `submitLabel: Generate images`.
 
+### `bytedance/seedream-v5.5`
+
+- Required: `prompt`
+- Optional: `aspect_ratio`, `resolution`, `output_format`, `background`
+- Options:
+  - `aspect_ratio`: `1:1` (default), `1:2`, `2:1`, `1:3`, `3:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `9:21`, `21:9`
+  - `resolution`: `1k` (default), `1.5k`, `2k`
+  - `output_format`: `png` (default), `jpeg`
+  - `background`: `auto` (default), `transparent`, `opaque`
+- Notes: Text-to-image. Price follows `resolution`; 1k and 1.5k share a price, and 2k costs more. `transparent` always returns a PNG with an alpha channel, including when `output_format` is `jpeg`. `auto` follows the prompt and output format. Use `submitLabel: Generate image`.
+
 ### `wavespeed-ai/qwen-image-2.1/edit`
 
 - Required: `prompt`, `images[]` (1 to 10)

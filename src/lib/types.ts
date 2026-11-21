@@ -60,6 +60,7 @@ export type SeedreamAspectRatio =
 export type SeedreamResolution = '1k' | '1.5k' | '2k'
 export type SeedreamOutputFormat = 'jpeg' | 'png'
 export type SeedreamPromptOptimizationMode = 'standard' | 'fast'
+export type SeedreamBackground = 'auto' | 'transparent' | 'opaque'
 export type QwenImageAspectRatio =
   | '1:1'
   | '1:2'
@@ -164,6 +165,14 @@ export interface SeedreamLiteEditSequentialInput {
   size: string
   max_images: number
   output_format?: SeedreamOutputFormat
+}
+
+export interface SeedreamTextToImageInput {
+  prompt: string
+  aspect_ratio?: SeedreamAspectRatio
+  resolution?: SeedreamResolution
+  output_format?: SeedreamOutputFormat
+  background?: SeedreamBackground
 }
 
 export interface QwenImageEditInput {

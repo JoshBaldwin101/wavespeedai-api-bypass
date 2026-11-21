@@ -24,7 +24,7 @@ You paste a WaveSpeed key, pick a workflow, and run a generation. Cost is estima
 
 ## What it does
 
-- **66 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, Kling 3.0 / 3.0 Turbo / Elements, GPT Image 2, Nano Banana Pro, 2, and 2.1, Seedream v5 Pro, Seedream v5 Lite, Qwen Image 2.1, SeedVR2, Scail 2, and Cinematic Video Generator
+- **66 WaveSpeed workflows** across Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, Kling 3.0 / 3.0 Turbo / Elements, GPT Image 2, Nano Banana Pro, 2, and 2.1, Seedream v5 Pro, Seedream v5 Lite, Seedream v5.5, Qwen Image 2.1, SeedVR2, Scail 2, and Cinematic Video Generator
 - Text-to-video, image-to-video, multi-shot storyboards, reference-to-video, video edit / extend / upscale, motion transfer, reusable character elements, text-to-image, and image edit
 - Live cost on the submit button, then a confirm step that checks your wallet
 - Upload images, video, or audio, or paste URLs
@@ -69,6 +69,7 @@ WaveSpeed's website playground keeps a content safety checker locked on. Their A
 | **Nano Banana 2.1** | Text-to-image · edit |
 | **Seedream v5 Pro** | Image edit |
 | **Seedream v5 Lite** | Sequential image edit |
+| **Seedream v5.5** | Text to image |
 | **Qwen Image 2.1** | Image edit |
 | **SeedVR2** | Video upscale (up to 4K) |
 | **Scail 2** | Image + driving video to motion transfer |
