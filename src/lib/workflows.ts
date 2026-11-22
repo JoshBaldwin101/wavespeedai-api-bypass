@@ -27,6 +27,7 @@ import { SeedanceVideoExtendForm } from '../components/seedance/SeedanceVideoExt
 import { SeedreamEditForm } from '../components/seedream/SeedreamEditForm'
 import { SeedreamLiteEditSequentialForm } from '../components/seedream/SeedreamLiteEditSequentialForm'
 import { SeedreamTextToImageForm } from '../components/seedream/SeedreamTextToImageForm'
+import { SeedreamV55EditForm } from '../components/seedream/SeedreamV55EditForm'
 import { SeedVr2VideoForm } from '../components/seedvr2/SeedVr2VideoForm'
 import type { SeedanceResolution } from './types'
 
@@ -1044,6 +1045,14 @@ export const workflows: WorkflowDefinition[] = [
     submitLabel: 'Generate image',
     model: 'bytedance/seedream-v5.5',
     form: SeedreamTextToImageForm,
+  },
+  {
+    id: 'bytedance/seedream-v5.5/edit',
+    label: 'bytedance/seedream-v5.5/edit',
+    group: 'seedream-v5.5',
+    submitLabel: 'Generate image',
+    model: 'bytedance/seedream-v5.5/edit',
+    form: SeedreamV55EditForm,
   },
   {
     id: 'wavespeed-ai/qwen-image-2.1/edit',

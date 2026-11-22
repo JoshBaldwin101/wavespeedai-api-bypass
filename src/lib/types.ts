@@ -177,6 +177,10 @@ export interface SeedreamTextToImageInput {
   background?: SeedreamBackground
 }
 
+export interface SeedreamV55EditInput extends SeedreamTextToImageInput {
+  images: string[]
+}
+
 export interface QwenImageEditInput {
   prompt: string
   images: string[]

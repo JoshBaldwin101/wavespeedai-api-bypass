@@ -59,7 +59,7 @@ Recount workflows from the `workflows` array in `src/lib/workflows.ts`. Do not c
 
 | README location | What to update |
 | --- | --- |
-| Centered subtitle under the title | The workflow count (`76 workflows` today). |
+| Centered subtitle under the title | The workflow count (`77 workflows` today). |
 | **What it does**, first bullet | Count plus the family names (Seedance 2.5 / 2.0 / Fast / Mini, MiniMax Hailuo 3, and so on). Add or drop a family name when the registry gains or loses a group. |
 | **What it does**, second bullet | Task kinds (text-to-video, image edit, motion transfer, ...). Touch this only if you add or remove a *kind* of job, not when you add another Seedance turbo of an existing kind. |
 | **Supported workflows** table | Family row and the variant names on that row. New family = new row. Removed family = delete the row. |
@@ -98,6 +98,7 @@ Current documented limits used in this app:
 - Nano Banana edit endpoints currently documented in this app use up to 14 input images (`images[]`).
 - Seedream v5.0 Pro edit `images[]` is capped at 10 per official docs.
 - Seedream v5.0 Lite edit-sequential `images[]` is capped at 10 per official docs.
+- Seedream v5.5 edit `images[]` accepts 0 to 10 per official docs. The field is required and may be empty.
 - Qwen Image 2.1 edit `images[]` is capped at 10 per official docs.
 - Kling Elements `element_refer_list` requires 1 to 3 reference images. Kling 3.0 image-to-video and motion-control `element_list` is capped at 3 element IDs. Kling `multi_prompt` is capped at 6 shots.
 - Cinematic Video Generator `images[]` is capped at 4 per official docs.
@@ -590,6 +591,17 @@ For optional integer fields with known ranges (for example `duration` or `seed`)
   - `output_format`: `png` (default), `jpeg`
   - `background`: `auto` (default), `transparent`, `opaque`
 - Notes: Text-to-image. Price follows `resolution`; 1k and 1.5k share a price, and 2k costs more. `transparent` always returns a PNG with an alpha channel, including when `output_format` is `jpeg`. `auto` follows the prompt and output format. Use `submitLabel: Generate image`.
+
+### `bytedance/seedream-v5.5/edit`
+
+- Required: `prompt`, `images[]` (0 to 10; the field is required and may be empty)
+- Optional: `aspect_ratio`, `resolution`, `output_format`, `background`
+- Options:
+  - `aspect_ratio`: `1:1`, `1:2`, `2:1`, `1:3`, `3:1`, `2:3`, `3:2`, `3:4`, `4:3`, `4:5`, `5:4`, `9:16`, `16:9`, `9:21`, `21:9`. Leave empty to follow the first input image.
+  - `resolution`: `1k` (default), `1.5k`, `2k`
+  - `output_format`: `png` (default), `jpeg`
+  - `background`: `auto` (default), `transparent`, `opaque`
+- Notes: Image edit with up to 10 reference images. Price is the selected resolution's output price plus a charge for each input image. 1k and 1.5k share an output price, and 2k costs more. `transparent` always returns a PNG with an alpha channel, including when `output_format` is `jpeg`. `auto` follows the prompt and output format. `enable_sync_mode` and `enable_base64_output` are intentionally unsupported. Use `submitLabel: Generate image`.
 
 ### `wavespeed-ai/qwen-image-2.1/edit`
 
